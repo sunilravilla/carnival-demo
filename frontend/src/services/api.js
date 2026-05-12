@@ -292,10 +292,59 @@ export async function generateAgentResponseStream(
 // ==============================================================================
 
 const USER_AUTH_KEY = "aria_user_auth";
+const GUEST_PHONE_KEY = "carnival_guest_phone";
 
 export const isUserAuthenticated = () => sessionStorage.getItem(USER_AUTH_KEY) === "true";
 export const setUserAuthenticated = () => sessionStorage.setItem(USER_AUTH_KEY, "true");
 export const clearUserAuthenticated = () => sessionStorage.removeItem(USER_AUTH_KEY);
+
+export const getStoredGuestPhone = () => sessionStorage.getItem(GUEST_PHONE_KEY);
+export const storeGuestPhone = (phone) => sessionStorage.setItem(GUEST_PHONE_KEY, phone);
+export const clearStoredGuest = () => {
+  sessionStorage.removeItem(GUEST_PHONE_KEY);
+  sessionStorage.removeItem(USER_AUTH_KEY);
+};
+
+// ==============================================================================
+// Guest Dashboard API Functions
+// ==============================================================================
+
+export const lookupGuest = async (identifier) => {
+  const response = await api.post(
+    "/api/guest/lookup",
+    { identifier },
+    { headers: { "Content-Type": "application/json" } }
+  );
+  return response.data;
+};
+
+export const getReservations = async () => {
+  const response = await api.get("/api/guest/reservations");
+  return response.data;
+};
+
+export const getFolio = async () => {
+  const response = await api.get("/api/guest/folio");
+  return response.data;
+};
+
+export const cancelReservation = async (name) => {
+  const response = await api.post(
+    "/api/guest/reservations/cancel",
+    { name },
+    { headers: { "Content-Type": "application/json" } }
+  );
+  return response.data;
+};
+
+export const resetGuest = async (phone) => {
+  const response = await api.post(
+    "/api/guest/reset",
+    phone ? { phone } : {},
+    { headers: { "Content-Type": "application/json" } }
+  );
+  return response.data;
+};
 
 export const userLogin = async (accessCode) => {
   const response = await api.post(

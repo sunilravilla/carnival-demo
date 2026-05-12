@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useContext } from "react";
 import { flushSync } from "react-dom";
 import InputSection from "./InputSection";
 import AudioPlayer from "./AudioPlayer";
@@ -12,7 +12,8 @@ import {
   generate2DResponseElevenLabs,
 } from "../services/api";
 import { activeTheme as theme, branding, isCarnival } from "../styles/branding";
-import { Menu, Settings, Trash2, Volume2, User } from "lucide-react";
+import { Menu, Settings, Trash2, Volume2, User, X } from "lucide-react";
+import GuestContext from "../context/GuestContext";
 
 // ─── Colours ────────────────────────────────────────────────────────────────
 const C = {
@@ -183,7 +184,18 @@ function LangBadge({ lang, inHeader = false }) {
 
 // ─── Main component ──────────────────────────────────────────────────────────
 
-export default function ChatInterface({ onAdminClick, isCheckingAuth }) {
+export default function ChatInterface({
+  onAdminClick,
+  isCheckingAuth,
+  // Panel mode props
+  panelMode = false,
+  panelOpen = true,
+  onClose,
+  prefilledMessage,
+  onMessageUsed,
+}) {
+  const guestCtx = useContext(GuestContext);
+
   const [conversation, setConversation] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isGeneratingResponse, setIsGeneratingResponse] = useState(false);
@@ -201,6 +213,7 @@ export default function ChatInterface({ onAdminClick, isCheckingAuth }) {
   const messagesEndRef = useRef(null);
   const audioElemRef = useRef(null);
   const streamTextRef = useRef("");
+  const prefilledUsedRef = useRef("");
 
   const stopCurrentAudio = () => {
     if (audioElemRef.current) {
@@ -216,6 +229,34 @@ export default function ChatInterface({ onAdminClick, isCheckingAuth }) {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [conversation]);
+
+  // Stop audio immediately when panel is closed
+  useEffect(() => {
+    if (panelMode && !panelOpen) {
+      stopCurrentAudio();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [panelOpen]);
+
+  // Register clearConversation with GuestContext so clearGuest() can reset chat
+  useEffect(() => {
+    if (guestCtx?.clearChatRef) {
+      guestCtx.clearChatRef.current = clearConversation;
+    }
+    return () => {
+      if (guestCtx?.clearChatRef) guestCtx.clearChatRef.current = null;
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [guestCtx]);
+
+  // Auto-submit prefilled message from QuickActions / cancel flow
+  useEffect(() => {
+    if (!prefilledMessage || prefilledMessage === prefilledUsedRef.current || isProcessing) return;
+    prefilledUsedRef.current = prefilledMessage;
+    onMessageUsed?.();
+    handleTextSubmit(prefilledMessage);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefilledMessage]);
 
   // CopilotKit bridge (opt-in, off by default)
   const copilotKitOn = isCarnival && branding.useCopilotKit;
@@ -282,6 +323,9 @@ export default function ChatInterface({ onAdminClick, isCheckingAuth }) {
                 folioPrevRef.current = event.folio_balance;
                 setFolioBalance(event.folio_balance);
               }
+
+              // Sync dashboard widgets
+              guestCtx?.applyAgentUpdate(event);
 
               playConfirmChime(event.card_payload);
 
@@ -414,7 +458,7 @@ export default function ChatInterface({ onAdminClick, isCheckingAuth }) {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div style={s.root}>
+    <div style={{ ...s.root, height: panelMode ? '100%' : '100dvh' }}>
       {/* Hidden audio player */}
       <AudioPlayer
         audioBuffer={currentAudio?.audioBuffer}
@@ -438,13 +482,19 @@ export default function ChatInterface({ onAdminClick, isCheckingAuth }) {
               </div>
             )}
             <LangBadge lang={detectedLang} inHeader />
-            <button
-              style={s.iconBtn}
-              onClick={() => setMenuOpen(v => !v)}
-              title="Menu"
-            >
-              {isCheckingAuth ? <div style={s.miniSpinner} /> : <Menu size={20} />}
-            </button>
+            {panelMode ? (
+              <button style={s.iconBtn} onClick={onClose} title="Close">
+                <X size={20} />
+              </button>
+            ) : (
+              <button
+                style={s.iconBtn}
+                onClick={() => setMenuOpen(v => !v)}
+                title="Menu"
+              >
+                {isCheckingAuth ? <div style={s.miniSpinner} /> : <Menu size={20} />}
+              </button>
+            )}
           </div>
         </div>
 

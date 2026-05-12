@@ -794,7 +794,7 @@ DEBARKATION (May 9, Miami)
 """
 
 
-def _build_system_prompt(folio_balance: float, reservations: list, drink_package: Optional[str]) -> str:
+def _build_system_prompt(folio_balance: float, reservations: list, drink_package: Optional[str], guest_first_name: str = "there") -> str:
     res_str = ", ".join(reservations) if reservations else "none yet"
     pkg_str = drink_package or "none active"
     dynamic = (
@@ -813,7 +813,7 @@ def _build_system_prompt(folio_balance: float, reservations: list, drink_package
     )
     return (
         "You are Marina, Carnival Celebration's warm and professional onboard concierge.\n"
-        "You know the Garcia family personally and greet them by name.\n"
+        f"You are speaking with {guest_first_name}. Always address them by their first name: {guest_first_name}.\n"
         "Respond ONLY with one JSON object — no prose, no markdown fences:\n"
         '  {"tool":"<name|null>","args":{...},"say":"<your reply to the guest>",'
         '"hints":["short follow-up question","...","..."]}\n\n'
@@ -835,7 +835,7 @@ def _build_system_prompt(folio_balance: float, reservations: list, drink_package
         f"Available tools: {tools_list}\n\n"
         "Examples:\n"
         'User: "hi"\n'
-        '{"tool":null,"args":{},"say":"Welcome back, Mr. and Mrs. Garcia! How can I make your day special?",'
+        f'{{"tool":null,"args":{{}},"say":"Welcome back, {guest_first_name}! How can I make your day special?",'
         '"hints":["What\'s on tonight?","Book dinner for 2","What\'s the weather tomorrow?"]}\n\n'
         'User: "book Italian at 7:30 for 2"\n'
         '{"tool":"book_dining","args":{"restaurant":"Italian","time":"19:30","party_size":2},'
@@ -922,6 +922,7 @@ class AgentService:
     async def respond(self, conversation_uuid: str, messages: List[Dict[str, str]]) -> Dict[str, Any]:
         """Run one agent turn. Returns {bot_text, card_payload}."""
         guest = ship_data.get_guest()
+        guest_first_name = guest.get("primary_first_name") or guest.get("name", "").split()[0] or "there"
         reservations = [
             f"{r.get('restaurant_name') or r.get('show_name', 'reservation')} @ {r.get('time','')}"
             for r in guest.get("reservations", [])
@@ -931,6 +932,7 @@ class AgentService:
             folio_balance=guest["folio"]["balance"],
             reservations=reservations,
             drink_package=drink_pkg,
+            guest_first_name=guest_first_name,
         )
 
         chat_messages: List[Dict[str, str]] = [
@@ -1057,6 +1059,7 @@ class AgentService:
     async def respond_stream(self, conversation_uuid: str, messages: List[Dict[str, str]]):
         """Async generator for SSE streaming. Yields dicts with type: text_delta | done."""
         guest = ship_data.get_guest()
+        guest_first_name = guest.get("primary_first_name") or guest.get("name", "").split()[0] or "there"
         reservations = [
             f"{r.get('restaurant_name') or r.get('show_name', 'reservation')} @ {r.get('time', '')}"
             for r in guest.get("reservations", [])
@@ -1066,6 +1069,7 @@ class AgentService:
             folio_balance=guest["folio"]["balance"],
             reservations=reservations,
             drink_package=drink_pkg,
+            guest_first_name=guest_first_name,
         )
 
         chat_messages = [{"role": "system", "content": system_prompt}]

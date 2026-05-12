@@ -1,0 +1,400 @@
+"""Mock guest registry for the Carnival concierge demo.
+
+10 guests mapped to phone numbers 9999999990 – 9999999999.
+Each entry is deep-copied into ship_data at startup so mutations
+during a demo session are isolated per phone number.
+"""
+
+GUEST_REGISTRY = {
+    # ── Primary demo guest ──────────────────────────────────────────────────
+    "9999999990": {
+        "guest_id": "G-77321",
+        "name": "Mr. and Mrs. Garcia",
+        "primary_first_name": "Diego",
+        "primary_last_name": "Garcia",
+        "cabin": "8245",
+        "deck": 8,
+        "party_size": 2,
+        "language_preference": "en",
+        "vifp_tier": "Gold",
+        "mobile_number": "9999999990",
+        "booking_ref": "CCL-2026-77321",
+        "folio": {
+            "balance": 342.18,
+            "items": [
+                {"date": "2026-05-02", "desc": "Embarkation Photo", "amount": 24.95},
+                {"date": "2026-05-03", "desc": "Cloud 9 Spa - Couples Massage", "amount": 189.00},
+                {"date": "2026-05-03", "desc": "Pool Bar - 2 cocktails", "amount": 28.50},
+                {"date": "2026-05-04", "desc": "Specialty Coffee x4", "amount": 16.80},
+                {"date": "2026-05-04", "desc": "Casino Drinks", "amount": 22.00},
+                {"date": "2026-05-04", "desc": "Excursion Deposit - Cozumel Snorkel", "amount": 60.93},
+            ],
+        },
+        "drink_package": None,
+        "reservations": [
+            {
+                "kind": "dining",
+                "restaurant_id": "cucina",
+                "restaurant_name": "Cucina del Capitano",
+                "time": "19:30",
+                "time_human": "7:30 PM",
+                "party_size": 2,
+                "confirmation_id": "C73210",
+            },
+            {
+                "kind": "show",
+                "show_id": "punchliner-9pm",
+                "show_name": "Punchliner Comedy Club",
+                "venue": "Limelight Lounge",
+                "time": "21:00",
+                "time_human": "9:00 PM",
+                "count": 2,
+                "confirmation_id": "S73212",
+            },
+        ],
+    },
+
+    # ── Conflict-detection demo: dinner at 7 PM + show at 7:30 PM ──────────
+    "9999999991": {
+        "guest_id": "G-64310",
+        "name": "Ms. Elena Reyes",
+        "primary_first_name": "Elena",
+        "primary_last_name": "Reyes",
+        "cabin": "6430",
+        "deck": 6,
+        "party_size": 1,
+        "language_preference": "en",
+        "vifp_tier": "Gold",
+        "mobile_number": "9999999991",
+        "booking_ref": "CCL-2026-64310",
+        "folio": {
+            "balance": 189.00,
+            "items": [
+                {"date": "2026-05-02", "desc": "Embarkation Photo", "amount": 24.95},
+                {"date": "2026-05-03", "desc": "Cloud 9 Spa - Facial Treatment", "amount": 89.00},
+                {"date": "2026-05-03", "desc": "Lido Bar - Cocktail", "amount": 12.50},
+                {"date": "2026-05-04", "desc": "Specialty Coffee x2", "amount": 8.40},
+                {"date": "2026-05-04", "desc": "Retail - Sundry Items", "amount": 54.15},
+            ],
+        },
+        "drink_package": None,
+        "reservations": [
+            {
+                "kind": "dining",
+                "restaurant_id": "cucina",
+                "restaurant_name": "Cucina del Capitano",
+                "time": "19:00",
+                "time_human": "7:00 PM",
+                "party_size": 1,
+                "confirmation_id": "C64311",
+            },
+            {
+                "kind": "show",
+                "show_id": "playlist-8pm",
+                "show_name": "Playlist Productions: Heart of Soul",
+                "venue": "Liquid Lounge",
+                "time": "19:30",
+                "time_human": "7:30 PM",
+                "count": 1,
+                "confirmation_id": "S64312",
+            },
+        ],
+    },
+
+    # ── Group of 4, CHEERS! drink package active ───────────────────────────
+    "9999999992": {
+        "guest_id": "G-61020",
+        "name": "Chen Family",
+        "primary_first_name": "Wei",
+        "primary_last_name": "Chen",
+        "cabin": "6102",
+        "deck": 6,
+        "party_size": 4,
+        "language_preference": "en",
+        "vifp_tier": "Platinum",
+        "mobile_number": "9999999992",
+        "booking_ref": "CCL-2026-61020",
+        "folio": {
+            "balance": 847.50,
+            "items": [
+                {"date": "2026-05-02", "desc": "Embarkation Photos x4", "amount": 99.80},
+                {"date": "2026-05-03", "desc": "Cloud 9 Spa - Swedish Massage x2", "amount": 340.00},
+                {"date": "2026-05-03", "desc": "Pool Bar - Before CHEERS!", "amount": 42.50},
+                {"date": "2026-05-04", "desc": "Fahrenheit 555 Steakhouse x4", "amount": 196.00},
+                {"date": "2026-05-04", "desc": "Cozumel Snorkel Excursion x4", "amount": 169.20},
+            ],
+        },
+        "drink_package": {
+            "id": "CHEERS",
+            "days_remaining": 3,
+            "total_charged": 335.76,
+        },
+        "reservations": [
+            {
+                "kind": "dining",
+                "restaurant_id": "fahrenheit",
+                "restaurant_name": "Fahrenheit 555 Steakhouse",
+                "time": "20:00",
+                "time_human": "8:00 PM",
+                "party_size": 4,
+                "confirmation_id": "C61021",
+            },
+        ],
+    },
+
+    # ── Spanish-speaker demo ────────────────────────────────────────────────
+    "9999999993": {
+        "guest_id": "G-51500",
+        "name": "Sr. Carlos Mendez",
+        "primary_first_name": "Carlos",
+        "primary_last_name": "Mendez",
+        "cabin": "5150",
+        "deck": 5,
+        "party_size": 1,
+        "language_preference": "es",
+        "vifp_tier": "Red",
+        "mobile_number": "9999999993",
+        "booking_ref": "CCL-2026-51500",
+        "folio": {
+            "balance": 47.00,
+            "items": [
+                {"date": "2026-05-02", "desc": "Tienda - Artículos varios", "amount": 28.00},
+                {"date": "2026-05-03", "desc": "Café Especialidad x2", "amount": 8.00},
+                {"date": "2026-05-04", "desc": "Bar de la Piscina", "amount": 11.00},
+            ],
+        },
+        "drink_package": None,
+        "reservations": [],
+    },
+
+    # ── Basic couple ────────────────────────────────────────────────────────
+    "9999999994": {
+        "guest_id": "G-72030",
+        "name": "Mr. and Mrs. Johnson",
+        "primary_first_name": "Robert",
+        "primary_last_name": "Johnson",
+        "cabin": "7203",
+        "deck": 7,
+        "party_size": 2,
+        "language_preference": "en",
+        "vifp_tier": "Gold",
+        "mobile_number": "9999999994",
+        "booking_ref": "CCL-2026-72030",
+        "folio": {
+            "balance": 201.00,
+            "items": [
+                {"date": "2026-05-02", "desc": "Embarkation Photo", "amount": 24.95},
+                {"date": "2026-05-02", "desc": "Casino - Cash Advance", "amount": 100.00},
+                {"date": "2026-05-03", "desc": "Pool Bar - 3 drinks", "amount": 42.50},
+                {"date": "2026-05-04", "desc": "Retail - Souvenirs", "amount": 33.55},
+            ],
+        },
+        "drink_package": None,
+        "reservations": [
+            {
+                "kind": "show",
+                "show_id": "punchliner-9pm",
+                "show_name": "Punchliner Comedy Club",
+                "venue": "Limelight Lounge",
+                "time": "21:00",
+                "time_human": "9:00 PM",
+                "count": 2,
+                "confirmation_id": "S72041",
+            },
+        ],
+    },
+
+    # ── Spa + fine dining (Platinum) ────────────────────────────────────────
+    "9999999995": {
+        "guest_id": "G-90880",
+        "name": "Mr. and Mrs. Patel",
+        "primary_first_name": "Priya",
+        "primary_last_name": "Patel",
+        "cabin": "9088",
+        "deck": 9,
+        "party_size": 2,
+        "language_preference": "en",
+        "vifp_tier": "Platinum",
+        "mobile_number": "9999999995",
+        "booking_ref": "CCL-2026-90880",
+        "folio": {
+            "balance": 445.00,
+            "items": [
+                {"date": "2026-05-02", "desc": "Embarkation Photo", "amount": 24.95},
+                {"date": "2026-05-03", "desc": "Cloud 9 Spa - Hot Stone Massage", "amount": 180.00},
+                {"date": "2026-05-03", "desc": "Cloud 9 Spa - Couples Aromatherapy", "amount": 189.00},
+                {"date": "2026-05-04", "desc": "Specialty Coffee x2", "amount": 8.00},
+                {"date": "2026-05-04", "desc": "Fahrenheit 555 - Wine Selection", "amount": 43.05},
+            ],
+        },
+        "drink_package": None,
+        "reservations": [
+            {
+                "kind": "spa",
+                "treatment_name": "Couples Deep Tissue Massage",
+                "time": "17:00",
+                "time_human": "5:00 PM",
+                "duration_min": 75,
+                "price": 299.00,
+                "confirmation_id": "SPA90881",
+            },
+            {
+                "kind": "dining",
+                "restaurant_id": "fahrenheit",
+                "restaurant_name": "Fahrenheit 555 Steakhouse",
+                "time": "19:00",
+                "time_human": "7:00 PM",
+                "party_size": 2,
+                "confirmation_id": "C90882",
+            },
+        ],
+    },
+
+    # ── Clean slate (solo) ──────────────────────────────────────────────────
+    "9999999996": {
+        "guest_id": "G-10305",
+        "name": "Mr. Marcus Williams",
+        "primary_first_name": "Marcus",
+        "primary_last_name": "Williams",
+        "cabin": "10305",
+        "deck": 10,
+        "party_size": 1,
+        "language_preference": "en",
+        "vifp_tier": "Gold",
+        "mobile_number": "9999999996",
+        "booking_ref": "CCL-2026-10305",
+        "folio": {
+            "balance": 85.00,
+            "items": [
+                {"date": "2026-05-02", "desc": "Casino - Cash Advance", "amount": 50.00},
+                {"date": "2026-05-03", "desc": "Specialty Coffee x5", "amount": 25.00},
+                {"date": "2026-05-04", "desc": "Pool Bar", "amount": 10.00},
+            ],
+        },
+        "drink_package": None,
+        "reservations": [],
+    },
+
+    # ── Show + dining combo ─────────────────────────────────────────────────
+    "9999999997": {
+        "guest_id": "G-11204",
+        "name": "Mr. and Mrs. O'Brien",
+        "primary_first_name": "Sarah",
+        "primary_last_name": "O'Brien",
+        "cabin": "11204",
+        "deck": 11,
+        "party_size": 2,
+        "language_preference": "en",
+        "vifp_tier": "Gold",
+        "mobile_number": "9999999997",
+        "booking_ref": "CCL-2026-11204",
+        "folio": {
+            "balance": 289.00,
+            "items": [
+                {"date": "2026-05-02", "desc": "Embarkation Photo", "amount": 24.95},
+                {"date": "2026-05-03", "desc": "Cloud 9 Spa - Hot Stone Massage", "amount": 95.00},
+                {"date": "2026-05-03", "desc": "Pool Bar x3", "amount": 42.50},
+                {"date": "2026-05-04", "desc": "Retail - Carnival Merchandise", "amount": 47.00},
+                {"date": "2026-05-04", "desc": "Specialty Coffee x8", "amount": 34.00},
+                {"date": "2026-05-04", "desc": "Casino Drinks", "amount": 45.55},
+            ],
+        },
+        "drink_package": None,
+        "reservations": [
+            {
+                "kind": "show",
+                "show_id": "playlist-8pm",
+                "show_name": "Playlist Productions: Heart of Soul",
+                "venue": "Liquid Lounge",
+                "time": "20:00",
+                "time_human": "8:00 PM",
+                "count": 2,
+                "confirmation_id": "S11241",
+            },
+            {
+                "kind": "dining",
+                "restaurant_id": "cucina",
+                "restaurant_name": "Cucina del Capitano",
+                "time": "20:30",
+                "time_human": "8:30 PM",
+                "party_size": 2,
+                "confirmation_id": "C11242",
+            },
+        ],
+    },
+
+    # ── High-spender (Platinum) ─────────────────────────────────────────────
+    "9999999998": {
+        "guest_id": "G-33070",
+        "name": "Mr. and Mrs. Tanaka",
+        "primary_first_name": "Yuki",
+        "primary_last_name": "Tanaka",
+        "cabin": "3307",
+        "deck": 3,
+        "party_size": 2,
+        "language_preference": "en",
+        "vifp_tier": "Platinum",
+        "mobile_number": "9999999998",
+        "booking_ref": "CCL-2026-33070",
+        "folio": {
+            "balance": 634.00,
+            "items": [
+                {"date": "2026-05-02", "desc": "Embarkation Photo Package", "amount": 49.90},
+                {"date": "2026-05-03", "desc": "Fahrenheit 555 Steakhouse x2", "amount": 98.00},
+                {"date": "2026-05-03", "desc": "Cloud 9 Spa - Couples Ritual", "amount": 260.00},
+                {"date": "2026-05-04", "desc": "Salon - Blowout Service", "amount": 65.00},
+                {"date": "2026-05-04", "desc": "Premium Spirits - Pool Bar x4", "amount": 68.00},
+                {"date": "2026-05-04", "desc": "Retail - Jewelry", "amount": 93.10},
+            ],
+        },
+        "drink_package": None,
+        "reservations": [
+            {
+                "kind": "spa",
+                "treatment_name": "Aroma Stone Therapy",
+                "time": "15:00",
+                "time_human": "3:00 PM",
+                "duration_min": 50,
+                "price": 189.00,
+                "confirmation_id": "SPA33071",
+            },
+        ],
+    },
+
+    # ── Excursion focus ─────────────────────────────────────────────────────
+    "9999999999": {
+        "guest_id": "G-85010",
+        "name": "Mr. and Mrs. Osei",
+        "primary_first_name": "Aisha",
+        "primary_last_name": "Osei",
+        "cabin": "8501",
+        "deck": 8,
+        "party_size": 2,
+        "language_preference": "en",
+        "vifp_tier": "Gold",
+        "mobile_number": "9999999999",
+        "booking_ref": "CCL-2026-85010",
+        "folio": {
+            "balance": 176.00,
+            "items": [
+                {"date": "2026-05-02", "desc": "Embarkation Photo", "amount": 24.95},
+                {"date": "2026-05-04", "desc": "Excursion - Cozumel Snorkel & Ruins x2", "amount": 84.00},
+                {"date": "2026-05-04", "desc": "Pool Bar - 2 cocktails", "amount": 28.50},
+                {"date": "2026-05-04", "desc": "Specialty Coffee x3", "amount": 14.55},
+                {"date": "2026-05-04", "desc": "Casino - Slots", "amount": 24.00},
+            ],
+        },
+        "drink_package": None,
+        "reservations": [
+            {
+                "kind": "dining",
+                "restaurant_id": "cucina",
+                "restaurant_name": "Cucina del Capitano",
+                "time": "19:00",
+                "time_human": "7:00 PM",
+                "party_size": 2,
+                "confirmation_id": "C85011",
+            },
+        ],
+    },
+}

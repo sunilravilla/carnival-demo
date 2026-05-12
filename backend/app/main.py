@@ -20,6 +20,7 @@ from app.services.rag_service import RAGService
 from app.services.elevenlabs_service import ElevenLabsService
 from app.services.agent_service import AgentService
 from app.services import config_store
+from app.services import ship_data
 import io
 import logging
 import uuid
@@ -479,7 +480,7 @@ async def agent_respond_elevenlabs(request: dict):
                 visemes = elevenlabs_service.fallback_visemes_from_text(spoken_text, duration_ms)
         else:
             audio_bytes = await elevenlabs_service.text_to_speech_fast(
-                text=spoken_text, voice_id=active_voice_id
+                text=spoken_text, voice_id=active_voice_id, language=language if language != "en" else None
             )
         mime = "audio/mpeg"
 
@@ -1291,6 +1292,71 @@ def generate_admin_token() -> str:
     # Token valid for 24 hours
     admin_tokens[token] = time.time() + 86400
     return token
+
+
+@app.post("/api/guest/lookup")
+async def guest_lookup(request: dict):
+    """Look up a guest by mobile number or booking reference (demo: 9999999990–9999999999)."""
+    identifier = str(request.get("identifier", "")).strip()
+    if not identifier:
+        raise HTTPException(status_code=400, detail="identifier required")
+    found = ship_data.set_active_guest(identifier)
+    if not found:
+        raise HTTPException(status_code=404, detail="Guest not found")
+    guest = ship_data.get_guest()
+    cruise = ship_data.get_cruise()
+    return {
+        "found": True,
+        "guest": {
+            **guest,
+            "ship": cruise["ship"],
+            "cruise": {
+                "currentDay": cruise["current_day"],
+                "totalDays": cruise["total_days"],
+                "todayLabel": cruise["today_label"],
+                "departurDate": cruise["departure_date"],
+                "nextPort": cruise.get("next_port", {}),
+                "itinerary": cruise.get("ports_visited", []) + cruise.get("ports_remaining", []),
+            },
+        },
+    }
+
+
+@app.get("/api/guest/reservations")
+async def guest_reservations():
+    """Return current in-memory reservations for the active guest."""
+    reservations = ship_data.list_reservations()
+    return {"reservations": reservations, "count": len(reservations)}
+
+
+@app.post("/api/guest/reservations/cancel")
+async def cancel_reservation_direct(request: dict):
+    """Cancel a reservation directly from the dashboard (no Marina chat needed)."""
+    name = str(request.get("name", "")).strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="name required")
+    removed = ship_data.remove_reservation(name)
+    if not removed:
+        raise HTTPException(status_code=404, detail="Reservation not found")
+    return {"cancelled": True, "reservation": removed}
+
+
+@app.get("/api/guest/folio")
+async def guest_folio():
+    """Return current folio (balance + items) for the active guest."""
+    guest = ship_data.get_guest()
+    folio = guest.get("folio", {"balance": 0, "items": []})
+    return folio
+
+
+@app.post("/api/guest/reset")
+async def guest_reset(request: dict):
+    """Reset a guest's session mutations back to original registry state (for demo restart)."""
+    phone = str(request.get("phone", "")).strip() or ship_data.get_active_phone()
+    ok = ship_data.reset_guest(phone)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Guest not found")
+    return {"reset": True, "phone": phone}
 
 
 @app.post("/api/user/login")

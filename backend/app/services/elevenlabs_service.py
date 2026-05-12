@@ -173,7 +173,8 @@ class ElevenLabsService:
         self,
         text: str,
         voice_id: str = None,
-        model_id: str = None
+        model_id: str = None,
+        language: str = None,
     ) -> bytes:
         """
         Generate speech from text WITHOUT alignment data (faster).
@@ -203,6 +204,11 @@ class ElevenLabsService:
             "output_format": "mp3_44100_128",
             "voice_settings": self.voice_settings,
         }
+
+        # Pass language_code so multilingual models use the correct dialect.
+        # zh → zh (Mandarin Simplified, not Cantonese); ja, es, etc. pass through.
+        if language and language != "en":
+            payload["language_code"] = language
 
         logger.info(f"ElevenLabs TTS (fast): voice={voice_id}, model={model_id}")
         logger.info(f"Text length: {len(text)} characters")

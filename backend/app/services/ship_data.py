@@ -3,6 +3,9 @@
 Reads JSON files from app/data/ship/ on import and exposes typed lookups for
 the agent's tools. Mutations (booking, drink-package upgrade) are kept in
 process memory so they show up in subsequent tool calls within one demo run.
+
+Multi-guest support: set_active_guest(phone) switches the active guest.
+Each of the 10 demo phones gets its own isolated mutable copy of guest data.
 """
 
 import copy
@@ -27,8 +30,56 @@ _restaurants = _load("restaurants")
 _shows = _load("shows")
 _excursions = _load("excursions")
 _drink_packages = _load("drink_packages")
-_guest = _load("guest")
 
+# ---------------------------------------------------------------------------
+# Multi-guest registry — 10 isolated demo guests (phones 9999999990–9999999999)
+# ---------------------------------------------------------------------------
+
+from app.data.ship.guests_mock import GUEST_REGISTRY as _GUEST_REGISTRY
+
+# Deep-copy each guest at startup so mutations are isolated per phone.
+_guests: Dict[str, Dict[str, Any]] = {
+    phone: copy.deepcopy(data) for phone, data in _GUEST_REGISTRY.items()
+}
+
+# Default to the primary demo guest.
+_current_phone: str = "9999999990"
+
+
+def _g() -> Dict[str, Any]:
+    """Return a direct (mutable) reference to the active guest dict."""
+    return _guests[_current_phone]
+
+
+def set_active_guest(phone: str) -> bool:
+    """Switch the active guest by phone number. Returns True if found."""
+    global _current_phone
+    phone = str(phone).strip()
+    if phone in _guests:
+        _current_phone = phone
+        logger.info("Active guest switched to phone %s (%s)", phone, _guests[phone]["primary_first_name"])
+        return True
+    logger.warning("Guest lookup failed for phone %s", phone)
+    return False
+
+
+def reset_guest(phone: str) -> bool:
+    """Reset a guest's session state to original registry values (for demo restart)."""
+    phone = str(phone).strip()
+    if phone in _GUEST_REGISTRY:
+        _guests[phone] = copy.deepcopy(_GUEST_REGISTRY[phone])
+        logger.info("Guest %s reset to original state", phone)
+        return True
+    return False
+
+
+def get_active_phone() -> str:
+    return _current_phone
+
+
+# ---------------------------------------------------------------------------
+# Read-only lookups
+# ---------------------------------------------------------------------------
 
 def _match_one(items: List[Dict[str, Any]], query: str, fields: List[str]) -> Optional[Dict[str, Any]]:
     """Loose case-insensitive match of `query` against any of `fields` on each item."""
@@ -51,7 +102,7 @@ def get_cruise() -> Dict[str, Any]:
 
 
 def get_guest() -> Dict[str, Any]:
-    return copy.deepcopy(_guest)
+    return copy.deepcopy(_g())
 
 
 def list_restaurants() -> List[Dict[str, Any]]:
@@ -88,8 +139,12 @@ def remaining_cruise_days() -> int:
     return max(1, _cruise["total_days"] - _cruise["current_day"])
 
 
+# ---------------------------------------------------------------------------
+# Reservation helpers
+# ---------------------------------------------------------------------------
+
 def list_reservations() -> List[Dict[str, Any]]:
-    return copy.deepcopy(_guest.get("reservations", []))
+    return copy.deepcopy(_g().get("reservations", []))
 
 
 def remove_reservation(query: str) -> Optional[Dict[str, Any]]:
@@ -97,9 +152,9 @@ def remove_reservation(query: str) -> Optional[Dict[str, Any]]:
     Returns the removed entry, or None if nothing matched.
     """
     q = (query or "").strip().lower()
-    reservations = _guest.get("reservations", [])
+    reservations = _g().get("reservations", [])
     for i, r in enumerate(reservations):
-        name = (r.get("restaurant_name") or r.get("show_name") or "").lower()
+        name = (r.get("restaurant_name") or r.get("show_name") or r.get("treatment_name") or "").lower()
         conf = (r.get("confirmation_id") or "").lower()
         if q in name or name in q or q == conf:
             removed = reservations.pop(i)
@@ -133,13 +188,10 @@ def modify_reservation(query: str, new_time: str) -> Optional[Dict[str, Any]]:
       like "Italian" that won't fuzzy-match the actual restaurant name).
     - Multiple dining reservations → fuzzy match by name, then fall back to first.
     """
-    dining = [r for r in _guest.get("reservations", []) if r.get("kind") == "dining"]
+    dining = [r for r in _g().get("reservations", []) if r.get("kind") == "dining"]
     if not dining:
         return None
 
-    # When there's exactly one dining reservation, modify it unconditionally.
-    # The LLM often passes inferred names ("Italian", "dinner") that don't match
-    # the stored restaurant name, so name-matching is unreliable with one reservation.
     if len(dining) == 1:
         r = dining[0]
         old_time = r["time"]
@@ -154,7 +206,6 @@ def modify_reservation(query: str, new_time: str) -> Optional[Dict[str, Any]]:
             "party_size": r.get("party_size", 2),
         }
 
-    # Multiple reservations — try fuzzy name/cuisine match, then fall back to first
     q = (query or "").strip().lower()
     q_tokens = [t for t in q.split() if t]
     is_generic = not q_tokens or all(t in _DINING_GENERIC_WORDS for t in q_tokens)
@@ -186,10 +237,14 @@ def modify_reservation(query: str, new_time: str) -> Optional[Dict[str, Any]]:
 def add_reservation(kind: str, payload: Dict[str, Any]) -> Dict[str, Any]:
     """Append a reservation to the in-memory guest folio. Returns the saved entry."""
     entry = {"kind": kind, **payload}
-    _guest.setdefault("reservations", []).append(entry)
+    _g().setdefault("reservations", []).append(entry)
     logger.info("Reservation added: %s", entry)
     return copy.deepcopy(entry)
 
+
+# ---------------------------------------------------------------------------
+# Folio / billing helpers
+# ---------------------------------------------------------------------------
 
 def add_folio_charge(desc: str, amount: float, date: Optional[str] = None) -> Dict[str, Any]:
     """Append a folio line item and update the running balance."""
@@ -198,17 +253,17 @@ def add_folio_charge(desc: str, amount: float, date: Optional[str] = None) -> Di
         "desc": desc,
         "amount": round(amount, 2),
     }
-    _guest["folio"]["items"].append(item)
-    _guest["folio"]["balance"] = round(_guest["folio"]["balance"] + amount, 2)
-    logger.info("Folio charge added: %s = $%.2f (balance now $%.2f)", desc, amount, _guest["folio"]["balance"])
+    _g()["folio"]["items"].append(item)
+    _g()["folio"]["balance"] = round(_g()["folio"]["balance"] + amount, 2)
+    logger.info("Folio charge added: %s = $%.2f (balance now $%.2f)", desc, amount, _g()["folio"]["balance"])
     return copy.deepcopy(item)
 
 
 def set_drink_package(package_id: str, days: int, total: float) -> Dict[str, Any]:
     """Apply a drink package to the guest profile; folio is updated separately."""
-    _guest["drink_package"] = {
+    _g()["drink_package"] = {
         "id": package_id,
         "days_remaining": days,
         "total_charged": round(total, 2),
     }
-    return copy.deepcopy(_guest["drink_package"])
+    return copy.deepcopy(_g()["drink_package"])
