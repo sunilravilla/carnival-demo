@@ -1,0 +1,50 @@
+[
+  {
+    "id": "cozumel-snorkel",
+    "name": "Cozumel Reef Snorkel & Beach Break",
+    "port": "Cozumel, Mexico",
+    "date": "2026-05-06",
+    "meet_time": "09:15",
+    "depart_time": "09:30",
+    "return_time": "13:00",
+    "duration_min": 210,
+    "meet_location": "Gangway B, Deck 0 forward",
+    "deck_directions": "From Deck 8 take elevator forward to Deck 0. Follow the staff at the gangway sign.",
+    "price_per_guest": 79.99,
+    "includes": ["snorkel gear", "open bar", "beach access", "round-trip transfer"],
+    "rating": "Light - Moderate",
+    "min_age": 8
+  },
+  {
+    "id": "cozumel-jeep",
+    "name": "Jeep Adventure & Mayan Ruins",
+    "port": "Cozumel, Mexico",
+    "date": "2026-05-06",
+    "meet_time": "08:45",
+    "depart_time": "09:00",
+    "return_time": "14:30",
+    "duration_min": 330,
+    "meet_location": "Pier B, Cozumel International Pier",
+    "deck_directions": "Disembark via Deck 0 gangway. Look for the Jeep Adventure flag.",
+    "price_per_guest": 129.99,
+    "includes": ["self-drive jeep (4-person)", "guide", "lunch"],
+    "rating": "Strenuous",
+    "min_age": 12
+  },
+  {
+    "id": "celebration-cabana",
+    "name": "Celebration Key Beachfront Cabana",
+    "port": "Celebration Key, Bahamas",
+    "date": "2026-05-05",
+    "meet_time": "08:30",
+    "depart_time": "08:45",
+    "return_time": "16:00",
+    "duration_min": 450,
+    "meet_location": "Celebration Key Pier, Cabana Concierge",
+    "deck_directions": "Disembark Deck 0. Follow blue path to Cabana Concierge tent.",
+    "price_per_guest": 299.00,
+    "includes": ["beachfront cabana for 4", "premium lunch", "open bar", "lounge service"],
+    "rating": "Light",
+    "min_age": 0
+  }
+]

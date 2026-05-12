@@ -1,0 +1,18 @@
+[
+  {
+    "id": "CHEERS",
+    "name": "CHEERS! Beverage Package",
+    "price_per_day": 83.94,
+    "covers": "Unlimited cocktails, beer, wine by the glass, sodas, juices, specialty coffees, bottled water",
+    "max_drinks_alcohol_per_day": 15,
+    "min_purchase_days": "Remainder of cruise"
+  },
+  {
+    "id": "BUBBLES",
+    "name": "Bottomless Bubbles",
+    "price_per_day": 9.50,
+    "covers": "Unlimited fountain sodas and juices",
+    "max_drinks_alcohol_per_day": 0,
+    "min_purchase_days": "Remainder of cruise"
+  }
+]

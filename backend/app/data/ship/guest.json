@@ -1,0 +1,24 @@
+{
+  "guest_id": "G-77321",
+  "name": "Mr. and Mrs. Garcia",
+  "primary_first_name": "Diego",
+  "primary_last_name": "Garcia",
+  "cabin": "8245",
+  "deck": 8,
+  "party_size": 2,
+  "language_preference": "en",
+  "vifp_tier": "Gold",
+  "folio": {
+    "balance": 342.18,
+    "items": [
+      {"date": "2026-05-02", "desc": "Embarkation Photo", "amount": 24.95},
+      {"date": "2026-05-03", "desc": "Cloud 9 Spa - Couples Massage", "amount": 189.00},
+      {"date": "2026-05-03", "desc": "Pool Bar - 2 cocktails", "amount": 28.50},
+      {"date": "2026-05-04", "desc": "Specialty Coffee x4", "amount": 16.80},
+      {"date": "2026-05-04", "desc": "Casino Drinks", "amount": 22.00},
+      {"date": "2026-05-04", "desc": "Excursion Deposit - Cozumel Snorkel", "amount": 60.93}
+    ]
+  },
+  "drink_package": null,
+  "reservations": []
+}

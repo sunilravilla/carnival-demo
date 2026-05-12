@@ -1,0 +1,96 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+dist/
+dist-ssr/
+*.local
+
+# Environment
+.env
+.env.local
+.env.production
+
+# Temporary files
+temp_files/
+*.wav
+*.mp4
+*.mp3
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+CLAUDE.md
+AGENTS.md
+liveavatar-web-sdk-master
+*.PDF
+/ssl
+
+# Root-level docs and planning files (not code)
+/*.md
+/*.zip
+/*.pem
+/*.jpeg
+/*.jpg
+/*.png
+
+# Non-carnival RAG microservices + one-off docs
+/services/
+/dukhan-bank-docs/
+/scripts/
+
+# Loose files not needed in repo
+backend/zscaler_root_ca.pem
+backend/Avatar_photo.jpeg
+backend/smoke_test_agent.py
+backend/smoke_test_translate.py
+backend/start.bat
+backend/.env_old
+frontend/start.bat
+
+# Backup files anywhere
+*.bak
+
+# Generated deployment reference doc
+/DEPLOY.md
+
+# Redundant (main Dockerfile is now clean)
+backend/Dockerfile.railway

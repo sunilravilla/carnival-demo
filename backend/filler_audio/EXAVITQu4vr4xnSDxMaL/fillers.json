@@ -1,0 +1,38 @@
+[
+  {
+    "id": 1,
+    "text": "Sure, give me just a moment.",
+    "filename": "filler_1.pcm",
+    "size_bytes": 71844
+  },
+  {
+    "id": 2,
+    "text": "One moment please.",
+    "filename": "filler_2.pcm",
+    "size_bytes": 56240
+  },
+  {
+    "id": 3,
+    "text": "Let me pull that up for you.",
+    "filename": "filler_3.pcm",
+    "size_bytes": 71844
+  },
+  {
+    "id": 4,
+    "text": "Of course, just a second.",
+    "filename": "filler_4.pcm",
+    "size_bytes": 76302
+  },
+  {
+    "id": 5,
+    "text": "Alright, let me check on that.",
+    "filename": "filler_5.pcm",
+    "size_bytes": 78532
+  },
+  {
+    "id": 6,
+    "text": "Absolutely, one moment.",
+    "filename": "filler_6.pcm",
+    "size_bytes": 71844
+  }
+]

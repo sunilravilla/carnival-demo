@@ -1,0 +1,38 @@
+[
+  {
+    "id": 1,
+    "text": "Claro, dame un momento.",
+    "filename": "filler_1.pcm",
+    "size_bytes": 78532
+  },
+  {
+    "id": 2,
+    "text": "Un momento por favor.",
+    "filename": "filler_2.pcm",
+    "size_bytes": 76302
+  },
+  {
+    "id": 3,
+    "text": "Déjame verificar eso para ti.",
+    "filename": "filler_3.pcm",
+    "size_bytes": 105282
+  },
+  {
+    "id": 4,
+    "text": "Por supuesto, un segundo.",
+    "filename": "filler_4.pcm",
+    "size_bytes": 85220
+  },
+  {
+    "id": 5,
+    "text": "Bien, déjame revisar eso.",
+    "filename": "filler_5.pcm",
+    "size_bytes": 89678
+  },
+  {
+    "id": 6,
+    "text": "Absolutamente, un momento.",
+    "filename": "filler_6.pcm",
+    "size_bytes": 89678
+  }
+]

@@ -1,0 +1,64 @@
+networks:
+  carnival-network:
+    driver: bridge
+
+volumes:
+  mongodb-data:
+
+services:
+  mongodb:
+    image: mongo:7.0.7
+    volumes:
+      - mongodb-data:/data/db
+    networks:
+      - carnival-network
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: carnival-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/temp_files:/app/temp_files
+      - ./backend/filler_audio:/app/filler_audio
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - mongodb
+    networks:
+      - carnival-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: ""
+        VITE_DEMO_BRAND: "carnival"
+    container_name: carnival-frontend
+    restart: unless-stopped
+    ports:
+      - "3050:443"
+      - "3051:80"
+    volumes:
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - backend
+    networks:
+      - carnival-network
+    healthcheck:
+      test: ["CMD", "curl", "-fsk", "https://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s

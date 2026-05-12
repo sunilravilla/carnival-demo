@@ -1,0 +1,67 @@
+[
+  {
+    "id": "cucina",
+    "name": "Cucina del Capitano",
+    "cuisine": "Italian",
+    "deck": 11,
+    "location": "Deck 11 mid-ship",
+    "specialty": true,
+    "cover_charge": 18.00,
+    "hours": "17:30 - 21:30",
+    "available_times": ["17:30", "18:00", "18:30", "19:00", "19:30", "20:00", "20:30", "21:00"],
+    "image_keyword": "italian",
+    "headline_dish": "Pasta del Capitano with house-made fettuccine"
+  },
+  {
+    "id": "fahrenheit",
+    "name": "Fahrenheit 555 Steakhouse",
+    "cuisine": "Steakhouse",
+    "deck": 11,
+    "location": "Deck 11 forward",
+    "specialty": true,
+    "cover_charge": 49.00,
+    "hours": "17:30 - 22:00",
+    "available_times": ["17:30", "18:00", "19:00", "19:30", "20:30", "21:00"],
+    "image_keyword": "steak",
+    "headline_dish": "24-oz dry-aged porterhouse"
+  },
+  {
+    "id": "shaq",
+    "name": "Big Chicken by Shaq",
+    "cuisine": "Casual American",
+    "deck": 8,
+    "location": "Deck 8 promenade",
+    "specialty": false,
+    "cover_charge": 0.00,
+    "hours": "11:00 - 23:00",
+    "available_times": [],
+    "image_keyword": "chicken",
+    "headline_dish": "Classic chicken sandwich"
+  },
+  {
+    "id": "guys",
+    "name": "Guy's Burger Joint",
+    "cuisine": "Burgers",
+    "deck": 10,
+    "location": "Deck 10 lido",
+    "specialty": false,
+    "cover_charge": 0.00,
+    "hours": "11:00 - 18:00",
+    "available_times": [],
+    "image_keyword": "burger",
+    "headline_dish": "Plain Jane (free)"
+  },
+  {
+    "id": "rudi",
+    "name": "Rudi's Seagrill",
+    "cuisine": "Seafood",
+    "deck": 5,
+    "location": "Deck 5 atrium",
+    "specialty": true,
+    "cover_charge": 38.00,
+    "hours": "17:30 - 22:00",
+    "available_times": ["17:30", "18:00", "18:30", "19:30", "20:00", "21:00"],
+    "image_keyword": "seafood",
+    "headline_dish": "Pan-seared branzino"
+  }
+]

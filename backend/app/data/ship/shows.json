@@ -1,0 +1,35 @@
+[
+  {
+    "id": "punchliner-9pm",
+    "name": "Punchliner Comedy Club",
+    "venue": "Limelight Lounge",
+    "deck": 4,
+    "time": "21:00",
+    "duration_min": 45,
+    "rating": "Adults only (18+)",
+    "available_seats": 42,
+    "headliner": "Mike Vecchione"
+  },
+  {
+    "id": "playlist-8pm",
+    "name": "Playlist Productions: Heart of Soul",
+    "venue": "Liquid Lounge",
+    "deck": 4,
+    "time": "20:00",
+    "duration_min": 50,
+    "rating": "All ages",
+    "available_seats": 180,
+    "headliner": "Cast ensemble"
+  },
+  {
+    "id": "piano-1030",
+    "name": "Piano Bar 88",
+    "venue": "Piano Bar",
+    "deck": 5,
+    "time": "22:30",
+    "duration_min": 90,
+    "rating": "All ages",
+    "available_seats": 36,
+    "headliner": "Crystal Marie"
+  }
+]
