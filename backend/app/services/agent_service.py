@@ -241,7 +241,7 @@ def _tool_cancel_reservation(args: Dict[str, Any]) -> Dict[str, Any]:
     if not current:
         return {
             "card": "error",
-            "error": "The Garcias don't have any reservations booked this session to cancel.",
+            "error": "No reservations are currently booked to cancel.",
         }
 
     removed = ship_data.remove_reservation(query)
@@ -500,7 +500,7 @@ def _tool_get_ship_info(args: Dict[str, Any]) -> Dict[str, Any]:
         "kids": "Camp Ocean (Kids Club): Deck 12. Ages 2–11. Hours 9 AM–10 PM. Circle C (tweens 12–14) also on Deck 12.",
         "gym": "Fitness Center: Deck 12, adjacent to Cloud 9 Spa. Open 6 AM–10 PM. Complimentary.",
         "medical": "Medical Center: Deck 0 Forward. Open 24/7 for emergencies; scheduled hours 8–11 AM and 4–7 PM. Dial ext. 911 for emergencies.",
-        "muster": "Garcia family muster station: Station G, Deck 4 Starboard.",
+        "muster": "Your muster station: Station G, Deck 4 Starboard.",
         "shopping": "Ocean Plaza shops: Deck 5, open 6 PM–midnight at sea.",
         "dining": "Specialty dining requires reservations. Big Chicken (Deck 8) and Guy's Burger Joint (Deck 10) are walk-up and free.",
         "photo": "Photo Gallery: Deck 5. Unlimited prints + digital download package: $199.",
@@ -694,8 +694,7 @@ VOYAGE
   Itinerary: Miami → Sea → Sea → Celebration Key Bahamas → Cozumel → Sea → Miami
 
 GUEST
-  Mr. & Mrs. Garcia | Cabin 8245 (Deck 8 Midship) | Party of 2
-  VIFP Tier: Gold — benefits: 10% spa discount, 10% casino match-play, priority boarding
+  (see dynamic session state below for current guest details)
 
 DINING (specialty restaurants require reservations unless noted)
   Cucina del Capitano | Deck 11 Midship | Italian | Cover $18/person
@@ -764,7 +763,7 @@ SHIP AMENITIES
   Guest Services: Deck 5 | Open 24/7
 
 MUSTER & SAFETY
-  Garcia family muster station: Station G, Deck 4 Starboard
+  Muster station: Station G, Deck 4 Starboard
 
 TODAY'S SCHEDULE (Day 4 — Sea Day)
   10:00 AM  Pool Deck Reggae Band (Resort Pool, Deck 10)
@@ -799,6 +798,7 @@ def _build_system_prompt(folio_balance: float, reservations: list, drink_package
     pkg_str = drink_package or "none active"
     dynamic = (
         f"\nCURRENT SESSION STATE\n"
+        f"  Guest first name: {guest_first_name}\n"
         f"  Folio balance: ${folio_balance:.2f}\n"
         f"  Reservations this session: {res_str}\n"
         f"  Drink package: {pkg_str}\n"
@@ -869,7 +869,7 @@ def _build_system_prompt(folio_balance: float, reservations: list, drink_package
     )
 
 
-def _build_finalize_prompt(tool_name: str, tool_result: Dict[str, Any]) -> str:
+def _build_finalize_prompt(tool_name: str, tool_result: Dict[str, Any], guest_first_name: str = "there") -> str:
     """Plain-text finalize prompt — natural concierge reply after a tool runs."""
     extra = ""
     if tool_name == "modify_dining" and tool_result.get("old_time_human"):
@@ -897,7 +897,7 @@ def _build_finalize_prompt(tool_name: str, tool_result: Dict[str, Any]) -> str:
             "Suggest one of these by name after confirming the dinner booking."
         )
     return (
-        "You are Marina, the warm onboard concierge for the Garcia family aboard Carnival Celebration.\n"
+        f"You are Marina, the warm onboard concierge aboard Carnival Celebration. You are speaking with {guest_first_name}.\n"
         "A tool just ran and returned data. Speak directly to the guest in 1–3 natural, friendly sentences.\n"
         "Be specific: mention the actual venue name, time, price, or detail from the result.\n"
         "Do NOT mention tools, JSON, or technical details.\n"
@@ -907,7 +907,7 @@ def _build_finalize_prompt(tool_name: str, tool_result: Dict[str, Any]) -> str:
         + extra
         + f"\n\nTool called: {tool_name}\n"
         f"Result: {tool_result}\n\n"
-        "Your reply to the Garcia family:"
+        f"Your reply to {guest_first_name}:"
     )
 
 
@@ -982,8 +982,8 @@ class AgentService:
                     self.llm.chat_completion,
                     [
                         {"role": "system", "content": (
-                            "You are Marina, Carnival's onboard concierge. A booking attempt just failed. "
-                            "Tell the Garcia family in 1-2 warm, helpful sentences what went wrong and what they can do instead. "
+                            f"You are Marina, Carnival's onboard concierge. You are speaking with {guest_first_name}. A booking attempt just failed. "
+                            f"Tell {guest_first_name} in 1-2 warm, helpful sentences what went wrong and what they can do instead. "
                             "Do not mention tools or technical details. Be specific about the alternatives."
                         )},
                         {"role": "user", "content": error_msg},
@@ -1006,7 +1006,7 @@ class AgentService:
                 }
 
         finalize_messages: List[Dict[str, str]] = [
-            {"role": "system", "content": _build_finalize_prompt(tool_name, tool_result)}
+            {"role": "system", "content": _build_finalize_prompt(tool_name, tool_result, guest_first_name)}
         ]
         for m in messages[-4:]:
             finalize_messages.append({"role": m["role"], "content": m["content"]})
@@ -1118,8 +1118,8 @@ class AgentService:
                     self.llm.chat_completion,
                     [
                         {"role": "system", "content": (
-                            "You are Marina, Carnival's onboard concierge. A booking attempt just failed. "
-                            "Tell the Garcia family in 1-2 warm, helpful sentences what went wrong and what they can do instead. "
+                            f"You are Marina, Carnival's onboard concierge. You are speaking with {guest_first_name}. A booking attempt just failed. "
+                            f"Tell {guest_first_name} in 1-2 warm, helpful sentences what went wrong and what they can do instead. "
                             "Do not mention tools or technical details."
                         )},
                         {"role": "user", "content": error_msg},
@@ -1133,7 +1133,7 @@ class AgentService:
             return
 
         # Phase 3: Stream the finalize reply
-        finalize_sys = _build_finalize_prompt(tool_name, tool_result)
+        finalize_sys = _build_finalize_prompt(tool_name, tool_result, guest_first_name)
         finalize_msgs = [{"role": "system", "content": finalize_sys}]
         for m in messages[-4:]:
             finalize_msgs.append({"role": m["role"], "content": m["content"]})

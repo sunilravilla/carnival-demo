@@ -96,12 +96,13 @@ export default function VoyageProgressBar() {
   if (!guestData?.cruise) return null;
 
   const { currentDay, totalDays, itinerary = [] } = guestData.cruise;
+  const firstName = guestData.primaryFirstName || guestData.name?.split(' ')[0] || '';
   const days = Array.from({ length: totalDays }, (_, i) => i + 1);
   const progressPct = ((currentDay - 1) / Math.max(totalDays - 1, 1)) * 100;
 
   return (
     <div style={S.wrap}>
-      <div style={S.label}>Your Voyage</div>
+      <div style={S.label}>{firstName ? `${firstName}'s Voyage` : 'Your Voyage'}</div>
       <div style={S.track}>
         <div style={S.line} />
         <div style={S.progress(progressPct)} />

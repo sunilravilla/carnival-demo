@@ -14,9 +14,11 @@ const S = {
     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
   },
   left: { display: 'flex', alignItems: 'center', gap: 10 },
-  logo: { height: 28, objectFit: 'contain', filter: 'brightness(0) invert(1)' },
+  logo: { height: 38, objectFit: 'contain', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))', alignSelf: 'flex-start', marginTop: -2 },
   guestName: {
-    color: '#fff', fontSize: 15, fontWeight: 700,
+    color: '#fff', fontSize: 16, fontWeight: 700,
+    fontFamily: "'Playfair Display', serif",
+    letterSpacing: 0.3,
     textShadow: '0 1px 4px rgba(0,0,0,0.3)',
   },
   right: { display: 'flex', alignItems: 'center', gap: 8 },
@@ -65,10 +67,7 @@ export default function GuestHeader({ onAdminClick, onSwitchGuest }) {
     <div style={S.header}>
       <div style={S.row1}>
         <div style={S.left}>
-          <img src="/carnival-logo.png" alt="Carnival" style={S.logo} />
-          <div style={S.guestName}>
-            {primaryFirstName ? `${primaryFirstName}'s Voyage` : name}
-          </div>
+          <img src="/carnival-logo-white.png" alt="Carnival" style={S.logo} />
         </div>
         <div style={S.right}>
           <div style={S.vifpBadge(vifpTier)}>{vifpTier} VIFP</div>

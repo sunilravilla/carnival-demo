@@ -471,7 +471,7 @@ export default function ChatInterface({
       <header style={s.header}>
         <div style={s.headerInner}>
           <div style={s.headerLeft}>
-            <span style={s.logoChip}>{branding.logoText}</span>
+            <img src="/carnival-logo-white.png" alt="Carnival" style={{ height: 28, width: 'auto', flexShrink: 0, filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))' }} />
             <div style={s.headerTitle}>{branding.headerTitle}</div>
           </div>
           <div style={s.headerRight}>
@@ -682,8 +682,10 @@ const s = {
   },
   headerTitle: {
     fontWeight: 700,
-    fontSize: 15,
+    fontSize: 17,
     lineHeight: 1.2,
+    fontFamily: "'Playfair Display', serif",
+    letterSpacing: 0.3,
     whiteSpace: "nowrap",
     overflow: "hidden",
     textOverflow: "ellipsis",

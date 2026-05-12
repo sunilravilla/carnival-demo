@@ -7,7 +7,6 @@ const S = {
     position: 'relative',
     height: 180,
     overflow: 'hidden',
-    background: 'linear-gradient(135deg, #0a2744 0%, #014E8F 50%, #006994 100%)',
     flexShrink: 0,
   },
   // Decorative wave overlay
@@ -92,31 +91,27 @@ export default function HeroBanner() {
   return (
     <div style={S.wrap}>
       <style>{`
-        @keyframes heroPan {
-          0%   { background-position: 0% 50%; }
-          50%  { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
-        }
         @keyframes bannerFadeUp {
           from { opacity: 0; transform: translateY(12px); }
           to   { opacity: 1; transform: translateY(0); }
         }
       `}</style>
 
-      {/* Animated ocean shimmer */}
+      {/* Ship photo background */}
+      <img
+        src="/carnival-ship-hero.jpg"
+        alt=""
+        style={{
+          position: 'absolute', inset: 0,
+          width: '100%', height: '100%',
+          objectFit: 'cover', objectPosition: 'center 55%',
+        }}
+      />
+
+      {/* Dark gradient overlay for text legibility */}
       <div style={{
         position: 'absolute', inset: 0,
-        background: 'linear-gradient(135deg, #0a2744 0%, #014E8F 40%, #006994 70%, #0a4060 100%)',
-        backgroundSize: '300% 300%',
-        animation: 'heroPan 18s ease infinite',
-      }} />
-
-      {/* Ship decorative silhouette dots */}
-      <div style={{
-        position: 'absolute',
-        right: 0, top: 0, bottom: 0,
-        width: '45%',
-        background: 'radial-gradient(ellipse at 80% 50%, rgba(255,255,255,0.04) 0%, transparent 70%)',
+        background: 'linear-gradient(to bottom, rgba(10,39,68,0.55) 0%, rgba(1,78,143,0.75) 100%)',
       }} />
 
       {/* Wave at bottom */}
