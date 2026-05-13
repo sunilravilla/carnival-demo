@@ -9,7 +9,7 @@
   "theme_color": "#B61B38",
   "icons": [
     {
-      "src": "/carnival-logo-white.png",
+      "src": "/carnival-logo.png",
       "sizes": "any",
       "type": "image/png",
       "purpose": "any maskable"
