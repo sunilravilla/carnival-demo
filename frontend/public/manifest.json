@@ -1,0 +1,18 @@
+{
+  "name": "Carnival Onboard Concierge",
+  "short_name": "Carnival",
+  "description": "Your AI-powered onboard concierge for Carnival Celebration",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#B61B38",
+  "theme_color": "#B61B38",
+  "icons": [
+    {
+      "src": "/carnival-logo-white.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
