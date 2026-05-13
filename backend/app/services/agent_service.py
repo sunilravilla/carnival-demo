@@ -448,7 +448,7 @@ def _tool_get_weather(_args: Dict[str, Any]) -> Dict[str, Any]:
     result = {
         "card": "weather",
         "location": "Cozumel, Mexico",
-        "port_date": "Tomorrow, May 6",
+        "port_date": "Today, May 12",
         "cozumel": cozumel,
         "onboard": {
             "temp_f": 84,
@@ -515,11 +515,12 @@ def _tool_get_ship_info(args: Dict[str, Any]) -> Dict[str, Any]:
 def _tool_modify_dining(args: Dict[str, Any]) -> Dict[str, Any]:
     restaurant_query = (args.get("restaurant") or args.get("name") or "").strip()
     new_time = (args.get("new_time") or args.get("time") or "").strip()
+    new_party_size = int(args.get("new_party_size") or args.get("party_size") or 0) or None
 
     if not restaurant_query or not new_time:
         return {"card": "error", "error": "I need the restaurant name and the new time to make the change."}
 
-    changed = ship_data.modify_reservation(restaurant_query, new_time)
+    changed = ship_data.modify_reservation(restaurant_query, new_time, new_party_size)
     if not changed:
         dining = [r.get("restaurant_name", "") for r in ship_data.list_reservations() if r.get("kind") == "dining"]
         if not dining:
@@ -688,10 +689,10 @@ _STATIC_KNOWLEDGE = """
 
 VOYAGE
   Ship: Carnival Celebration | 7-Night Western Caribbean
-  Departure: Miami, FL — May 2, 2026 | Return: May 9, 2026
-  Today: Day 4 of 7 (Tue, May 6 — Sea Day)
-  Tomorrow: Cozumel, Mexico (arrival 7 AM, all aboard 16:30)
-  Itinerary: Miami → Sea → Sea → Celebration Key Bahamas → Cozumel → Sea → Miami
+  Departure: Miami, FL — May 9, 2026 | Return: May 15, 2026
+  Today: Day 4 of 7 (Tue, May 12 — Cozumel Port Day)
+  Tomorrow (Day 5): Celebration Key, Bahamas (all aboard 17:00)
+  Itinerary: Miami → Sea Day → Sea Day → Cozumel → Celebration Key → Sea Day → Miami
 
 GUEST
   (see dynamic session state below for current guest details)
@@ -719,7 +720,7 @@ ENTERTAINMENT
   Piano Bar 88 | 10:30 PM | 90 min | Crystal Marie
     Venue: Piano Bar, Deck 5 | 36 seats remaining | All ages
 
-EXCURSIONS (Cozumel, tomorrow May 6)
+EXCURSIONS (Cozumel, today May 12)
   Cozumel Reef Snorkel & Beach Break
     Meet: 9:15 AM, Deck 0 Aft Gangway | Duration: 3.5 hrs | $79.99/person | Age 8+
     Bring: swimsuit, reef-safe sunscreen, towel (provided onboard), water shoes optional
@@ -728,7 +729,7 @@ EXCURSIONS (Cozumel, tomorrow May 6)
     Meet: 8:45 AM, Deck 0 Aft Gangway | Duration: 5.5 hrs | $129.99/person | Age 12+
     Bring: comfortable walking shoes, hat, sunscreen, light jacket
     Cancel: free up to 24 hrs before sailing
-  Celebration Key Beachfront Cabana (May 5 — already passed)
+  Celebration Key Beachfront Cabana (May 13 — tomorrow)
 
 DRINK PACKAGES
   CHEERS! | $83.94/person/day | Unlimited cocktails, wine, beer, sodas, specialty coffee
@@ -765,7 +766,7 @@ SHIP AMENITIES
 MUSTER & SAFETY
   Muster station: Station G, Deck 4 Starboard
 
-TODAY'S SCHEDULE (Day 4 — Sea Day)
+TODAY'S SCHEDULE (Day 4 — Cozumel Port Day)
   10:00 AM  Pool Deck Reggae Band (Resort Pool, Deck 10)
   11:30 AM  Belly Flop Contest (Resort Pool)
    2:00 PM  90s Music Trivia (Alchemy Bar, Deck 6)
@@ -785,7 +786,7 @@ POLICIES
   Smoking: Deck 11 Aft starboard only
   Tonight is Formal Night — Smart Casual minimum in all venues after 6 PM
 
-DEBARKATION (May 9, Miami)
+DEBARKATION (May 15, Miami)
   Self-assist (carry own bags): from 7:30 AM | Porter-assist: by 9:30 AM
   Customs: Miami Terminal F | Color-coded luggage tags distributed tonight
 
@@ -805,7 +806,7 @@ def _build_system_prompt(folio_balance: float, reservations: list, drink_package
     )
     tools_list = (
         "book_dining(restaurant,time,party_size), book_show(show,count), "
-        "modify_dining(restaurant,new_time), cancel_reservation(name), switch_reservation(cancel,to,type,count), "
+        "modify_dining(restaurant,new_time,new_party_size?), cancel_reservation(name), switch_reservation(cancel,to,type,count), "
         "get_my_reservations(), book_spa_treatment(treatment,time), "
         "get_excursion(name), get_today_schedule(), get_folio(), "
         "upgrade_drink_package(package,days), get_weather(), "
@@ -846,6 +847,9 @@ def _build_system_prompt(folio_balance: float, reservations: list, drink_package
         'User: "change dinner reservation to 8:30 PM" / "reschedule my dinner to 8" / "change dinner time"\n'
         '{"tool":"modify_dining","args":{"restaurant":"dinner","new_time":"20:30"},'
         '"say":"Updating your dinner reservation to 8:30 PM.","hints":["Check my reservations","Book a show after dinner","What\'s the dress code?"]}\n\n'
+        'User: "change my Italian dinner to 8 PM for 3 people"\n'
+        '{"tool":"modify_dining","args":{"restaurant":"Italian","new_time":"20:00","new_party_size":3},'
+        '"say":"Updated your Cucina reservation to 8 PM for 3 guests.","hints":["Check my reservations","Book a show after dinner","What\'s the dress code?"]}\n\n'
         'User: "what time does the comedy show start"\n'
         '{"tool":null,"args":{},"say":"The Punchliner Comedy Club with Mike Vecchione starts at 9 PM in the Liquid Lounge on Deck 7 — 42 seats still available.",'
         '"hints":["Book 2 seats for comedy","What other shows are on?","Book dinner before the show"]}\n\n'

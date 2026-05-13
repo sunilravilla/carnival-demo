@@ -12,6 +12,7 @@ import copy
 import json
 import logging
 import os
+from datetime import date as _date, timedelta as _timedelta
 from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
@@ -98,7 +99,33 @@ def _match_one(items: List[Dict[str, Any]], query: str, fields: List[str]) -> Op
 
 
 def get_cruise() -> Dict[str, Any]:
-    return copy.deepcopy(_cruise)
+    c = copy.deepcopy(_cruise)
+    today = _date.today()
+
+    # Always pin to Day 4 — demo scenario is always Cozumel port day
+    day_num = 4
+    departure = today - _timedelta(days=3)   # Day 1 = 3 days ago
+    return_date = today + _timedelta(days=3)  # Day 7 = 3 days ahead
+
+    c["current_day"] = day_num
+    c["departure_date"] = departure.isoformat()
+    c["return_date"] = return_date.isoformat()
+
+    itinerary = c.get("itinerary", [])
+    today_stop = itinerary[day_num - 1] if day_num <= len(itinerary) else "At Sea"
+    day5_stop = itinerary[4] if len(itinerary) >= 5 else "Celebration Key, Bahamas"
+
+    day_names = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    c["today_label"] = today_stop
+    c["today_weekday"] = day_names[today.weekday()]
+
+    # Next port is always Day 5 = tomorrow
+    c["next_port"] = {
+        "name": day5_stop,
+        "arrival_date": (today + _timedelta(days=1)).isoformat(),
+        "all_aboard_time": "17:00",
+    }
+    return c
 
 
 def get_guest() -> Dict[str, Any]:
@@ -136,7 +163,8 @@ def find_drink_package(query: str) -> Optional[Dict[str, Any]]:
 
 def remaining_cruise_days() -> int:
     """Days remaining including today's evening + future days, used for drink-package math."""
-    return max(1, _cruise["total_days"] - _cruise["current_day"])
+    cruise = get_cruise()
+    return max(1, cruise["total_days"] - cruise["current_day"])
 
 
 # ---------------------------------------------------------------------------
@@ -180,8 +208,8 @@ _DINING_GENERIC_WORDS = frozenset({
 })
 
 
-def modify_reservation(query: str, new_time: str) -> Optional[Dict[str, Any]]:
-    """Update the time of a dining reservation.
+def modify_reservation(query: str, new_time: str, new_party_size: int = None) -> Optional[Dict[str, Any]]:
+    """Update the time (and optionally party size) of a dining reservation.
 
     Strategy:
     - Only 1 dining reservation → always modify it (LLM passes cuisine/generic names
@@ -197,6 +225,8 @@ def modify_reservation(query: str, new_time: str) -> Optional[Dict[str, Any]]:
         old_time = r["time"]
         r["time"] = new_time
         r["time_human"] = _format_time(new_time)
+        if new_party_size and new_party_size > 0:
+            r["party_size"] = new_party_size
         logger.info("Reservation modified (only one): %s %s → %s", r["restaurant_name"], old_time, new_time)
         return {
             "restaurant_name": r["restaurant_name"],
@@ -224,6 +254,8 @@ def modify_reservation(query: str, new_time: str) -> Optional[Dict[str, Any]]:
     old_time = target["time"]
     target["time"] = new_time
     target["time_human"] = _format_time(new_time)
+    if new_party_size and new_party_size > 0:
+        target["party_size"] = new_party_size
     logger.info("Reservation modified: %s %s → %s", target["restaurant_name"], old_time, new_time)
     return {
         "restaurant_name": target["restaurant_name"],
