@@ -85,23 +85,31 @@ function useWeather(port) {
 
   useEffect(() => {
     if (!port) return;
-    // Port coordinates
+    // Port coordinates (case-insensitive substring match against port label)
     const coords = {
-      Nassau:   { lat: 25.05, lon: -77.35 },
-      Cozumel:  { lat: 20.42, lon: -86.92 },
-      Belize:   { lat: 17.50, lon: -88.19 },
-      Miami:    { lat: 25.77, lon: -80.19 },
+      nassau:           { lat: 25.05, lon: -77.35 },
+      cozumel:          { lat: 20.42, lon: -86.92 },
+      belize:           { lat: 17.50, lon: -88.19 },
+      miami:            { lat: 25.77, lon: -80.19 },
+      'celebration key':{ lat: 26.69, lon: -78.36 },
+      'grand turk':     { lat: 21.46, lon: -71.13 },
+      'half moon cay':  { lat: 24.57, lon: -75.95 },
+      'amber cove':     { lat: 19.84, lon: -70.71 },
     };
-    const key = Object.keys(coords).find(k => port.includes(k));
+    const p = port.toLowerCase();
+    const key = Object.keys(coords).find(k => p.includes(k));
     if (!key) return;
     const { lat, lon } = coords[key];
-    fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&temperature_unit=fahrenheit`)
+    let cancelled = false;
+    fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&temperature_unit=fahrenheit&windspeed_unit=mph`)
       .then(r => r.json())
       .then(data => {
+        if (cancelled) return;
         const cw = data.current_weather;
         if (cw) setWeather({ temp: Math.round(cw.temperature), code: cw.weathercode, wind: Math.round(cw.windspeed) });
       })
       .catch(() => {});
+    return () => { cancelled = true; };
   }, [port]);
 
   return weather;
@@ -132,7 +140,9 @@ export default function TodayCard() {
   const { todayLabel, nextPort } = guestData.cruise;
 
   const isSeaDay = !todayLabel || todayLabel === 'At Sea';
-  const portName = nextPort?.name || todayLabel;
+  // Weather should reflect where we ARE today (port day) — fall back to next
+  // port only on sea days when there's no current-location signal.
+  const portName = isSeaDay ? (nextPort?.name || '') : todayLabel;
   const weather = useWeather(portName);
 
   let countdown = null;
