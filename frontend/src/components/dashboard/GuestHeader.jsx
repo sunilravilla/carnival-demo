@@ -1,12 +1,16 @@
 import { useState } from 'react';
 import { useGuest } from '../../context/GuestContext';
+import { branding, isVirgin } from '../../styles/branding';
 
-const VIFP_COLORS = { Platinum: '#6B7CFF', Gold: '#C8952A', Red: '#B61B38' };
+const TIER_COLORS = branding.tierColors || {};
+const TIER_LABEL = branding.tierLabel || 'Tier';
+const ACCENT = branding.accentColor || '#FFC72C';
+const HEADER_GRADIENT = branding.headerGradient || 'linear-gradient(135deg, #B61B38 0%, #014E8F 100%)';
 
 const S = {
   header: {
     position: 'sticky', top: 0, zIndex: 100,
-    background: 'linear-gradient(135deg, #B61B38 0%, #014E8F 100%)',
+    background: HEADER_GRADIENT,
     padding: '12px 16px 10px',
     boxShadow: '0 2px 12px rgba(0,0,0,0.25)',
   },
@@ -15,6 +19,18 @@ const S = {
   },
   left: { display: 'flex', alignItems: 'center', gap: 10 },
   logo: { height: 38, objectFit: 'contain', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))', alignSelf: 'flex-start', marginTop: -2 },
+  logoCard: {
+    height: 38,
+    background: '#fff',
+    borderRadius: 6,
+    padding: '4px 8px',
+    boxShadow: '0 2px 6px rgba(0,0,0,0.25)',
+    display: 'flex',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    marginTop: -2,
+  },
+  logoCardImg: { height: '100%', width: 'auto', objectFit: 'contain' },
   guestName: {
     color: '#fff', fontSize: 16, fontWeight: 700,
     fontFamily: "'Playfair Display', serif",
@@ -23,7 +39,7 @@ const S = {
   },
   right: { display: 'flex', alignItems: 'center', gap: 8 },
   vifpBadge: (tier) => ({
-    background: VIFP_COLORS[tier] || '#888',
+    background: TIER_COLORS[tier] || '#888',
     color: '#fff', fontSize: 11, fontWeight: 700,
     padding: '3px 10px', borderRadius: 20,
     letterSpacing: 0.5,
@@ -42,7 +58,7 @@ const S = {
     padding: '2px 10px', borderRadius: 12,
   },
   dayChip: {
-    color: '#FFC72C', fontSize: 12, fontWeight: 700,
+    color: ACCENT, fontSize: 12, fontWeight: 700,
   },
 };
 
@@ -67,10 +83,16 @@ export default function GuestHeader({ onAdminClick, onSwitchGuest }) {
     <div style={S.header}>
       <div style={S.row1}>
         <div style={S.left}>
-          <img src="/carnival-logo-white.png" alt="Carnival" style={S.logo} />
+          {isVirgin ? (
+            <div style={S.logoCard}>
+              <img src={branding.logo || '/virgin-logo.jpg'} alt={branding.logoText} style={S.logoCardImg} />
+            </div>
+          ) : (
+            <img src={branding.logoWhite || '/carnival-logo-white.png'} alt={branding.logoText} style={S.logo} />
+          )}
         </div>
         <div style={S.right}>
-          <div style={S.vifpBadge(vifpTier)}>{vifpTier} VIFP</div>
+          <div style={S.vifpBadge(vifpTier)}>{vifpTier} {TIER_LABEL}</div>
           {onSwitchGuest && (
             <button
               onClick={onSwitchGuest}

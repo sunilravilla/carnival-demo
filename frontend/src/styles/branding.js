@@ -1,61 +1,136 @@
 // Centralised brand selection for the demo.
-// Set VITE_DEMO_BRAND=carnival in the frontend env to enable the Carnival demo skin.
-// Falls back to HPE/ARIA branding for the default codebase.
+// Set VITE_DEMO_BRAND=carnival | virgin | hpe in the frontend env.
+// Default = hpe (the upstream codebase).
 import hpeTheme from "./hpeTheme";
 import carnivalTheme from "./carnivalTheme";
+import virginTheme from "./virginTheme";
 
 const brand = (import.meta.env.VITE_DEMO_BRAND || "hpe").toLowerCase();
 
 export const isCarnival = brand === "carnival";
+export const isVirgin = brand === "virgin";
+export const isHpe = !isCarnival && !isVirgin;
 
-export const activeTheme = isCarnival ? carnivalTheme : hpeTheme;
+export const activeTheme = isVirgin
+  ? virginTheme
+  : isCarnival
+  ? carnivalTheme
+  : hpeTheme;
 
-export const branding = isCarnival
-  ? {
-      logoText: "Carnival",
-      headerTitle: "Onboard AI Concierge",
-      headerSubtitle: "",
-      avatarName: "Marina",
-      avatarRole: "Your Onboard Guide",
-      avatarInitials: "MA",
-      emptyHeadline: "Welcome aboard, Garcia family",
-      emptySubtext:
-        'Try: "Book me a table at the Italian place at 7:30" — voice or text.',
-      conversationTitle: "Concierge Chat",
-      inputPlaceholder: "Ask Marina…",
-      useAgentEndpoint: true,
-      // Disabled until Qwen Omni Vision is back online and prop JPEGs are dropped
-      // into frontend/public/demo-props/ + backend/app/data/demo_props/.
-      enableShowThis: false,
-      // CopilotKit / AG-UI provider wrapper. When true, ChatInterface mounts
-      // <CopilotKit runtimeUrl="/api/copilotkit"> and shares cruise/guest/folio
-      // state with the LLM via useCopilotReadable. Keep false until the
-      // backend deps + endpoint are verified live (see SESSION_HANDOFF.md).
-      useCopilotKit: false,
-      defaultLanguage: "en",
-      // Toggle between photo-realistic sprite-sheet Marina (true) and the
-      // illustrated SVG Marina (false). Default true; flip to false to
-      // revert to the SVG character without code changes. PhotoMarina
-      // also auto-falls-back to the SVG if any sprite file is missing.
-      useSpriteAvatar: true,
-    }
-  : {
-      logoText: "HPE",
-      headerTitle: "ARIA – AI Product Advisor",
-      headerSubtitle: "Powered by HPE AI Services • AI Factory Portfolio",
-      avatarName: "ARIA",
-      avatarRole: "AI-Powered Product Advisor",
-      avatarInitials: "AR",
-      emptyHeadline: "Welcome to HPE AI Factory",
-      emptySubtext:
-        "Ask ARIA about the HPE AI Factory Portfolio — in English or Spanish.",
-      conversationTitle: "Conversation History",
-      inputPlaceholder:
-        "Ask about HPE AI Factory... / Pregunta sobre HPE AI Factory...",
-      useAgentEndpoint: false,
-      enableShowThis: false,
-      defaultLanguage: "en",
-      useSpriteAvatar: false,
-    };
+const virginBranding = {
+  logoText: "Virgin Voyages",
+  headerTitle: "Sailor App",
+  headerSubtitle: "It's Not a Cruise · Adult by Design",
+  avatarName: "Ruby",
+  avatarRole: "Your Sailor Concierge",
+  avatarInitials: "RB",
+  emptyHeadline: "Honey, you're home.",
+  emptySubtext:
+    'Try: "Bring me a bottle to the pool" — or shake your phone. Ruby\'s listening.',
+  conversationTitle: "Chat with Ruby",
+  inputPlaceholder: "Ask Ruby…",
+  useAgentEndpoint: true,
+  enableShowThis: false,
+  useCopilotKit: false,
+  defaultLanguage: "en",
+  // Sprite-sheet avatar built for Marina — disable for Virgin until a
+  // Ruby sprite ships; SVG/initials fallback is on-brand enough for the demo.
+  useSpriteAvatar: false,
+  // Visual assets — official Virgin Voyages logo + Scarlet Lady photo.
+  logo: "/virgin-logo.jpg",
+  logoWhite: "/virgin-logo-white.svg",
+  heroImage: "/scarlet-lady-hero.jpg",
+  // Tolopea → Guardsman Red is the signature brand gradient.
+  headerGradient: "linear-gradient(135deg, #2E0444 0%, #CC0000 100%)",
+  // Subtle so the Scarlet Lady photo shines through, with just enough darkening
+  // at the bottom for white text legibility.
+  heroOverlay: "linear-gradient(180deg, rgba(46,4,68,0.30) 0%, rgba(10,10,10,0.70) 100%)",
+  tierLabel: "Sailor",  // "Mega RockStar Sailor", "Sea Terrace Sailor"
+  tierColors: {
+    "Mega RockStar": "#D4A862",   // gold — most prestigious
+    "RockStar":      "#2E0444",   // Tolopea — deep prestige
+    "Sea Terrace":   "#1A1A1A",   // charcoal — contrasts the red header
+    "Sea View":      "#6DBDD6",   // Viking blue — fresh sea-view
+    "Insider":       "#8A8A8A",   // neutral
+  },
+  accentColor: "#CC0000",
+  goldColor: "#D4A862",
+  quickChips: [
+    { icon: "🍽️", label: "Book Extra Virgin for 7:30" },
+    { icon: "🎭", label: "2 seats for Persephone tonight" },
+    { icon: "🥂", label: "Shake — bring me champagne" },
+    { icon: "💃", label: "What should I wear for Scarlet Night?" },
+    { icon: "🎧", label: "What's on at The Manor tonight?" },
+  ],
+};
+
+const carnivalBranding = {
+  logoText: "Carnival",
+  headerTitle: "Onboard AI Concierge",
+  headerSubtitle: "",
+  avatarName: "Marina",
+  avatarRole: "Your Onboard Guide",
+  avatarInitials: "MA",
+  emptyHeadline: "Welcome aboard, Garcia family",
+  emptySubtext:
+    'Try: "Book me a table at the Italian place at 7:30" — voice or text.',
+  conversationTitle: "Concierge Chat",
+  inputPlaceholder: "Ask Marina…",
+  useAgentEndpoint: true,
+  enableShowThis: false,
+  useCopilotKit: false,
+  defaultLanguage: "en",
+  useSpriteAvatar: true,
+  logo: "/carnival-logo.png",
+  logoWhite: "/carnival-logo-white.png",
+  heroImage: "/carnival-ship-hero.jpg",
+  headerGradient: "linear-gradient(135deg, #B61B38 0%, #014E8F 100%)",
+  heroOverlay: "linear-gradient(to bottom, rgba(10,39,68,0.55) 0%, rgba(1,78,143,0.75) 100%)",
+  tierLabel: "VIFP",
+  tierColors: { Platinum: "#6B7CFF", Gold: "#C8952A", Red: "#B61B38" },
+  accentColor: "#FFC72C",
+  goldColor: "#FFC72C",
+  quickChips: [
+    { icon: "🍽️", label: "Book Italian for 7:30" },
+    { icon: "🎭", label: "2 seats for 9 PM comedy" },
+    { icon: "⛵", label: "What time is the Cozumel snorkel?" },
+    { icon: "💳", label: "What have I spent so far?" },
+    { icon: "🥂", label: "Add CHEERS! for the rest of the cruise" },
+  ],
+};
+
+const hpeBranding = {
+  logoText: "HPE",
+  headerTitle: "ARIA – AI Product Advisor",
+  headerSubtitle: "Powered by HPE AI Services • AI Factory Portfolio",
+  avatarName: "ARIA",
+  avatarRole: "AI-Powered Product Advisor",
+  avatarInitials: "AR",
+  emptyHeadline: "Welcome to HPE AI Factory",
+  emptySubtext:
+    "Ask ARIA about the HPE AI Factory Portfolio — in English or Spanish.",
+  conversationTitle: "Conversation History",
+  inputPlaceholder:
+    "Ask about HPE AI Factory... / Pregunta sobre HPE AI Factory...",
+  useAgentEndpoint: false,
+  enableShowThis: false,
+  defaultLanguage: "en",
+  useSpriteAvatar: false,
+  logo: "/carnival-logo.png",
+  logoWhite: "/carnival-logo-white.png",
+  heroImage: "/carnival-ship-hero.jpg",
+  headerGradient: "linear-gradient(135deg, #01a982 0%, #00739d 100%)",
+  heroOverlay: "linear-gradient(to bottom, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.6) 100%)",
+  tierLabel: "Tier",
+  tierColors: {},
+  accentColor: "#01a982",
+  goldColor: "#FFC72C",
+};
+
+export const branding = isVirgin
+  ? virginBranding
+  : isCarnival
+  ? carnivalBranding
+  : hpeBranding;
 
 export default activeTheme;

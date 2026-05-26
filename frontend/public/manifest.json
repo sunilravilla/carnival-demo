@@ -1,18 +1,18 @@
 {
-  "name": "Carnival Onboard Concierge",
-  "short_name": "Carnival",
-  "description": "Your AI-powered onboard concierge for Carnival Celebration",
+  "name": "Virgin Voyages Sailor",
+  "short_name": "Sailor",
+  "description": "Your onboard AI concierge for Virgin Voyages — Adult by Design.",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#B61B38",
-  "theme_color": "#B61B38",
+  "background_color": "#2E0444",
+  "theme_color": "#CC0000",
   "icons": [
     {
-      "src": "/carnival-logo.png",
+      "src": "/virgin-logo.jpg",
       "sizes": "any",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/jpeg",
+      "purpose": "any"
     }
   ]
 }

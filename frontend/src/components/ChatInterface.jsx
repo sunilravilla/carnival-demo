@@ -11,7 +11,7 @@ import {
   generateAgentResponseStream,
   generate2DResponseElevenLabs,
 } from "../services/api";
-import { activeTheme as theme, branding, isCarnival } from "../styles/branding";
+import { activeTheme as theme, branding, isCarnival, isVirgin } from "../styles/branding";
 import { Menu, Settings, Trash2, Volume2, User, X } from "lucide-react";
 import GuestContext from "../context/GuestContext";
 
@@ -62,13 +62,10 @@ const detectLang = (text) => {
   return total > 0 && votes / total >= 0.35 ? "es" : "en";
 };
 
-// ─── Quick-action chips ──────────────────────────────────────────────────────
-const CHIPS = [
-  { icon: "🍽️", label: "Book Italian for 7:30" },
-  { icon: "🎭", label: "2 seats for 9 PM comedy" },
-  { icon: "⛵", label: "What time is the Cozumel snorkel?" },
+// ─── Quick-action chips (per-brand, configured in branding.js) ─────────────
+const CHIPS = branding.quickChips || [
   { icon: "💳", label: "What have I spent so far?" },
-  { icon: "🥂", label: "Add CHEERS! for the rest of the cruise" },
+  { icon: "📅", label: "Show my reservations" },
 ];
 
 // ─── Inject keyframes once ───────────────────────────────────────────────────
@@ -130,10 +127,13 @@ function playConfirmChime(cardPayload) {
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
 function MarinaAvatar({ size = 36, speaking = false }) {
+  // Photo-real concierge avatar. We reuse the existing Marina sprite for Ruby
+  // (Virgin) too — same face, different voice/persona. A dedicated Ruby photo
+  // can be dropped into /avatars/ruby-real/ later and we'll switch the src.
   return (
     <img
       src="/avatars/marina-real/marina_01_closed.png"
-      alt="Marina"
+      alt={branding.avatarName}
       style={{
         width: size,
         height: size,
@@ -143,7 +143,7 @@ function MarinaAvatar({ size = 36, speaking = false }) {
         border: `2px solid ${speaking ? C.gold : C.red}`,
         flexShrink: 0,
         boxShadow: speaking
-          ? `0 0 0 3px rgba(255,199,44,0.35)`
+          ? `0 0 0 3px rgba(212,168,98,0.35)`
           : `0 2px 8px rgba(0,0,0,0.18)`,
         transition: "border-color 0.3s, box-shadow 0.3s",
       }}
@@ -270,7 +270,7 @@ export default function ChatInterface({
       const last = messageHistoryRef.current.slice().reverse().find(m => m.role === "user");
       return copilotBridge.runViaCopilot({ userText: last?.content });
     }
-    if (isCarnival) {
+    if (branding.useAgentEndpoint) {
       return generateAgentResponseElevenLabs(
         conversationUuidRef.current,
         messageHistoryRef.current,
@@ -294,8 +294,8 @@ export default function ChatInterface({
   };
 
   const _handleResponse = async (userText, msgIndex, timestamp) => {
-    // Use SSE streaming for the Carnival concierge path
-    if (isCarnival && !copilotKitOn) {
+    // Use SSE streaming for any brand using the cruise concierge agent (Carnival, Virgin).
+    if (branding.useAgentEndpoint && !copilotKitOn) {
       streamTextRef.current = "";
       try {
         await generateAgentResponseStream(
@@ -359,7 +359,7 @@ export default function ChatInterface({
       return;
     }
 
-    // Non-streaming fallback (non-Carnival or CopilotKit path)
+    // Non-streaming fallback (non-agent brands or CopilotKit path)
     try {
       const response = await _run2DPipeline();
       messageHistoryRef.current.push({ role: "assistant", content: response.bot_text });
@@ -471,7 +471,13 @@ export default function ChatInterface({
       <header style={s.header}>
         <div style={s.headerInner}>
           <div style={s.headerLeft}>
-            <img src="/carnival-logo-white.png" alt="Carnival" style={{ height: 28, width: 'auto', flexShrink: 0, filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))' }} />
+            {isVirgin ? (
+              <div style={{ height: 28, background: '#fff', borderRadius: 5, padding: '3px 7px', display: 'flex', alignItems: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.2)', flexShrink: 0 }}>
+                <img src={branding.logo || "/virgin-logo.jpg"} alt={branding.logoText} style={{ height: '100%', width: 'auto', objectFit: 'contain' }} />
+              </div>
+            ) : (
+              <img src={branding.logoWhite || "/carnival-logo-white.png"} alt={branding.logoText} style={{ height: 28, width: 'auto', flexShrink: 0, filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))' }} />
+            )}
             <div style={s.headerTitle}>{branding.headerTitle}</div>
           </div>
           <div style={s.headerRight}>

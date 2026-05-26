@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { lookupGuest } from '../services/api';
+import { branding } from '../styles/branding';
 
 const S = {
   root: {
@@ -116,10 +117,10 @@ export default function GuestLookupScreen({ onGuestFound }) {
 
       <div style={S.card}>
         <div style={S.logoRow}>
-          <img src="/carnival-logo.png" alt="Carnival" style={S.logo} />
+          <img src={branding.logo || "/carnival-logo.png"} alt={branding.logoText} style={S.logo} />
         </div>
         <div style={S.header}>Your Voyage Profile</div>
-        <div style={S.shipLine}>Carnival Celebration · Western Caribbean · 7 Nights</div>
+        <div style={S.shipLine}>Scarlet Lady · Western Caribbean · 5 Nights</div>
 
         <form onSubmit={handleSubmit}>
           <label style={S.label} htmlFor="phone-input">Registered Mobile Number</label>

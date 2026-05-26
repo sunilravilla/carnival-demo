@@ -1,35 +1,68 @@
 [
   {
-    "id": "punchliner-9pm",
-    "name": "Punchliner Comedy Club",
-    "venue": "Limelight Lounge",
-    "deck": 4,
+    "id": "persephone-9pm",
+    "name": "Persephone",
+    "venue": "The Red Room",
+    "deck": 6,
     "time": "21:00",
-    "duration_min": 45,
-    "rating": "Adults only (18+)",
-    "available_seats": 42,
-    "headliner": "Mike Vecchione"
+    "duration_min": 60,
+    "rating": "18+",
+    "available_seats": 64,
+    "headliner": "Resident immersive cast"
   },
   {
-    "id": "playlist-8pm",
-    "name": "Playlist Productions: Heart of Soul",
-    "venue": "Liquid Lounge",
-    "deck": 4,
-    "time": "20:00",
-    "duration_min": 50,
-    "rating": "All ages",
-    "available_seats": 180,
-    "headliner": "Cast ensemble"
-  },
-  {
-    "id": "piano-1030",
-    "name": "Piano Bar 88",
-    "venue": "Piano Bar",
-    "deck": 5,
+    "id": "untitled-1030",
+    "name": "UNTITLED DANCESHOWPARTYTHING",
+    "venue": "The Manor",
+    "deck": 6,
     "time": "22:30",
-    "duration_min": 90,
-    "rating": "All ages",
-    "available_seats": 36,
-    "headliner": "Crystal Marie"
+    "duration_min": 75,
+    "rating": "18+",
+    "available_seats": 120,
+    "headliner": "Resident dance company + live DJ"
+  },
+  {
+    "id": "drag-8pm",
+    "name": "Lights, Camera, Drag!",
+    "venue": "The Red Room",
+    "deck": 6,
+    "time": "20:00",
+    "duration_min": 60,
+    "rating": "18+",
+    "available_seats": 80,
+    "headliner": "Drag cabaret ensemble"
+  },
+  {
+    "id": "klub-rubiks-1130",
+    "name": "Klub Rubik's",
+    "venue": "The Manor (upper)",
+    "deck": 7,
+    "time": "23:30",
+    "duration_min": 120,
+    "rating": "18+",
+    "available_seats": 200,
+    "headliner": "'80s dance party — costume encouraged"
+  },
+  {
+    "id": "booked-7pm",
+    "name": "Booked!",
+    "venue": "The Red Room",
+    "deck": 6,
+    "time": "19:00",
+    "duration_min": 55,
+    "rating": "18+",
+    "available_seats": 90,
+    "headliner": "Musical theatre cast"
+  },
+  {
+    "id": "festival-stage-10pm",
+    "name": "Festival Stage — Tonight's Headliner",
+    "venue": "The Manor",
+    "deck": 6,
+    "time": "22:00",
+    "duration_min": 60,
+    "rating": "18+",
+    "available_seats": 110,
+    "headliner": "Rotating comedians + magicians"
   }
 ]

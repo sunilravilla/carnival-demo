@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs><linearGradient id="bg6" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F2EEE7"/><stop offset="1" stop-color="#D4A862"/></linearGradient></defs>
+  <rect width="200" height="200" fill="url(#bg6)"/>
+  <!-- linen set -->
+  <path d="M76 70 L100 64 L124 70 L124 120 L100 116 L76 120 Z" fill="#FAFAF7"/>
+  <path d="M84 130 L116 130 L120 180 L100 184 L80 180 Z" fill="#FAFAF7"/>
+  <!-- raffia tote -->
+  <rect x="40" y="120" width="24" height="20" rx="3" fill="#D4A862"/>
+  <text x="100" y="32" font-family="Inter,Helvetica,sans-serif" font-size="13" font-weight="800" fill="#0A0A0A" text-anchor="middle" letter-spacing="2">BIMINI EASY</text>
+</svg>

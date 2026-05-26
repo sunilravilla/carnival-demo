@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" width="800" height="400" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1A0303"/>
+      <stop offset="0.55" stop-color="#5B0808"/>
+      <stop offset="1" stop-color="#E10A0A"/>
+    </linearGradient>
+    <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#A20808" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#0A0A0A"/>
+    </linearGradient>
+    <radialGradient id="sun" cx="0.78" cy="0.32" r="0.18">
+      <stop offset="0" stop-color="#FFE6B0" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#FFE6B0" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="800" height="400" fill="url(#sky)"/>
+  <rect width="800" height="400" fill="url(#sun)"/>
+  <!-- Horizon haze -->
+  <rect y="245" width="800" height="14" fill="#D4A862" opacity="0.25"/>
+  <!-- Ship silhouette -->
+  <g fill="#0A0A0A">
+    <path d="M120,270 L680,270 L660,300 L140,300 Z"/>
+    <rect x="180" y="232" width="440" height="40" rx="3"/>
+    <rect x="220" y="200" width="360" height="34" rx="3"/>
+    <rect x="280" y="172" width="240" height="30" rx="3"/>
+    <rect x="340" y="148" width="120" height="26" rx="3"/>
+    <!-- funnels -->
+    <rect x="440" y="120" width="14" height="44" rx="2" fill="#E10A0A"/>
+    <rect x="470" y="120" width="14" height="44" rx="2" fill="#E10A0A"/>
+  </g>
+  <!-- Lit cabin dots -->
+  <g fill="#D4A862" opacity="0.85">
+    <circle cx="220" cy="248" r="1.6"/><circle cx="240" cy="248" r="1.6"/><circle cx="260" cy="248" r="1.6"/>
+    <circle cx="280" cy="248" r="1.6"/><circle cx="320" cy="248" r="1.6"/><circle cx="360" cy="248" r="1.6"/>
+    <circle cx="400" cy="248" r="1.6"/><circle cx="500" cy="248" r="1.6"/><circle cx="540" cy="248" r="1.6"/>
+    <circle cx="580" cy="248" r="1.6"/><circle cx="240" cy="216" r="1.6"/><circle cx="300" cy="216" r="1.6"/>
+    <circle cx="380" cy="216" r="1.6"/><circle cx="460" cy="216" r="1.6"/><circle cx="540" cy="216" r="1.6"/>
+  </g>
+  <!-- Sea -->
+  <path d="M0,300 L800,300 L800,400 L0,400 Z" fill="url(#sea)"/>
+  <!-- Wave highlights -->
+  <g stroke="#E10A0A" stroke-opacity="0.3" stroke-width="1" fill="none">
+    <path d="M0,320 Q200,310 400,322 T800,318"/>
+    <path d="M0,340 Q200,332 400,344 T800,338"/>
+    <path d="M0,360 Q200,352 400,364 T800,358"/>
+  </g>
+</svg>

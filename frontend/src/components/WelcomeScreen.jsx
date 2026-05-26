@@ -1,9 +1,14 @@
 import { useEffect, useState } from 'react';
+import { branding, isVirgin } from '../styles/branding';
+
+const ROOT_GRADIENT = isVirgin
+  ? 'linear-gradient(170deg, #2E0444 0%, #5B0822 50%, #CC0000 100%)'
+  : 'linear-gradient(170deg, #003580 0%, #006994 45%, #C8952A 100%)';
 
 const S = {
   root: {
     position: 'fixed', inset: 0,
-    background: 'linear-gradient(170deg, #003580 0%, #006994 45%, #C8952A 100%)',
+    background: ROOT_GRADIENT,
     display: 'flex', flexDirection: 'column',
     alignItems: 'center', justifyContent: 'center',
     overflow: 'hidden',
@@ -91,18 +96,18 @@ export default function WelcomeScreen({ onGetStarted }) {
         }
       `}</style>
 
-      {/* Carnival logo */}
+      {/* Brand logo — use the white/transparent variant on the dark gradient. */}
       <div style={S.logoWrap}>
-        <img src="/carnival-logo.png" alt="Carnival Cruise Line" style={S.logo} />
+        <img src={isVirgin ? branding.logoWhite : (branding.logo || "/carnival-logo.png")} alt={branding.logoText} style={S.logo} />
       </div>
 
-      {/* Marina avatar */}
+      {/* Concierge avatar — reusing the Marina sprite for Ruby until a dedicated photo ships. */}
       <div style={S.avatarRing}>
-        <img src="/avatars/marina-real/marina_01_closed.png" alt="Marina" style={S.avatar} />
+        <img src="/avatars/marina-real/marina_01_closed.png" alt={branding.avatarName} style={S.avatar} />
       </div>
 
-      <div style={S.headline}>Welcome Aboard</div>
-      <div style={S.sub}>Carnival Celebration · Western Caribbean · 7 Nights</div>
+      <div style={S.headline}>{isVirgin ? "Honey, you're home." : "Welcome Aboard"}</div>
+      <div style={S.sub}>{isVirgin ? "Scarlet Lady · Western Caribbean · 5 Nights" : "Carnival Celebration · Western Caribbean · 7 Nights"}</div>
 
       <button
         style={{
@@ -129,7 +134,7 @@ export default function WelcomeScreen({ onGetStarted }) {
         </svg>
       </div>
 
-      <div style={S.footer}>Powered by HPE · Carnival AI Concierge</div>
+      <div style={S.footer}>Powered by HPE · {branding.logoText} {isVirgin ? "Sailor App" : "AI Concierge"}</div>
     </div>
   );
 }

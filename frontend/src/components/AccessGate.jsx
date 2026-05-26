@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { branding } from '../styles/branding';
 
 const ACCESS_CODE = (import.meta.env.VITE_ACCESS_CODE || 'hpe-carnival').toLowerCase();
 const SESSION_KEY = 'carnival_access_granted';
@@ -182,7 +183,7 @@ export default function AccessGate({ onGranted }) {
 
       <div style={S.card}>
         <div style={S.logoRow}>
-          <img src="/carnival-logo.png" alt="Carnival" style={S.logo} />
+          <img src={branding.logo || "/carnival-logo.png"} alt={branding.logoText} style={S.logo} />
         </div>
 
         <div style={S.divider} />
@@ -220,7 +221,7 @@ export default function AccessGate({ onGranted }) {
           </button>
         </div>
 
-        <div style={S.hint}>Provided by your Carnival / HPE representative</div>
+        <div style={S.hint}>Provided by your {branding.logoText} / HPE representative</div>
 
         <button
           style={S.submitBtn(ready)}
@@ -233,7 +234,7 @@ export default function AccessGate({ onGranted }) {
         {error && <div style={S.error}>{error}</div>}
       </div>
 
-      <div style={S.footer}>Carnival Cruise Line · Powered by HPE · Demo Environment</div>
+      <div style={S.footer}>{branding.logoText} · Powered by HPE · Demo Environment</div>
     </div>
   );
 }

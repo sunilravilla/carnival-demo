@@ -1,22 +1,21 @@
 {
-  "guest_id": "G-77321",
-  "name": "Mr. and Mrs. Garcia",
-  "primary_first_name": "Diego",
-  "primary_last_name": "Garcia",
-  "cabin": "8245",
-  "deck": 8,
+  "guest_id": "VV-77321",
+  "name": "Ms. Vivian Bell",
+  "primary_first_name": "Vivian",
+  "primary_last_name": "Bell",
+  "cabin": "10245",
+  "deck": 10,
   "party_size": 2,
   "language_preference": "en",
-  "vifp_tier": "Gold",
+  "vifp_tier": "Sea Terrace",
   "folio": {
-    "balance": 342.18,
+    "balance": 287.50,
     "items": [
-      {"date": "2026-05-02", "desc": "Embarkation Photo", "amount": 24.95},
-      {"date": "2026-05-03", "desc": "Cloud 9 Spa - Couples Massage", "amount": 189.00},
-      {"date": "2026-05-03", "desc": "Pool Bar - 2 cocktails", "amount": 28.50},
-      {"date": "2026-05-04", "desc": "Specialty Coffee x4", "amount": 16.80},
-      {"date": "2026-05-04", "desc": "Casino Drinks", "amount": 22.00},
-      {"date": "2026-05-04", "desc": "Excursion Deposit - Cozumel Snorkel", "amount": 60.93}
+      {"date": "2026-05-23", "desc": "Embarkation Photo", "amount": 24.95},
+      {"date": "2026-05-24", "desc": "Beach Club at Bimini — Cabana share", "amount": 112.25},
+      {"date": "2026-05-25", "desc": "On The Rocks — 2 cocktails", "amount": 32.00},
+      {"date": "2026-05-25", "desc": "Redemption Spa — Salt Therapy", "amount": 65.00},
+      {"date": "2026-05-26", "desc": "Sip — single-origin pour-over x3", "amount": 18.30}
     ]
   },
   "drink_package": null,

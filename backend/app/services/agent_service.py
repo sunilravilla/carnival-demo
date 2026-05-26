@@ -1,4 +1,7 @@
-"""Onboard concierge agent — Carnival Celebration demo.
+"""Onboard concierge agent — Virgin Voyages, Scarlet Lady demo.
+
+Concierge persona: Ruby. Warm + cheeky, music-literate (Branson / Virgin
+Records DNA), knows the ship's venues cold, "Always Included" framing.
 
 Uses Anthropic Claude in JSON-output mode. The model returns:
     {"tool": "<name|null>", "args": {...}, "say": "<reply>"}
@@ -46,9 +49,9 @@ def _tool_get_today_schedule(_args: Dict[str, Any]) -> Dict[str, Any]:
         "day_label": f"{cruise['today_label']} of {cruise['total_days']}",
         "next_port": cruise["next_port"],
         "highlights": [
-            {"time": "14:00", "title": "Pool-deck reggae", "venue": "Lido Deck"},
-            {"time": "17:00", "title": "Wine tasting", "venue": "Atrium"},
-            {"time": "21:00", "title": "Punchliner Comedy Club", "venue": "Limelight Lounge"},
+            {"time": "15:00", "title": "Beach Club Yoga (returning sailors)", "venue": "B-Complex, Deck 5"},
+            {"time": "19:00", "title": "Booked! — musical theatre", "venue": "The Red Room, Deck 6"},
+            {"time": "22:00", "title": "Festival Stage — tonight's headliner", "venue": "The Manor, Deck 6"},
         ],
     }
 
@@ -209,7 +212,7 @@ def _tool_get_folio(_args: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _tool_upgrade_drink_package(args: Dict[str, Any]) -> Dict[str, Any]:
-    package_query = args.get("package") or "CHEERS"
+    package_query = args.get("package") or "bar-tab-500"
     days_arg = args.get("days")
 
     pkg = ship_data.find_drink_package(package_query)
@@ -371,7 +374,7 @@ def _tool_book_spa_treatment(args: Dict[str, Any]) -> Dict[str, Any]:
         "price": discounted,
         "confirmation_id": confirmation_id,
     })
-    ship_data.add_folio_charge(f"Cloud 9 Spa – {treatment['name']}", discounted)
+    ship_data.add_folio_charge(f"Redemption Spa — {treatment['name']}", discounted)
 
     return {
         "card": "spa_booking",
@@ -382,9 +385,9 @@ def _tool_book_spa_treatment(args: Dict[str, Any]) -> Dict[str, Any]:
         "savings": savings,
         "time": time,
         "time_human": _human_time(time),
-        "location": "Cloud 9 Spa, Deck 12",
+        "location": "Redemption Spa, Decks 5–6",
         "confirmation_id": confirmation_id,
-        "vifp_note": f"VIFP Gold 10% discount applied — you saved ${savings:.2f}",
+        "vifp_note": f"Always Included Sailor perk — gratuity is on us. (Saved ${savings:.2f})",
         "new_folio_balance": ship_data.get_guest()["folio"]["balance"],
     }
 
@@ -418,18 +421,20 @@ def _tool_get_weather(_args: Dict[str, Any]) -> Dict[str, Any]:
         logger.info("Weather cache hit (age %.0fs)", now - _weather_cache["ts"])
         return _weather_cache["data"]
 
+    # Today's port = Puerto Plata, Dominican Republic (~19.79N, -70.69W)
+    cruise = ship_data.get_cruise()
     try:
         url = (
             "https://api.open-meteo.com/v1/forecast"
-            "?latitude=20.51&longitude=-86.94"
+            "?latitude=19.79&longitude=-70.69"
             "&current=temperature_2m,weathercode,windspeed_10m,relative_humidity_2m,uv_index"
-            "&temperature_unit=fahrenheit&windspeed_unit=mph&timezone=America%2FChicago"
+            "&temperature_unit=fahrenheit&windspeed_unit=mph&timezone=America%2FNew_York"
         )
         with httpx.Client(timeout=5) as client:
             r = client.get(url)
             r.raise_for_status()
             c = r.json()["current"]
-        cozumel = {
+        port_weather = {
             "temp_f": round(c["temperature_2m"]),
             "wind_mph": round(c["windspeed_10m"]),
             "humidity": c["relative_humidity_2m"],
@@ -437,21 +442,22 @@ def _tool_get_weather(_args: Dict[str, Any]) -> Dict[str, Any]:
             "condition": _wmo_to_condition(c["weathercode"]),
             "icon_key": _wmo_to_icon_key(c["weathercode"]),
         }
-        logger.info("Weather fetched live: %s°F %s", cozumel["temp_f"], cozumel["condition"])
+        logger.info("Weather fetched live: %s°F %s", port_weather["temp_f"], port_weather["condition"])
     except Exception as e:
         logger.warning("Weather fetch failed (%s); using fallback", e)
-        cozumel = {
-            "temp_f": 88, "wind_mph": 12, "humidity": 72, "uv_index": 8,
+        port_weather = {
+            "temp_f": 85, "wind_mph": 9, "humidity": 70, "uv_index": 8,
             "condition": "Sunny", "icon_key": "sunny",
         }
 
     result = {
         "card": "weather",
-        "location": "Cozumel, Mexico",
-        "port_date": "Today, May 12",
-        "cozumel": cozumel,
+        "location": cruise.get("today_label", "Puerto Plata, Dominican Republic"),
+        "port_date": f"Today, Day {cruise.get('current_day', 4)} of {cruise.get('total_days', 6)}",
+        # Keep 'cozumel' key for backward-compat with frontend card renderer.
+        "cozumel": port_weather,
         "onboard": {
-            "temp_f": 84,
+            "temp_f": 82,
             "condition": "Partly cloudy",
             "icon_key": "partly_cloudy",
             "sea_state": "Calm (2 ft)",
@@ -467,49 +473,265 @@ def _tool_get_wifi_options(_args: Dict[str, Any]) -> Dict[str, Any]:
     return {
         "topic": "wifi",
         "packages": [
-            {"name": "Social", "price_per_day": 17, "includes": "Facebook, Instagram, WhatsApp, TikTok"},
-            {"name": "Value", "price_per_day": 25, "includes": "Browsing, email, social media, news"},
-            {"name": "Premium", "price_per_day": 35, "includes": "Streaming, video calls (Zoom/FaceTime), all of the above"},
+            {"name": "Basic Wi-Fi", "price_per_day": 0, "includes": "Always Included — browsing, messaging, email, social on every device"},
+            {"name": "Premium Wi-Fi", "price_per_day": 20, "includes": "Add streaming, Zoom/FaceTime video, and faster speeds across all your devices"},
+            {"name": "Mega RockStar", "price_per_day": 0, "includes": "Premium Wi-Fi included with your suite — no purchase needed"},
         ],
-        "purchase": "Internet Café on Deck 5 or the HUB app on your phone.",
+        "purchase": "Upgrade in the Sailor App or at any bar — Sailor Services will sort you out.",
     }
 
 
 def _tool_get_spa_options(_args: Dict[str, Any]) -> Dict[str, Any]:
     return {
         "topic": "spa",
-        "location": "Cloud 9 Spa & Fitness Center, Deck 12",
-        "hours": "8 AM – 10 PM",
+        "location": "Redemption Spa, Decks 5–6",
+        "hours": "6 AM – 11:30 PM",
         "services": [
             {"name": "Hot Stone Massage", "duration_min": 50, "price": 149},
             {"name": "Hot Stone Massage", "duration_min": 80, "price": 199},
             {"name": "Couples Massage", "duration_min": 50, "price": 289},
-            {"name": "Relaxation Facial", "duration_min": 50, "price": 129},
-            {"name": "Thermal Suite Day Pass", "price": 35, "note": "complimentary with any treatment"},
+            {"name": "Salt-Stone Facial", "duration_min": 50, "price": 129},
+            {"name": "Mud Room Day Pass", "price": 45, "note": "complimentary with any treatment; unlimited for Mega RockStar Sailors"},
         ],
-        "vifp_discount": "10% off all treatments (VIFP Gold benefit)",
-        "booking": "Visit Deck 12 or call ext. 7100",
+        "vifp_discount": "Always Included — no auto-gratuity, no add-on fees.",
+        "booking": "Tap Book in the Sailor App or call ext. 7100",
     }
 
 
 def _tool_get_ship_info(args: Dict[str, Any]) -> Dict[str, Any]:
     topic = (args.get("topic") or "general").lower()
     info_map = {
-        "pool": "Resort Pool: Deck 10, open 8 AM–10 PM. Serenity Adult-Only Pool: Deck 11 Fwd (18+). WaterWorks slides: Deck 11 Aft.",
-        "casino": "Casino Royale: Deck 5. Hours 8 PM–2 AM at sea; closed in port. VIFP Gold guests receive 10% casino match-play.",
-        "kids": "Camp Ocean (Kids Club): Deck 12. Ages 2–11. Hours 9 AM–10 PM. Circle C (tweens 12–14) also on Deck 12.",
-        "gym": "Fitness Center: Deck 12, adjacent to Cloud 9 Spa. Open 6 AM–10 PM. Complimentary.",
-        "medical": "Medical Center: Deck 0 Forward. Open 24/7 for emergencies; scheduled hours 8–11 AM and 4–7 PM. Dial ext. 911 for emergencies.",
-        "muster": "Your muster station: Station G, Deck 4 Starboard.",
-        "shopping": "Ocean Plaza shops: Deck 5, open 6 PM–midnight at sea.",
-        "dining": "Specialty dining requires reservations. Big Chicken (Deck 8) and Guy's Burger Joint (Deck 10) are walk-up and free.",
-        "photo": "Photo Gallery: Deck 5. Unlimited prints + digital download package: $199.",
-        "room service": "Room service available 24/7. $4 delivery fee, free between 6 AM–10 AM.",
+        "pool": "The Perch (Deck 16 aft) — sundeck pool with cabanas. Aquatic Club (Deck 7 pool deck) for the main pool action. Both adult-only — the whole ship is.",
+        "casino": "The Casino, Deck 6 — open from 8 PM at sea, closed in port. Cocktails on; intimate scale, not a megacasino.",
+        "kids": "Honey, this is an adult-only ship — 18 and over. No kids clubs, no family programming. That's by design.",
+        "gym": "B-Complex, Deck 5 forward. Three rooms: Build (weights), Bike (spin), Balance (yoga). 6 AM – 11:30 PM. All group classes included.",
+        "medical": "Medical Centre, Deck 2 mid-ship. Open 24/7 for emergencies; scheduled hours 8–11 AM and 4–7 PM. Dial ext. 911 for emergencies.",
+        "muster": "Muster check-in is done entirely in the Sailor App — no group drill required. Tap 'Muster' before sail-away.",
+        "shopping": "Sundries Shop (Deck 5) and the curated High Street boutiques (Deck 7) — open at sea after 6 PM.",
+        "dining": "All 20+ venues are included — no covers anywhere. Reservations recommended for specialty (The Wake, Pink Agave, Gunbae, Extra Virgin, Razzle Dazzle, Test Kitchen, Dock House). The Galley food hall is 24-hour walk-up.",
+        "photo": "Sailor Snaps, Deck 5. Digital download bundle: $99. Print-on-demand kiosks throughout the ship.",
+        "room service": "ShipEats room service: 24/7. Free menu plus à la carte upgrades. Order in the Sailor App or tap the cabin tablet.",
+        "manor": "The Manor, Decks 6–7 — two-story nightclub directly inspired by Richard Branson's Virgin Records era. Day lounge, evening cabaret, late-night dance floor.",
+        "champagne": "Shake your phone in the Sailor App — secret button appears — Möet & Chandon delivered wherever you are in about 30 minutes. $105/bottle.",
+        "scarlet night": "Once per voyage: the whole ship turns RED. Pool-deck takeover, pop-up acts, DJs till late. Dress code: red, non-negotiable. Tomorrow night this sailing.",
+        "wifi": "Basic Wi-Fi included for every Sailor. Upgrade to Premium ($20/day) for streaming, Zoom, video calls.",
+        "rockstar": "RockStar Quarters = Richard's Rooftop access, in-cabin bar, 24/7 RockStar Agent. Mega RockStar adds unlimited bar tab, unlimited Thermal Suite, included Premium Wi-Fi.",
     }
     for key, val in info_map.items():
         if key in topic:
             return {"topic": topic, "info": val}
-    return {"topic": topic, "info": "Deck 5 has Guest Services (open 24/7) who can help with anything not covered here."}
+    return {"topic": topic, "info": "Sailor Services on Deck 5 (or message us in the app) can help with anything I haven't covered."}
+
+
+# ─── Tonight's Look: outfit + salon + pre-show drink (multi-tool chain) ──────
+
+_OUTFIT_LOOKBOOK = {
+    "scarlet night": [
+        {
+            "id": "scarlet-statement",
+            "name": "Scarlet Statement",
+            "description": "Crimson silk slip + bare-shoulder jacket. Gold strappy heel. Hair: sleek bun.",
+            "image": "/looks/scarlet-statement.svg",
+            "vibe": "Photo-finish red. Made for the pool-deck takeover.",
+            "needs": ["blow-out", "smoky-eye"],
+        },
+        {
+            "id": "ruby-tux",
+            "name": "Ruby Tuxedo",
+            "description": "Tailored red tux + black silk tee + crisp loafers. Optional black bow.",
+            "image": "/looks/ruby-tux.svg",
+            "vibe": "Branson energy. Late-night Manor approved.",
+            "needs": ["trim", "manicure"],
+        },
+        {
+            "id": "after-hours",
+            "name": "After-Hours Red",
+            "description": "Floor-length scarlet column dress, slit. Drop earrings, gold cuff.",
+            "image": "/looks/after-hours.svg",
+            "vibe": "Quiet drama. For arriving second, leaving last.",
+            "needs": ["updo", "polish"],
+        },
+    ],
+    "manor": [
+        {
+            "id": "manor-disco",
+            "name": "Manor Disco",
+            "description": "Metallic mini + ankle boots. Black blazer for the cold deck walk.",
+            "image": "/looks/manor-disco.svg",
+            "vibe": "Built to dance.",
+            "needs": ["blow-out"],
+        },
+    ],
+    "pool day": [
+        {
+            "id": "pool-rouge",
+            "name": "Pool-Deck Rouge",
+            "description": "Red one-piece + linen overshirt + woven mules. Straw bag.",
+            "image": "/looks/pool-rouge.svg",
+            "vibe": "Sunset cocktail at The Perch.",
+            "needs": [],
+        },
+    ],
+    "bimini": [
+        {
+            "id": "bimini-easy",
+            "name": "Bimini Easy",
+            "description": "Cream linen set + raffia tote + slim-strap sandal.",
+            "image": "/looks/bimini-easy.svg",
+            "vibe": "Beach-Club-to-cabana smooth.",
+            "needs": [],
+        },
+    ],
+}
+
+
+def _tool_suggest_outfit(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Suggest 1–3 looks for tonight's occasion (Scarlet Night, Manor, pool, Bimini)."""
+    occasion = (args.get("occasion") or "scarlet night").strip().lower()
+    vibe = (args.get("vibe") or "").strip().lower()
+
+    # Fuzzy match
+    key = "scarlet night"
+    for k in _OUTFIT_LOOKBOOK:
+        if k in occasion or occasion in k:
+            key = k
+            break
+
+    looks = _OUTFIT_LOOKBOOK.get(key, _OUTFIT_LOOKBOOK["scarlet night"])
+    # Vibe filter (loose)
+    if vibe:
+        filtered = [l for l in looks if vibe in l["vibe"].lower() or vibe in l["description"].lower()]
+        looks = filtered or looks
+
+    return {
+        "card": "outfit_suggestion",
+        "occasion": occasion,
+        "looks": looks[:3],
+        "stylist_note": (
+            "Anything here speak to you? I can pre-book a blow-out at the salon and "
+            "a Manor table to land your night."
+        ),
+    }
+
+
+_SALON_MENU = [
+    {"keys": ["blow-out", "blowout", "blow dry", "blow-dry"], "name": "Blow-Out", "price": 65, "duration_min": 45},
+    {"keys": ["updo", "up-do", "styling"], "name": "Updo Styling", "price": 95, "duration_min": 60},
+    {"keys": ["makeup", "make-up", "smoky-eye", "glam"], "name": "Glam Makeup", "price": 120, "duration_min": 60},
+    {"keys": ["manicure", "nails", "polish"], "name": "Express Manicure", "price": 45, "duration_min": 30},
+    {"keys": ["trim", "haircut", "men's cut"], "name": "Salon Trim", "price": 55, "duration_min": 30},
+]
+
+
+def _match_salon_service(query: str) -> Optional[Dict[str, Any]]:
+    q = (query or "").strip().lower()
+    for s in _SALON_MENU:
+        if any(k in q or q in k for k in s["keys"]):
+            return s
+    return None
+
+
+def _tool_book_salon(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Book a salon service at Redemption Spa (Deck 5 salon side)."""
+    service_query = (args.get("service") or args.get("name") or "").strip()
+    time = args.get("time", "17:00")
+
+    service = _match_salon_service(service_query)
+    if not service:
+        menu = ", ".join(s["name"] for s in _SALON_MENU)
+        return {"card": "error", "error": f"I didn't recognise that salon service. Try: {menu}."}
+
+    confirmation_id = f"SAL{abs(hash((service['name'], time))) % 100000:05d}"
+
+    ship_data.add_reservation("salon", {
+        "treatment_name": service["name"],
+        "time": time,
+        "time_human": _human_time(time),
+        "duration_min": service["duration_min"],
+        "price": service["price"],
+        "confirmation_id": confirmation_id,
+    })
+    ship_data.add_folio_charge(f"Redemption Spa Salon — {service['name']}", service["price"])
+
+    return {
+        "card": "salon_booking",
+        "service": service["name"],
+        "duration_min": service["duration_min"],
+        "price": service["price"],
+        "time": time,
+        "time_human": _human_time(time),
+        "location": "Redemption Spa Salon, Deck 5",
+        "confirmation_id": confirmation_id,
+        "new_folio_balance": ship_data.get_guest()["folio"]["balance"],
+    }
+
+
+_DRINK_PAIRING = {
+    "the manor":   {"name": "Negroni Bianco",      "venue": "The Manor",      "deck": 6, "price": 16},
+    "manor":       {"name": "Negroni Bianco",      "venue": "The Manor",      "deck": 6, "price": 16},
+    "on the rocks":{"name": "Smoked Old Fashioned","venue": "On The Rocks",   "deck": 6, "price": 16},
+    "red room":    {"name": "French 75",           "venue": "Red Bar",        "deck": 7, "price": 17},
+    "loose cannon":{"name": "Dirty Vesper",        "venue": "Loose Cannon",   "deck": 6, "price": 15},
+    "pink agave":  {"name": "Smoked Mezcal Sour",  "venue": "Pink Agave bar", "deck": 5, "price": 17},
+    "the wake":    {"name": "Krug pour",           "venue": "Red Bar",        "deck": 7, "price": 28},
+}
+
+
+def _tool_recommend_pre_show_drink(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Recommend a single cocktail + venue to pair with tonight's plan."""
+    venue_query = (args.get("venue") or "the manor").strip().lower()
+    pick = None
+    for k, v in _DRINK_PAIRING.items():
+        if k in venue_query or venue_query in k:
+            pick = v
+            break
+    pick = pick or _DRINK_PAIRING["the manor"]
+
+    return {
+        "card": "drink_pairing",
+        "drink": pick["name"],
+        "venue": pick["venue"],
+        "deck": pick["deck"],
+        "price": pick["price"],
+        "note": "Optional — sip first, then the show.",
+    }
+
+
+def _tool_order_champagne(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Shake-for-Champagne — Möet & Chandon Impérial 750ml delivered to a location.
+
+    Virgin's signature ritual. Mock delivery: bottle dispatched from On The Rocks
+    (Deck 6), tracked via the Sailor App, ~30 min ETA. $105 to the folio.
+    """
+    guest = ship_data.get_guest()
+    location = (args.get("location") or "").strip()
+    if not location:
+        location = f"Cabin {guest.get('cabin', '')} · Deck {guest.get('deck', '')}".strip(" ·")
+    location = location or "your current location"
+
+    # ETA is calibrated to feel cinematic but plausible.
+    eta_minutes = 7
+    confirmation_id = f"CH{abs(hash((location, _time.time()))) % 100000:05d}"
+    bottle_price = 105.00
+
+    ship_data.add_folio_charge(
+        f"Möet & Chandon Impérial 750ml — delivered to {location}",
+        bottle_price,
+    )
+
+    return {
+        "card": "champagne",
+        "bottle": "Möet & Chandon Impérial",
+        "volume_ml": 750,
+        "price": bottle_price,
+        "location": location,
+        "dispatched_from": "On The Rocks bar, Deck 6",
+        "eta_minutes": eta_minutes,
+        "deck_path": [6, 5, 4, guest.get("deck", 8)],  # rough route for the tracker
+        "confirmation_id": confirmation_id,
+        "includes": ["chilled red Virgin ice bucket", "2 champagne flutes"],
+        "new_folio_balance": ship_data.get_guest()["folio"]["balance"],
+    }
 
 
 def _tool_modify_dining(args: Dict[str, Any]) -> Dict[str, Any]:
@@ -581,8 +803,8 @@ def _natural_reply_for(tool_name: str, tool_result: Dict[str, Any]) -> str:
     if tool_name == "upgrade_drink_package":
         p = tool_result.get("package", {}) or {}
         return (
-            f"{p.get('name', 'CHEERS!')} is active for {tool_result.get('days', '')} days "
-            f"— that's ${tool_result.get('total', 0):.2f} on your folio."
+            f"{p.get('name', 'Bar Tab')} is loaded for {tool_result.get('days', '')} days "
+            f"— ${tool_result.get('total', 0):.2f} on your onboard account."
         )
     if tool_name == "cancel_reservation":
         name = tool_result.get("name", "your reservation")
@@ -603,10 +825,8 @@ def _natural_reply_for(tool_name: str, tool_result: Dict[str, Any]) -> str:
     if tool_name == "book_spa_treatment":
         t = tool_result.get("treatment", "treatment")
         time_h = tool_result.get("time_human", "")
-        savings = tool_result.get("savings", 0)
         return (
-            f"All set! Your {t} is booked at {time_h} at Cloud 9 Spa, Deck 12. "
-            f"Your VIFP Gold discount saved you ${savings:.2f}. "
+            f"You're booked, honey — {t} at {time_h} at Redemption Spa. "
             f"Confirmation #{tool_result.get('confirmation_id', '')}."
         )
     if tool_name == "modify_dining":
@@ -620,7 +840,25 @@ def _natural_reply_for(tool_name: str, tool_result: Dict[str, Any]) -> str:
     if tool_name == "get_today_schedule":
         port = (tool_result.get("next_port") or {}).get("name", "the next port")
         day = tool_result.get("day_label", "today")
-        return f"It's {day} — pool reggae, wine tasting, and a 9 PM comedy show, with {port} tomorrow."
+        return f"It's {day} — Booked! at 7, Persephone at 9, The Manor going late. {port} tomorrow."
+    if tool_name == "order_champagne":
+        loc = tool_result.get("location", "your location")
+        eta = tool_result.get("eta_minutes", 7)
+        return f"Möet & Chandon Impérial on the way to {loc}. About {eta} minutes — track it in the app, honey."
+    if tool_name == "suggest_outfit":
+        looks = tool_result.get("looks", [])
+        if not looks:
+            return "Pulled a few looks for you — pick one and I'll sort the rest."
+        names = ", ".join(l["name"] for l in looks)
+        return f"Three looks: {names}. Tell me which speaks to you — I'll book the salon and a Manor table to land it."
+    if tool_name == "book_salon":
+        s = tool_result.get("service", "service")
+        t = tool_result.get("time_human", "")
+        return f"{s} at {t} at the Redemption salon — done. Confirmation #{tool_result.get('confirmation_id', '')}."
+    if tool_name == "recommend_pre_show_drink":
+        d = tool_result.get("drink", "a cocktail")
+        v = tool_result.get("venue", "the bar")
+        return f"{d} at {v} — that's the move. Want me to set a table?"
     return "Done — anything else?"
 
 
@@ -681,114 +919,164 @@ _TOOLS: Dict[str, ToolFn] = {
     "get_wifi_options": _tool_get_wifi_options,
     "get_spa_options": _tool_get_spa_options,
     "get_ship_info": _tool_get_ship_info,
+    "order_champagne": _tool_order_champagne,
+    "suggest_outfit": _tool_suggest_outfit,
+    "book_salon": _tool_book_salon,
+    "recommend_pre_show_drink": _tool_recommend_pre_show_drink,
 }
 
 
 _STATIC_KNOWLEDGE = """
-=== CARNIVAL CELEBRATION — ONBOARD CONCIERGE KNOWLEDGE BASE ===
+=== VIRGIN VOYAGES — SCARLET LADY — CONCIERGE KNOWLEDGE BASE ===
 
 VOYAGE
-  Ship: Carnival Celebration | 7-Night Western Caribbean
-  Departure: Miami, FL — May 9, 2026 | Return: May 15, 2026
-  Today: Day 4 of 7 (Tue, May 12 — Cozumel Port Day)
-  Tomorrow (Day 5): Celebration Key, Bahamas (all aboard 17:00)
-  Itinerary: Miami → Sea Day → Sea Day → Cozumel → Celebration Key → Sea Day → Miami
+  Ship: Scarlet Lady | 5-Night Western Caribbean Charm | Adult-only (18+)
+  Departure: PortMiami, FL — Saturday | Return: Thursday
+  Today: Day 4 of 6 — Puerto Plata, Dominican Republic (port day)
+  Tomorrow (Day 5): Sea Day — SCARLET NIGHT (ship-wide all-red party)
+  Itinerary: PortMiami → Bimini Beach Club → Sea Day → Puerto Plata → Sea Day (Scarlet Night) → PortMiami
 
 GUEST
-  (see dynamic session state below for current guest details)
+  (see dynamic session state below — Sailor name, cabin tier, folio, bookings)
 
-DINING (specialty restaurants require reservations unless noted)
-  Cucina del Capitano | Deck 11 Midship | Italian | Cover $18/person
-    Signature: Pasta del Capitano (house-made fettuccine) | Dress: Smart Casual
+DINING — 8 specialty restaurants, ALL INCLUDED (no cover charges)
+  No buffet, no main dining room. Every venue is curated. Reservations recommended.
+  The Wake | Deck 7 aft | Steak & Seafood | Signature: dry-aged ribeye with bordelaise
+    Slots: 17:30 18:00 18:30 19:30 20:00 20:30 21:00
+  Pink Agave | Deck 5 mid | Modern Mexican | Tableside guacamole + mezcal flight
+    Slots: 17:30 18:00 18:30 19:00 19:30 20:00 21:00 21:30
+  Gunbae | Deck 6 mid | Korean BBQ | Wagyu short rib + interactive soju games
+    Slots: 17:30 18:00 19:00 19:30 20:30 21:00
+  Extra Virgin | Deck 5 mid | Italian | Hand-rolled tagliatelle al ragu
     Slots: 17:30 18:00 18:30 19:00 19:30 20:00 20:30 21:00
-  Fahrenheit 555 Steakhouse | Deck 11 Fwd | $49/person
-    Signature: Dry-aged USDA Prime ribeye | Dress: Smart Casual+ (no shorts/flip-flops)
-    Slots: 17:30 18:00 18:30 19:30 20:00 20:30
-  Rudi's Seagrill | Deck 5 | Seafood | Cover $38/person
-    Signature: Chilean sea bass | Dress: Smart Casual
-    Slots: 17:30 18:00 19:00 19:30 20:00 20:30
-  Big Chicken by Shaq | Deck 8 | Free | Walk-up, no reservation | Casual
-  Guy's Burger Joint | Deck 10 | Free | Walk-up 11 AM–6 PM | Casual
-  Tonight is Formal Night — specialty restaurants recommend suits/cocktail attire.
-  18% gratuity auto-added to specialty dining bills.
+  Razzle Dazzle | Deck 5 fwd | Plant-forward American | Naughty-list cauliflower 'wings'
+    Slots: 18:00 18:30 19:00 19:30 20:00 20:30 21:00
+  The Test Kitchen | Deck 5 | Experimental 7-course chef's tasting menu
+    Slots: 18:00 18:30 20:00 20:30
+  The Galley | Deck 7 mid | Food hall — burger, taco, sushi, noodle, salad, diner
+    Walk-up, 24-hour. Order any combination in one tap via the Sailor App.
+  The Dock House | Deck 7 aft, open-air | Eastern Mediterranean | Mezze + spicy lamb
+    Slots: 18:00 18:30 19:00 19:30 20:00 20:30
+  Dress: Sailors wear whatever they like. No formal nights. Sneakers welcome everywhere.
 
-ENTERTAINMENT
-  Punchliner Comedy Club | 9 PM | 45 min | Mike Vecchione (headliner)
-    Venue: Liquid Lounge, Deck 7 | 42 seats remaining | Ages 18+
-  Heart of Soul (Playlist Productions) | 8 PM | 50 min
-    Venue: Limelight Lounge, Deck 3 | All ages | 180 seats remaining
-  Piano Bar 88 | 10:30 PM | 90 min | Crystal Marie
-    Venue: Piano Bar, Deck 5 | 36 seats remaining | All ages
+ENTERTAINMENT — 18+ shows, free, bookable via the Sailor App
+  Persephone | 9 PM | 60 min | The Red Room (Deck 6) — Greek-myth immersive theatre
+    64 seats remaining
+  UNTITLED DANCESHOWPARTYTHING | 10:30 PM | 75 min | The Manor (Deck 6)
+    Resident dance company + live DJ | 120 seats
+  Lights, Camera, Drag! | 8 PM | 60 min | The Red Room | Drag cabaret | 80 seats
+  Klub Rubik's | 11:30 PM | 2 hrs | The Manor (upper, Deck 7) | '80s dance party
+    Costume encouraged | 200 capacity
+  Booked! | 7 PM | 55 min | The Red Room | Musical theatre | 90 seats
+  Festival Stage | 10 PM | 60 min | The Manor | Rotating headliner (comedian / magician)
 
-EXCURSIONS (Cozumel, today May 12)
-  Cozumel Reef Snorkel & Beach Break
-    Meet: 9:15 AM, Deck 0 Aft Gangway | Duration: 3.5 hrs | $79.99/person | Age 8+
-    Bring: swimsuit, reef-safe sunscreen, towel (provided onboard), water shoes optional
-    Cancel: free up to 24 hrs before sailing
-  Jeep Adventure & Mayan Ruins
-    Meet: 8:45 AM, Deck 0 Aft Gangway | Duration: 5.5 hrs | $129.99/person | Age 12+
-    Bring: comfortable walking shoes, hat, sunscreen, light jacket
-    Cancel: free up to 24 hrs before sailing
-  Celebration Key Beachfront Cabana (May 13 — tomorrow)
+BARS
+  The Manor (Decks 6–7) — two-story nightclub explicitly inspired by Richard Branson's
+    Virgin Records era. Day lounge → evening cabaret → late-night dance floor.
+  On The Rocks — largest bar onboard, live music nightly
+  Loose Cannon — cheeky dive bar, easy to miss; ask Ruby for directions
+  Red Bar — hidden behind The Wake; watches the kitchen
+  Draught House — late-night craft brews
+  The Roundabout — central atrium bar
 
-DRINK PACKAGES
-  CHEERS! | $83.94/person/day | Unlimited cocktails, wine, beer, sodas, specialty coffee
-    Max 15 drinks/day per person | Applies to all guests in cabin simultaneously
-    Can add for remaining cruise days (3 days left = $251.82/person)
-  Bottomless Bubbles | $9.50/person/day | Sodas and juices only
+EXCURSIONS
+  Bimini, Bahamas (Day 2 — past)
+    The Beach Club at Bimini | All-Day | $0 (included)
+      Two pools, DJ takeover, beach loungers, lunch buffet, yoga, volleyball
+    Private Cabana | $449 for 4 | Dedicated host + bottle service
+  Puerto Plata, Dominican Republic (Today — Day 4)
+    Cocoa & Cigar Trail | 4.5 hrs | $119/Sailor — chocolate tasting + hand-rolled cigar
+      Meet: 8:45 AM, Amber Cove Pier
+    Mount Isabel de Torres Cable Car & Botanical Garden | 4 hrs | $89/Sailor
+      Meet: 9:30 AM, Amber Cove Pier
 
-WIFI
-  Social | $17/day | Facebook, Instagram, WhatsApp, TikTok
-  Value  | $25/day | Browsing, email, social media
-  Premium| $35/day | Streaming, Zoom/FaceTime video calls, all of the above
-  Purchase: Internet Café Deck 5 or the Carnival HUB app
+WHAT'S INCLUDED (no extra charge — never quote a price for these)
+  All dining at all 20+ venues (no covers, no main-dining-room fee)
+  Wi-Fi (basic) — works fleet-wide
+  Gratuities (no auto-tip on folio)
+  Group fitness classes (yoga, HIIT, meditation, bungee, gut-health)
+  Essential drinks: still & sparkling water, drip coffee, tea, soda, juice,
+    gym smoothies — at every bar, every venue
+  Soft-serve, sunset toast on opening night
 
-SPA — Cloud 9 Spa & Fitness Center | Deck 12 | Hours 8 AM–10 PM
+BAR TAB (prepaid premium drink credit, optional)
+  $300 → $350 credit (17% bonus when bought pre-voyage)
+  $500 → $600 credit (20% bonus, roll-over unused balance)
+  Covers cocktails, wine by the glass, craft beer, top spirits.
+  Mega RockStar Sailors have an UNLIMITED bar tab (no need to top up).
+
+SPA — Redemption Spa | Decks 5–6 | 6 AM – 11:30 PM
+  Award-winning Mud Room, salt therapy, hydrotherapy pool, mineral massages.
+  Couples Massage: 50 min $289
   Hot Stone Massage: 50 min $149 / 80 min $199
-  Couples Massage: 50 min $289 (VIFP Gold: 10% off → $260.10)
-  Relaxation Facial: 50 min $129
-  Thermal Suite Day Pass: $35 (complimentary with any treatment)
-  Book: visit Deck 12 desk or call ext. 7100
+  Salt-Stone Facial: 50 min $129
+  Mud Room day pass: $45 (Mega RockStar: unlimited daily access included)
+  Salon (Deck 5): blow-dry, makeup, manicure available — same-day booking via Ruby
+  Book in-app or call ext. 7100.
+
+WELLNESS / FITNESS
+  B-Complex | Deck 5 fwd — Build, Bike, Balance rooms with ocean views
+  Free classes: yoga, HIIT, meditation, gut-health, bungee — daily schedule in app
+  PT sessions: $89/hr
 
 SHIP AMENITIES
-  Resort Pool: Deck 10 Midship | Open 8 AM–10 PM | Family-friendly
-  Serenity Adult-Only Pool: Deck 11 Fwd | 18+ only | Quiet loungers
-  WaterWorks Slides: Deck 11 Aft | Open 10 AM–6 PM
-  Fitness Center: Deck 12 (adjacent to Spa) | Open 6 AM–10 PM | Free
-  Camp Ocean (Kids Club): Deck 12 | Ages 2–11 | 9 AM–10 PM
-  Circle C (tweens): Deck 12 | Ages 12–14 | 9 AM–10 PM
-  Casino: Deck 5 | Open 8 PM–2 AM at sea (closed in port)
-  Ocean Plaza Shopping: Deck 5 | 6 PM–midnight at sea
-  Medical Center: Deck 0 Forward | 24/7 emergencies | Scheduled 8–11 AM & 4–7 PM | Ext. 911
-  Photo Gallery: Deck 5 | Unlimited prints + digital download: $199 package
-  Guest Services: Deck 5 | Open 24/7
+  Athletic Club | Deck 16 — basketball, runner's track, SkyPad (VR)
+  The Perch | Deck 16 aft — sundeck pool, cabanas
+  Richard's Rooftop | Decks 14–15 — RockStar/Mega RockStar-exclusive sundeck,
+    lounge, plunge pools, sunset cocktails
+  The Groupie | Deck 5 — private karaoke rooms, bookable in app
+
+CABIN TIERS (perks)
+  Insider — entry-level cabin
+  Sea View — porthole window
+  Sea Terrace — private balcony (the most common tier)
+  RockStar Quarters — priority boarding, in-cabin bar stocked, Richard's Rooftop
+    access, 24/7 RockStar Agent
+  Mega RockStar Quarters — all of the above + unlimited bar tab, unlimited
+    Thermal Suite access, included Wi-Fi, white-glove service
+
+SIGNATURE RITUALS
+  Shake for Champagne — open the Sailor App, shake your phone, tap the secret
+    "Press for Champagne" button. Möet & Chandon Impérial 750ml ($105) + ice
+    bucket + 2 glasses delivered to your location within ~30 min. Available
+    everywhere except the spa and the gym.
+  Scarlet Night (recurring) — once per voyage, ship turns RED. Pool-deck takeover,
+    pop-up performances, inflatable octopus, DJ till late. Dress code: ALL RED.
+  PJ Party — late-night pyjama social, recurring.
+  Grog Walk — guided self-paced bar crawl, ends at The Manor.
 
 MUSTER & SAFETY
-  Muster station: Station G, Deck 4 Starboard
+  Muster check-in is done in the Sailor App before sail-away — no group drill required.
 
-TODAY'S SCHEDULE (Day 4 — Cozumel Port Day)
-  10:00 AM  Pool Deck Reggae Band (Resort Pool, Deck 10)
-  11:30 AM  Belly Flop Contest (Resort Pool)
-   2:00 PM  90s Music Trivia (Alchemy Bar, Deck 6)
-   3:30 PM  Wine Tasting with Sommelier — $15/person (Ocean Plaza, Deck 5)
-   5:00 PM  Hasbro Game Show (Limelight Lounge, Deck 3)
-   6:30 PM  Captain's Cocktail Hour — complimentary (Cloud 9 Spa, Deck 12)
-   9:00 PM  Punchliner Comedy Club (Liquid Lounge, Deck 7)
-  10:30 PM  Piano Bar 88 (Deck 5)
+TONIGHT (Day 4)
+   3:00 PM  Beach Club Yoga returning to the ship (B-Complex, Deck 5)
+   5:00 PM  Sip — single-origin pour-over flight (Deck 5 atrium)
+   7:00 PM  Booked! musical theatre (The Red Room, Deck 6)
+   9:00 PM  Persephone (The Red Room, Deck 6)
+  10:00 PM  Festival Stage headliner (The Manor, Deck 6)
+  10:30 PM  UNTITLED DANCESHOWPARTYTHING (The Manor)
+  11:30 PM  Klub Rubik's '80s party (The Manor, upper)
+
+TOMORROW — SCARLET NIGHT (Day 5)
+  Sea Day. Ship-wide all-red event culminating on the pool deck. Pop-up
+  performances throughout. Dress code: red is non-negotiable. Salon and
+  Redemption Spa book up fast for pre-event glam — Ruby can pre-book.
 
 WEATHER
-  Current: 84°F / 29°C, partly cloudy, light breeze 12 mph, seas calm 2 ft
-  Cozumel tomorrow: 88°F / 31°C, sunny, excellent visibility for snorkeling
+  Puerto Plata today: ~85°F / 29°C, partly cloudy, light breeze, calm seas
 
-POLICIES
-  Gratuity: 18% auto-added to bar, spa, and specialty dining tabs
-  Room service: $4 delivery fee; free 6 AM–10 AM
-  Smoking: Deck 11 Aft starboard only
-  Tonight is Formal Night — Smart Casual minimum in all venues after 6 PM
+DEBARKATION (Thursday, PortMiami)
+  Sailor App walks you off — no group muster. Self-walk-off from 7:00 AM.
 
-DEBARKATION (May 15, Miami)
-  Self-assist (carry own bags): from 7:30 AM | Porter-assist: by 9:30 AM
-  Customs: Miami Terminal F | Color-coded luggage tags distributed tonight
+BRAND VOICE & TRIVIA RUBY CAN DRAW ON
+  Virgin Voyages launched in 2021 with Scarlet Lady. Adult-only by design.
+  Sister ships: Valiant Lady, Resilient Lady, Brilliant Lady.
+  Founded by Richard Branson, who started Virgin Records in 1972. First release:
+    Mike Oldfield's "Tubular Bells." He famously signed the Sex Pistols when
+    other labels refused them. Other Virgin Records acts: Peter Gabriel, XTC,
+    UB40, Culture Club, the Rolling Stones.
+  The Manor's name and aesthetic are a direct homage to that Virgin Records era.
+  Brand line: "It's Not a Cruise."
 
 === END KNOWLEDGE BASE ===
 """
@@ -810,64 +1098,106 @@ def _build_system_prompt(folio_balance: float, reservations: list, drink_package
         "get_my_reservations(), book_spa_treatment(treatment,time), "
         "get_excursion(name), get_today_schedule(), get_folio(), "
         "upgrade_drink_package(package,days), get_weather(), "
-        "get_wifi_options(), get_spa_options(), get_ship_info(topic)"
+        "get_wifi_options(), get_spa_options(), get_ship_info(topic), "
+        "order_champagne(location), "
+        "suggest_outfit(occasion,vibe?), book_salon(service,time), recommend_pre_show_drink(venue)"
     )
     return (
-        "You are Marina, Carnival Celebration's warm and professional onboard concierge.\n"
-        f"You are speaking with {guest_first_name}. Always address them by their first name: {guest_first_name}.\n"
+        "You are Ruby, Scarlet Lady's onboard Sailor concierge for Virgin Voyages.\n"
+        f"You are speaking with {guest_first_name}. Always address them by first name: {guest_first_name}.\n"
+        "\n"
+        "PERSONA — get this right or you sound like a different brand:\n"
+        "  • Warm + cheeky, never stuffy. Confident. A little sharp. British-leaning cadence.\n"
+        "  • You call Sailors 'Sailor' or 'honey' once in a while — never overdo it.\n"
+        "  • Music-literate: Virgin Records started in 1972 with Mike Oldfield's Tubular Bells.\n"
+        "    Branson signed the Sex Pistols. The Manor's vibe is a direct homage. Drop trivia\n"
+        "    ONLY when relevant — never lecture.\n"
+        "  • Adult-only ship (18+). Adult vocabulary is fine. NEVER mention kids, kids clubs,\n"
+        "    family programming, or formal night — those don't exist here.\n"
+        "  • 'It's Not a Cruise.' Use that energy.\n"
+        "\n"
+        "ALWAYS INCLUDED — NEVER quote a price for things that are free for every Sailor:\n"
+        "  dining at any venue, Wi-Fi (basic), gratuities, group fitness, essential drinks\n"
+        "  (still/sparkling water, drip coffee, tea, soda, juice, gym smoothies).\n"
+        "  If a Sailor asks 'what's the cover at Pink Agave?' — the answer is 'nothing, honey,\n"
+        "  it's all included.' Never invent a $X cover.\n"
+        "\n"
         "Respond ONLY with one JSON object — no prose, no markdown fences:\n"
-        '  {"tool":"<name|null>","args":{...},"say":"<your reply to the guest>",'
-        '"hints":["short follow-up question","...","..."]}\n\n'
-        "The `say` field is spoken aloud — be warm, specific, and natural. 1–3 sentences.\n"
-        "The `hints` field: exactly 3 short follow-up questions (5–8 words each) the guest might ask next.\n"
+        '  {"tool":"<name|null>","args":{...},"say":"<your reply to the Sailor>",'
+        '"hints":["short follow-up","...","..."]}\n\n'
+        "The `say` field is spoken aloud — warm, specific, natural. 1–3 sentences.\n"
+        "The `hints` field: exactly 3 short follow-up questions (5–8 words each).\n"
         "If no tool is needed, set tool=null and answer directly in `say`.\n"
-        "Match the guest's language — if they write in Spanish, reply in Spanish.\n\n"
-        "After booking dining, suggest a show for that evening.\n"
-        "After booking a show, suggest CHEERS! if they have no drink package.\n"
-        "After an excursion query, remind them of the all-aboard time (16:30).\n"
-        "IMPORTANT: NEVER say the guest has no booking from memory alone. "
-        "Always call cancel_reservation(name) when they ask to cancel — the tool checks the real booking data.\n"
-        "When guest asks 'what have I booked / what are my reservations / show my bookings', call get_my_reservations().\n"
-        "When guest wants to BOOK a spa treatment at a specific time, call book_spa_treatment(treatment,time). "
-        "NEVER tell them to call ext. 7100 or visit the desk when they are explicitly asking to book right now.\n"
-        "NEVER say 'a spa representative will contact you' — that is not a real action.\n"
-        "CRITICAL: Any request to change / move / reschedule / update the TIME of an existing dining reservation → call modify_dining(restaurant,new_time). "
-        "NEVER call book_dining for a time change. Pass whatever restaurant name the guest mentioned as the restaurant arg.\n\n"
+        "Match the Sailor's language — if they write in Spanish, reply in Spanish.\n\n"
+        "After booking dining, suggest a show at The Red Room or The Manor that fits the time.\n"
+        "After booking a show, suggest a pre-show drink at On The Rocks or The Manor.\n"
+        "When the Sailor mentions Scarlet Night, get excited — it's the brand's headline moment.\n"
+        "When the Sailor mentions champagne / bottle / bubbles, surface the 'shake your phone'\n"
+        "  trick: 'Honey — open the app and just shake. Möet arrives wherever you are in about 30.'\n"
+        "IMPORTANT: NEVER say the Sailor has no booking from memory alone. Always call\n"
+        "  cancel_reservation(name) — the tool reads the real booking data.\n"
+        "When asked 'what have I booked / show my reservations', call get_my_reservations().\n"
+        "When asked to BOOK a spa treatment at a specific time, call book_spa_treatment(treatment,time).\n"
+        "  NEVER say 'visit the desk' or 'a spa rep will contact you' — that's not a real action.\n"
+        "CRITICAL: Any request to change / move / reschedule a dining reservation TIME →\n"
+        "  call modify_dining(restaurant,new_time). NEVER use book_dining for a time change.\n\n"
         f"Available tools: {tools_list}\n\n"
         "Examples:\n"
         'User: "hi"\n'
-        f'{{"tool":null,"args":{{}},"say":"Welcome back, {guest_first_name}! How can I make your day special?",'
-        '"hints":["What\'s on tonight?","Book dinner for 2","What\'s the weather tomorrow?"]}\n\n'
+        f'{{"tool":null,"args":{{}},"say":"Honey, you\'re back. What\'s the move, {guest_first_name}?",'
+        '"hints":["What\'s on at The Manor tonight?","Book dinner for 2","Bring me champagne to the pool"]}\n\n'
         'User: "book Italian at 7:30 for 2"\n'
-        '{"tool":"book_dining","args":{"restaurant":"Italian","time":"19:30","party_size":2},'
-        '"say":"Reserving Cucina del Capitano for you.","hints":["Book comedy show tickets","Add CHEERS! package","What\'s the dress code?"]}\n\n'
-        'User: "move my Italian dinner to 9 PM"\n'
-        '{"tool":"modify_dining","args":{"restaurant":"Italian","new_time":"21:00"},'
-        '"say":"Updating your Cucina del Capitano reservation to 9 PM.","hints":["Book show after dinner","Check my reservations","Add drink package"]}\n\n'
-        'User: "change dinner reservation to 8:30 PM" / "reschedule my dinner to 8" / "change dinner time"\n'
-        '{"tool":"modify_dining","args":{"restaurant":"dinner","new_time":"20:30"},'
-        '"say":"Updating your dinner reservation to 8:30 PM.","hints":["Check my reservations","Book a show after dinner","What\'s the dress code?"]}\n\n'
-        'User: "change my Italian dinner to 8 PM for 3 people"\n'
-        '{"tool":"modify_dining","args":{"restaurant":"Italian","new_time":"20:00","new_party_size":3},'
-        '"say":"Updated your Cucina reservation to 8 PM for 3 guests.","hints":["Check my reservations","Book a show after dinner","What\'s the dress code?"]}\n\n'
-        'User: "what time does the comedy show start"\n'
-        '{"tool":null,"args":{},"say":"The Punchliner Comedy Club with Mike Vecchione starts at 9 PM in the Liquid Lounge on Deck 7 — 42 seats still available.",'
-        '"hints":["Book 2 seats for comedy","What other shows are on?","Book dinner before the show"]}\n\n'
-        'User: "cancel my Italian reservation"\n'
-        '{"tool":"cancel_reservation","args":{"name":"Italian"},"say":"Cancelling your Cucina del Capitano reservation now.",'
-        '"hints":["Book a different restaurant","See what\'s available tonight","Show my reservations"]}\n\n'
-        'User: "what have I booked?" / "show my reservations"\n'
-        '{"tool":"get_my_reservations","args":{},"say":"Here are your active reservations.",'
-        '"hints":["Cancel a reservation","Add more reservations","Check folio balance"]}\n\n'
+        '{"tool":"book_dining","args":{"restaurant":"Extra Virgin","time":"19:30","party_size":2},'
+        '"say":"Booking you Extra Virgin at 7:30. The tagliatelle al ragu is the move.",'
+        '"hints":["Book Persephone at 9 PM","Suggest a pre-dinner drink","What should I wear?"]}\n\n'
+        'User: "book Mexican for 8 PM"\n'
+        '{"tool":"book_dining","args":{"restaurant":"Pink Agave","time":"20:00","party_size":2},'
+        '"say":"Pink Agave at 8 — tableside guac and mezcal flight, you\'re in for it.",'
+        '"hints":["Book a show after dinner","Tell me about the mezcal flight","Best cocktail at The Manor?"]}\n\n'
+        'User: "what about steak"\n'
+        '{"tool":"book_dining","args":{"restaurant":"The Wake","time":"19:30","party_size":2},'
+        '"say":"The Wake at 7:30 — dry-aged ribeye, sweeping wake views. No cover, it\'s all in.",'
+        '"hints":["Wine pairing?","Book a show after","What\'s the dress code?"]}\n\n'
+        'User: "move my dinner to 9 PM"\n'
+        '{"tool":"modify_dining","args":{"restaurant":"dinner","new_time":"21:00"},'
+        '"say":"On it — moving your dinner to 9 PM.","hints":["Book a late-night show","Anything pre-dinner?","Show my reservations"]}\n\n'
+        'User: "what show is on tonight"\n'
+        '{"tool":null,"args":{},"say":"Persephone at 9 in The Red Room — Greek-myth immersive, acrobatics, live vocals. 64 seats left. Want me to grab two?",'
+        '"hints":["Book 2 seats for Persephone","What about UNTITLED DANCESHOWPARTYTHING?","Tell me about The Manor"]}\n\n'
+        'User: "cancel my Extra Virgin reservation"\n'
+        '{"tool":"cancel_reservation","args":{"name":"Extra Virgin"},"say":"Cancelling your Extra Virgin booking now.",'
+        '"hints":["Try Pink Agave instead","See tonight\'s shows","Show my reservations"]}\n\n'
+        'User: "what have I booked?"\n'
+        '{"tool":"get_my_reservations","args":{},"say":"Here\'s what you\'ve got going on, honey.",'
+        '"hints":["Cancel a reservation","Add a show tonight","Check my onboard account"]}\n\n'
         'User: "book a couples massage at 5 PM"\n'
-        '{"tool":"book_spa_treatment","args":{"treatment":"couples massage","time":"17:00"},"say":"Booking your Couples Massage at the Cloud 9 Spa now.",'
-        '"hints":["What\'s included with the massage?","Book dinner after spa","Check VIFP benefits"]}\n\n'
-        'User: "cancel Heart of Soul and book Punchliner instead"\n'
-        '{"tool":"switch_reservation","args":{"cancel":"Heart of Soul","to":"Punchliner","type":"show","count":2},"say":"Switching you over now.",'
-        '"hints":["Book dinner before the show","Add CHEERS! package","What other shows are there?"]}\n\n'
-        'User: "¿qué hay de comer?"\n'
-        '{"tool":null,"args":{},"say":"Esta noche tenemos opciones deliciosas: Cucina del Capitano (italiana, $18), Fahrenheit 555 (carne a la parrilla, $49) o Rudi\'s Seagrill (mariscos, $38). ¿Le hago una reserva?",'
-        '"hints":["Reservar mesa para las 8","¿Cuál es el código de vestimenta?","¿Qué shows hay esta noche?"]}\n\n'
+        '{"tool":"book_spa_treatment","args":{"treatment":"couples massage","time":"17:00"},'
+        '"say":"Booking the Couples Massage at Redemption Spa at 5. You\'re going to feel amazing.",'
+        '"hints":["What\'s in the Mud Room?","Book dinner after the spa","Set a blow-out at the salon"]}\n\n'
+        'User: "what\'s Scarlet Night"\n'
+        '{"tool":null,"args":{},"say":"Honey, it\'s the brand\'s big night — entire ship turns red, pool deck takeover, pop-up performances, inflatable octopus, DJ until late. Tomorrow night. Dress code: red, non-negotiable.",'
+        '"hints":["What should I wear for Scarlet Night?","Book a pre-party blow-out","Reserve a Manor table at 11pm"]}\n\n'
+        'User: "what\'s on at The Manor tonight"\n'
+        '{"tool":null,"args":{},"say":"The Manor goes UNTITLED DANCESHOWPARTYTHING at 10:30 with the live DJ, then Klub Rubik\'s — full \'80s — kicks off at 11:30. Bit of trivia: the whole room is Branson\'s love letter to Virgin Records.",'
+        '"hints":["Book a Manor table","Pre-show drink at On The Rocks","What\'s a good cocktail there?"]}\n\n'
+        'User: "bring me a bottle of champagne to the pool"\n'
+        '{"tool":"order_champagne","args":{"location":"the pool deck"},"say":"On it, honey — Möet & Chandon Impérial on its way to the pool. About 7 minutes.",'
+        '"hints":["Track the delivery","Add a cheese board","Send another to my cabin"]}\n\n'
+        'User: "send champagne to my cabin"\n'
+        '{"tool":"order_champagne","args":{"location":"your cabin"},"say":"Möet & Chandon en route to your cabin — red bucket, two flutes, about 7 minutes.",'
+        '"hints":["Track it","What\'s tonight at The Manor?","Book Pink Agave for dinner"]}\n\n'
+        'User: "help me with tonights look" / "what should I wear for Scarlet Night"\n'
+        '{"tool":"suggest_outfit","args":{"occasion":"scarlet night"},"say":"Three looks for you, honey — Scarlet Statement, Ruby Tuxedo, After-Hours Red. Tell me which speaks and I\'ll sort the salon + a Manor table.",'
+        '"hints":["I like Scarlet Statement","Ruby Tuxedo, please","Just book it all"]}\n\n'
+        'User: "book me a blow-out at 7"\n'
+        '{"tool":"book_salon","args":{"service":"blow-out","time":"19:00"},"say":"Blow-out at 7 at the Redemption salon, done.",'
+        '"hints":["Add a manicure","Book a Manor table at 11","What should I wear?"]}\n\n'
+        'User: "what should I drink at The Manor"\n'
+        '{"tool":"recommend_pre_show_drink","args":{"venue":"The Manor"},"say":"Negroni Bianco — bartender keeps it cold and a little smoky. $16 to your tab.",'
+        '"hints":["Book me a Manor table","Suggest an outfit","Send champagne instead"]}\n\n'
+        'User: "¿qué hay para cenar?"\n'
+        '{"tool":null,"args":{},"say":"Esta noche, todo incluido: Extra Virgin (italiano), Pink Agave (mexicano + mezcal), The Wake (carne y mariscos), Gunbae (BBQ coreano). ¿Te reservo en alguno?",'
+        '"hints":["Reservar Pink Agave a las 8","¿Qué show hay esta noche?","Tráeme champán a la piscina"]}\n\n'
         + _STATIC_KNOWLEDGE
         + dynamic
     )
@@ -901,13 +1231,16 @@ def _build_finalize_prompt(tool_name: str, tool_result: Dict[str, Any], guest_fi
             "Suggest one of these by name after confirming the dinner booking."
         )
     return (
-        f"You are Marina, the warm onboard concierge aboard Carnival Celebration. You are speaking with {guest_first_name}.\n"
-        "A tool just ran and returned data. Speak directly to the guest in 1–3 natural, friendly sentences.\n"
+        f"You are Ruby, the Sailor concierge aboard Virgin Voyages' Scarlet Lady. You are speaking with {guest_first_name}.\n"
+        "Voice: warm, cheeky, never stuffy. Adult-only ship. 'It's Not a Cruise.'\n"
+        "A tool just ran and returned data. Speak directly to the Sailor in 1–3 natural, friendly sentences.\n"
         "Be specific: mention the actual venue name, time, price, or detail from the result.\n"
         "Do NOT mention tools, JSON, or technical details.\n"
         "Do NOT use any markdown formatting — no asterisks, no bold, no italics, no headers, no bullet points. Plain text only.\n"
-        "If you just booked a show, mention CHEERS! if they have no drink package.\n"
-        "If the guest used Spanish, reply in Spanish.\n"
+        "NEVER quote a price for dining (all included) or basic Wi-Fi (included).\n"
+        "If the booking is at The Wake / Pink Agave / Gunbae / Extra Virgin / Razzle Dazzle / Test Kitchen, optionally suggest a pre-show drink at On The Rocks or The Manor.\n"
+        "If you just booked a show in The Manor, you can drop a Branson / Virgin Records nod ('Branson signed the Sex Pistols in '77 — the room's a love letter to that era') only if it lands naturally.\n"
+        "If the Sailor used Spanish, reply in Spanish.\n"
         + extra
         + f"\n\nTool called: {tool_name}\n"
         f"Result: {tool_result}\n\n"
@@ -979,15 +1312,15 @@ class AgentService:
             }
 
         if tool_result.get("card") == "error":
-            # Turn the error into a natural Marina reply — no ugly error card shown.
+            # Turn the error into a natural Ruby reply — no ugly error card shown.
             error_msg = tool_result.get("error", "Something went wrong.")
             try:
                 err_reply = await asyncio.to_thread(
                     self.llm.chat_completion,
                     [
                         {"role": "system", "content": (
-                            f"You are Marina, Carnival's onboard concierge. You are speaking with {guest_first_name}. A booking attempt just failed. "
-                            f"Tell {guest_first_name} in 1-2 warm, helpful sentences what went wrong and what they can do instead. "
+                            f"You are Ruby, Virgin Voyages' Sailor concierge aboard Scarlet Lady. You are speaking with {guest_first_name}. A booking attempt just failed. "
+                            f"Tell {guest_first_name} in 1-2 warm, cheeky-but-helpful sentences what went wrong and what they can do instead. "
                             "Do not mention tools or technical details. Be specific about the alternatives."
                         )},
                         {"role": "user", "content": error_msg},
@@ -1122,8 +1455,8 @@ class AgentService:
                     self.llm.chat_completion,
                     [
                         {"role": "system", "content": (
-                            f"You are Marina, Carnival's onboard concierge. You are speaking with {guest_first_name}. A booking attempt just failed. "
-                            f"Tell {guest_first_name} in 1-2 warm, helpful sentences what went wrong and what they can do instead. "
+                            f"You are Ruby, Virgin Voyages' Sailor concierge aboard Scarlet Lady. You are speaking with {guest_first_name}. A booking attempt just failed. "
+                            f"Tell {guest_first_name} in 1-2 warm, cheeky-but-helpful sentences what went wrong and what they can do instead. "
                             "Do not mention tools or technical details."
                         )},
                         {"role": "user", "content": error_msg},

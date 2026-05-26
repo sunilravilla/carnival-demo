@@ -102,10 +102,11 @@ def get_cruise() -> Dict[str, Any]:
     c = copy.deepcopy(_cruise)
     today = _date.today()
 
-    # Always pin to Day 4 — demo scenario is always Cozumel port day
+    # Always pin to Day 4 — the marquee port day for whichever itinerary is loaded.
     day_num = 4
-    departure = today - _timedelta(days=3)   # Day 1 = 3 days ago
-    return_date = today + _timedelta(days=3)  # Day 7 = 3 days ahead
+    total = c.get("total_days", 7)
+    departure = today - _timedelta(days=day_num - 1)            # Day 1 = (day_num-1) days ago
+    return_date = today + _timedelta(days=total - day_num)      # works for 5/6/7-night cruises
 
     c["current_day"] = day_num
     c["departure_date"] = departure.isoformat()
@@ -113,15 +114,15 @@ def get_cruise() -> Dict[str, Any]:
 
     itinerary = c.get("itinerary", [])
     today_stop = itinerary[day_num - 1] if day_num <= len(itinerary) else "At Sea"
-    day5_stop = itinerary[4] if len(itinerary) >= 5 else "Celebration Key, Bahamas"
+    next_day_stop = itinerary[day_num] if len(itinerary) > day_num else "At Sea"
 
     day_names = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
     c["today_label"] = today_stop
     c["today_weekday"] = day_names[today.weekday()]
 
-    # Next port is always Day 5 = tomorrow
+    # Next port = the stop immediately after today
     c["next_port"] = {
-        "name": day5_stop,
+        "name": next_day_stop,
         "arrival_date": (today + _timedelta(days=1)).isoformat(),
         "all_aboard_time": "17:00",
     }

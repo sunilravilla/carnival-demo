@@ -1,6 +1,10 @@
 import { useGuest } from '../../context/GuestContext';
+import { branding } from '../../styles/branding';
 
-const VIFP_COLORS = { Platinum: '#6B7CFF', Gold: '#C8952A', Red: '#B61B38' };
+const TIER_COLORS = branding.tierColors || {};
+const TIER_LABEL = branding.tierLabel || 'Tier';
+const ACCENT = branding.accentColor || '#FFC72C';
+const GOLD = branding.goldColor || '#FFC72C';
 
 const S = {
   wrap: {
@@ -35,15 +39,15 @@ const S = {
     display: 'flex', gap: 8, alignItems: 'center',
   },
   dayPill: {
-    background: 'rgba(255,199,44,0.2)',
-    border: '1px solid rgba(255,199,44,0.5)',
-    color: '#FFC72C',
+    background: `${GOLD}33`,
+    border: `1px solid ${GOLD}80`,
+    color: GOLD,
     fontSize: 11, fontWeight: 700,
     padding: '3px 10px', borderRadius: 20,
     letterSpacing: 0.5,
   },
   vifpBadge: (tier) => ({
-    background: VIFP_COLORS[tier] || '#888',
+    background: TIER_COLORS[tier] || '#888',
     color: '#fff', fontSize: 11, fontWeight: 700,
     padding: '3px 10px', borderRadius: 20,
     letterSpacing: 0.5,
@@ -71,9 +75,9 @@ const S = {
     borderRadius: 12,
   },
   portChip: {
-    background: 'rgba(255,199,44,0.15)',
-    border: '1px solid rgba(255,199,44,0.3)',
-    color: '#FFC72C',
+    background: `${GOLD}26`,
+    border: `1px solid ${GOLD}4D`,
+    color: GOLD,
     fontSize: 12, fontWeight: 600,
     padding: '2px 10px', borderRadius: 12,
   },
@@ -99,7 +103,7 @@ export default function HeroBanner() {
 
       {/* Ship photo background */}
       <img
-        src="/carnival-ship-hero.jpg"
+        src={branding.heroImage || '/carnival-ship-hero.jpg'}
         alt=""
         style={{
           position: 'absolute', inset: 0,
@@ -111,7 +115,7 @@ export default function HeroBanner() {
       {/* Dark gradient overlay for text legibility */}
       <div style={{
         position: 'absolute', inset: 0,
-        background: 'linear-gradient(to bottom, rgba(10,39,68,0.55) 0%, rgba(1,78,143,0.75) 100%)',
+        background: branding.heroOverlay || 'linear-gradient(to bottom, rgba(10,39,68,0.55) 0%, rgba(1,78,143,0.75) 100%)',
       }} />
 
       {/* Wave at bottom */}
@@ -126,7 +130,7 @@ export default function HeroBanner() {
         {cruise && (
           <span style={S.dayPill}>Day {cruise.currentDay} of {cruise.totalDays}</span>
         )}
-        <span style={S.vifpBadge(vifpTier)}>{vifpTier} VIFP</span>
+        <span style={S.vifpBadge(vifpTier)}>{vifpTier} {TIER_LABEL}</span>
       </div>
 
       {/* Bottom content */}

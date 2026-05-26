@@ -8,6 +8,11 @@ import FolioWidget from './FolioWidget';
 import QuickActions from './QuickActions';
 import MarinaChatBubble from './MarinaChatBubble';
 import MarinaPanel from './MarinaPanel';
+import ShakeForChampagne from '../champagne/ShakeForChampagne';
+import TonightsLook from '../style/TonightsLook';
+import NowPlayingManor from '../music/NowPlayingManor';
+import RockStarPerks from './RockStarPerks';
+import { isVirgin } from '../../styles/branding';
 
 const S = {
   root: {
@@ -49,6 +54,10 @@ export default function DashboardPage({ onAdminClick, onSwitchGuest, isCheckingA
         <HeroBanner />
         <VoyageProgressBar />
         <TodayCard />
+        {isVirgin && <RockStarPerks />}
+        {isVirgin && <TonightsLook onAction={openMarinaPanelWithMessage} />}
+        {isVirgin && <ShakeForChampagne />}
+        {isVirgin && <NowPlayingManor />}
         <ReservationWidget />
         <FolioWidget />
         <QuickActions onAction={openMarinaPanelWithMessage} />

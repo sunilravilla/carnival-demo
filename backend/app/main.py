@@ -1359,6 +1359,18 @@ async def guest_reset(request: dict):
     return {"reset": True, "phone": phone}
 
 
+@app.post("/api/champagne/order")
+async def champagne_order(request: dict):
+    """Virgin signature ritual: Shake for Champagne.
+
+    Frontend invokes this directly (no agent chat) when the Sailor presses the
+    button or shakes their phone. Returns the order card payload + new folio balance.
+    """
+    from app.services.agent_service import _tool_order_champagne
+    location = (request or {}).get("location", "").strip()
+    return _tool_order_champagne({"location": location})
+
+
 @app.post("/api/user/login")
 async def user_login(request: dict):
     """

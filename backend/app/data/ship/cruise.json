@@ -1,21 +1,20 @@
 {
-  "ship": "Carnival Celebration",
-  "itinerary_name": "7-Night Western Caribbean",
-  "departure_port": "Miami, FL",
-  "departure_date": "2026-05-09",
-  "return_date": "2026-05-15",
-  "total_days": 7,
+  "ship": "Scarlet Lady",
+  "itinerary_name": "5-Night Western Caribbean Charm",
+  "departure_port": "PortMiami, FL",
+  "departure_date": "2026-05-23",
+  "return_date": "2026-05-28",
+  "total_days": 6,
   "itinerary": [
-    "Miami, FL (Embark)",
+    "PortMiami, FL (Embark)",
+    "Bimini, Bahamas — The Beach Club",
     "Sea Day",
-    "Sea Day",
-    "Cozumel, Mexico",
-    "Celebration Key, Bahamas",
-    "Sea Day",
-    "Miami, FL (Disembark)"
+    "Puerto Plata, Dominican Republic",
+    "Sea Day — Scarlet Night",
+    "PortMiami, FL (Disembark)"
   ],
   "next_port_schedule": [
-    {"day": 4, "name": "Cozumel, Mexico", "arrival_date": "2026-05-12", "all_aboard_time": "16:30"},
-    {"day": 5, "name": "Celebration Key, Bahamas", "arrival_date": "2026-05-13", "all_aboard_time": "17:00"}
+    {"day": 4, "name": "Puerto Plata, Dominican Republic", "arrival_date": "2026-05-26", "all_aboard_time": "17:00"},
+    {"day": 5, "name": "Sea Day — Scarlet Night", "arrival_date": "2026-05-27", "all_aboard_time": "—"}
   ]
 }

@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useGuest } from '../../context/GuestContext';
+import { branding, isVirgin } from '../../styles/branding';
 
-const TOOLTIP_KEY = 'carnival_marina_tooltip_shown';
+const TOOLTIP_KEY = 'concierge_chat_tooltip_shown';
+const RING_COLOR = branding.accentColor || '#B61B38';
+const UNREAD_COLOR = branding.goldColor || '#FFC72C';
 
 const S = {
   wrap: {
@@ -42,10 +45,10 @@ const S = {
     borderRadius: '50%',
     overflow: 'hidden',
     cursor: 'pointer',
-    border: `3px solid ${unread ? '#FFC72C' : '#B61B38'}`,
+    border: `3px solid ${unread ? UNREAD_COLOR : RING_COLOR}`,
     boxShadow: unread
-      ? '0 4px 20px rgba(255,199,44,0.5)'
-      : '0 4px 20px rgba(182,27,56,0.35)',
+      ? `0 4px 20px ${UNREAD_COLOR}80`
+      : `0 4px 20px ${RING_COLOR}59`,
     position: 'relative',
     transition: 'transform 0.2s, box-shadow 0.2s',
     WebkitTapHighlightColor: 'transparent',
@@ -57,12 +60,18 @@ const S = {
     objectPosition: 'center 5%',
     display: 'block',
   },
+  initials: {
+    width: '100%', height: '100%',
+    background: 'linear-gradient(135deg, #CC0000 0%, #2E0444 100%)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    color: '#fff', fontWeight: 800, fontSize: 28, letterSpacing: 0.5,
+  },
   unreadDot: {
     position: 'absolute',
     top: 2, right: 2,
     width: 14, height: 14,
     borderRadius: '50%',
-    background: '#FFC72C',
+    background: UNREAD_COLOR,
     border: '2px solid #fff',
     animation: 'dotPulse 1.5s ease-in-out infinite',
   },
@@ -115,9 +124,9 @@ export default function MarinaChatBubble({ onOpen }) {
 
       {showTooltip && (
         <div style={S.tooltip}>
-          Hi {firstName}! I'm Marina 👋<br />
+          Hi {firstName}! I'm {branding.avatarName} 👋<br />
           <span style={{ fontWeight: 400, color: '#666', fontSize: 12 }}>
-            Your AI cruise concierge — tap me!
+            {branding.avatarRole} — tap me!
           </span>
           <div style={S.tooltipArrow} />
         </div>
@@ -134,11 +143,11 @@ export default function MarinaChatBubble({ onOpen }) {
         onMouseUp={() => setPressed(false)}
         onTouchStart={() => setPressed(true)}
         onTouchEnd={() => setPressed(false)}
-        title="Chat with Marina"
+        title={`Chat with ${branding.avatarName}`}
       >
         <img
           src="/avatars/marina-real/marina_01_closed.png"
-          alt="Marina"
+          alt={branding.avatarName}
           style={S.img}
         />
         {marinaUnread && <div style={S.unreadDot} />}

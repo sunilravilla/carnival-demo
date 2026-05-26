@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <linearGradient id="bg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2E0444"/><stop offset="1" stop-color="#5B0822"/></linearGradient>
+  </defs>
+  <rect width="200" height="200" fill="url(#bg1)"/>
+  <!-- silhouette: silk slip -->
+  <path d="M100 50 C110 50 116 60 116 72 L116 168 C116 180 110 188 100 188 C90 188 84 180 84 168 L84 72 C84 60 90 50 100 50 Z" fill="#CC0000"/>
+  <!-- shoulder jacket suggestion -->
+  <path d="M62 86 L100 70 L138 86 L132 120 L100 110 L68 120 Z" fill="#D4A862" opacity="0.95"/>
+  <!-- gold heel hint -->
+  <circle cx="92" cy="184" r="4" fill="#D4A862"/>
+  <circle cx="108" cy="184" r="4" fill="#D4A862"/>
+  <!-- label -->
+  <text x="100" y="32" font-family="Inter,Helvetica,sans-serif" font-size="13" font-weight="800" fill="#fff" text-anchor="middle" letter-spacing="2">SCARLET STATEMENT</text>
+</svg>

@@ -1,7 +1,7 @@
 // Generative-UI cards rendered above the conversation when the agent calls a tool.
 // Single file holds all variants to keep the demo footprint compact.
 import { useState } from "react";
-import { activeTheme as theme } from "../../styles/branding";
+import { activeTheme as theme, branding } from "../../styles/branding";
 
 // Inject card-slide-up keyframe once
 if (!document.getElementById("concierge-card-keyframes")) {
@@ -25,11 +25,11 @@ function downloadICS({ title, date, startHHMM, durationMin = 90, location = "", 
   const endMin = parseInt(startM, 10) + durationMin;
   const endH = parseInt(startH, 10) + Math.floor(endMin / 60);
   const dtEnd = `${year}${month}${day}T${pad(endH)}${pad(endMin % 60)}00`;
-  const uid = `marina-${Date.now()}@carnival.com`;
+  const uid = `${(branding.avatarName || 'concierge').toLowerCase()}-${Date.now()}@${(branding.logoText || 'cruise').toLowerCase().replace(/\s+/g, '-')}.demo`;
   const ics = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//Marina//Carnival Celebration//EN",
+    `PRODID:-//${branding.avatarName || 'Concierge'}//${branding.logoText || 'Cruise'}//EN`,
     "BEGIN:VEVENT",
     `UID:${uid}`,
     `DTSTART:${dtStart}`,
@@ -144,7 +144,7 @@ function DiningCard({ payload }) {
           date: payload.date,
           startHHMM: payload.time,
           durationMin: 90,
-          location: `${r.location}, Carnival Celebration`,
+          location: `${r.location}, ${branding.logoText || ''}`,
           description: `Reservation #${payload.confirmation_id} · Party of ${payload.party_size}${r.cover_charge ? ` · Cover charge $${r.cover_charge.toFixed(2)}/person` : ""}`,
         })}>Add to Calendar</button>
       </div>
@@ -176,7 +176,7 @@ function ShowCard({ payload }) {
           date: payload.date,
           startHHMM: payload.time,
           durationMin: s.duration_min || 60,
-          location: `${s.venue}, Carnival Celebration`,
+          location: `${s.venue}, ${branding.logoText || ''}`,
           description: `${payload.seat_label} · Confirmation #${payload.confirmation_id}${s.headliner ? ` · Featuring ${s.headliner}` : ""}`,
         })}>Save to Calendar</button>
       </div>
@@ -380,9 +380,9 @@ function SpaBookingCard({ payload }) {
           )}
         </div>
       </div>
-      {payload.savings > 0 && (
+      {payload.vifp_note && (
         <div style={{ ...pill("#E0F2F1", teal), display: "block", textAlign: "center", padding: "6px 12px", borderRadius: 8 }}>
-          ✓ VIFP Gold 10% discount applied
+          ✓ {payload.vifp_note}
         </div>
       )}
     </div>
@@ -499,6 +499,129 @@ function ErrorCard({ payload }) {
   );
 }
 
+// ── Virgin: Shake for Champagne confirmation card ───────────────────────────
+function ChampagneCard({ payload }) {
+  const red = "#CC0000";
+  return (
+    <div style={{ ...cardBase, borderColor: "#F0B8B8" }}>
+      <div style={headerStrip(red)} />
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+        <h3 style={{ ...title, color: red }}>🥂 {payload.bottle}</h3>
+        <span style={pill("#FFE9E9", red)}>#{payload.confirmation_id}</span>
+      </div>
+      <div style={{ ...subtle, marginBottom: 10 }}>
+        {payload.volume_ml} ml · From {payload.dispatched_from}
+      </div>
+      <div style={{ ...row, marginBottom: 10 }}>
+        <div>
+          <div style={subtle}>Delivery to</div>
+          <div style={{ fontWeight: 700, fontSize: 16 }}>{payload.location}</div>
+        </div>
+        <div style={{ textAlign: "right" }}>
+          <div style={subtle}>ETA</div>
+          <div style={{ fontWeight: 800, fontSize: 18, color: red }}>~{payload.eta_minutes} min</div>
+        </div>
+      </div>
+      <div style={{ ...pill("#FFE9E9", red), display: "block", textAlign: "center", padding: "6px 12px", borderRadius: 8 }}>
+        ${(payload.price || 0).toFixed(2)} · Red bucket + 2 flutes included
+      </div>
+    </div>
+  );
+}
+
+// ── Virgin: Tonight's Look — outfit suggestions ─────────────────────────────
+function OutfitSuggestionCard({ payload, onAction }) {
+  const red = "#CC0000";
+  const looks = payload.looks || [];
+  return (
+    <div style={{ ...cardBase, borderColor: "#F0D8D8" }}>
+      <div style={headerStrip(red)} />
+      <h3 style={{ ...title, color: red, marginBottom: 4 }}>
+        💃 Tonight's Look — {String(payload.occasion || "").replace(/\b\w/g, c => c.toUpperCase())}
+      </h3>
+      {payload.stylist_note && (
+        <div style={{ ...subtle, marginBottom: 12 }}>{payload.stylist_note}</div>
+      )}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 10 }}>
+        {looks.map((look) => (
+          <div key={look.id} style={{
+            display: "flex", gap: 10, padding: 10,
+            background: "#FAFAF7", borderRadius: 10,
+            border: "1px solid #ECE8E0",
+          }}>
+            <img
+              src={look.image}
+              alt={look.name}
+              style={{ width: 64, height: 64, borderRadius: 8, objectFit: "cover", background: "#fff", flexShrink: 0 }}
+              onError={(e) => { e.target.style.visibility = "hidden"; }}
+            />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 800, fontSize: 14, color: "#0A0A0A" }}>{look.name}</div>
+              <div style={{ fontSize: 12, color: "#666", marginTop: 2 }}>{look.description}</div>
+              <div style={{ fontSize: 11, color: red, marginTop: 4, fontStyle: "italic" }}>{look.vibe}</div>
+              {onAction && (
+                <button
+                  onClick={() => onAction(`I want ${look.name} — book the salon and a Manor table to land it`)}
+                  style={{
+                    marginTop: 8,
+                    background: red, color: "#fff", border: "none",
+                    borderRadius: 999, padding: "6px 12px",
+                    fontSize: 12, fontWeight: 700, cursor: "pointer",
+                  }}
+                >
+                  Land this look
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Virgin: Salon booking confirmation ──────────────────────────────────────
+function SalonBookingCard({ payload }) {
+  const gold = "#D4A862";
+  return (
+    <div style={{ ...cardBase, borderColor: "#E7D8B8" }}>
+      <div style={headerStrip(gold)} />
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+        <h3 style={{ ...title, color: "#0A0A0A" }}>💅 {payload.service}</h3>
+        <span style={pill("#F5EBD2", "#7A5A1B")}>#{payload.confirmation_id}</span>
+      </div>
+      <div style={{ ...subtle, marginBottom: 10 }}>
+        {payload.location} · {payload.duration_min} min
+      </div>
+      <div style={{ ...row }}>
+        <div>
+          <div style={subtle}>Appointment</div>
+          <div style={{ fontWeight: 700, fontSize: 18 }}>{payload.time_human}</div>
+        </div>
+        <div style={{ textAlign: "right" }}>
+          <div style={subtle}>Total</div>
+          <div style={{ fontWeight: 700, fontSize: 18, color: "#0A0A0A" }}>${(payload.price || 0).toFixed(2)}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Virgin: Pre-show drink pairing recommendation ───────────────────────────
+function DrinkPairingCard({ payload }) {
+  const purple = "#2E0444";
+  return (
+    <div style={{ ...cardBase, borderColor: "#C9B8DC" }}>
+      <div style={headerStrip(purple)} />
+      <h3 style={{ ...title, color: purple, marginBottom: 4 }}>🍸 {payload.drink}</h3>
+      <div style={{ ...subtle, marginBottom: 8 }}>
+        {payload.venue} · Deck {payload.deck} · ${(payload.price || 0).toFixed(2)}
+      </div>
+      {payload.note && <div style={{ fontSize: 13, color: "#4A4A4A" }}>{payload.note}</div>}
+    </div>
+  );
+}
+
 const REGISTRY = {
   today: TodayCard,
   dining: DiningCard,
@@ -511,6 +634,10 @@ const REGISTRY = {
   drink_package: DrinkPackageCard,
   weather: WeatherCard,
   error: ErrorCard,
+  champagne: ChampagneCard,
+  outfit_suggestion: OutfitSuggestionCard,
+  salon_booking: SalonBookingCard,
+  drink_pairing: DrinkPairingCard,
 };
 
 function SingleCard({ payload, onAction }) {
