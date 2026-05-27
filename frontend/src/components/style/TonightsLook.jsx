@@ -78,7 +78,8 @@ const S = {
     letterSpacing: 0.2,
   },
   subline: {
-    fontSize: 13, opacity: 0.9, marginTop: 4,
+    fontSize: 13, opacity: 0.9,
+    padding: '0 18px 8px',
   },
   countdown: {
     display: 'flex', alignItems: 'baseline', gap: 4,
@@ -204,9 +205,6 @@ export default function TonightsLook({ onAction }) {
         <div style={S.topLeft}>
           <div style={S.eyebrow}>Tonight's Look · Scarlet Night</div>
           <div style={S.headline}>{firstName}, you in red?</div>
-          <div style={S.subline}>
-            The ship turns scarlet tomorrow. Let's land your look.
-          </div>
         </div>
         <div style={S.countdown}>
           {cd.d > 0 && (<><span style={S.cdNum}>{cd.d}</span><span style={S.cdLbl}>D</span></>)}
@@ -215,6 +213,7 @@ export default function TonightsLook({ onAction }) {
           <span style={S.cdNum}>{String(cd.s).padStart(2, '0')}</span><span style={S.cdLbl}>S</span>
         </div>
       </div>
+      <div style={S.subline}>Scarlet Night is tomorrow — pick a look.</div>
 
       <div style={S.dressRow}>
         <div style={S.redDot} />
