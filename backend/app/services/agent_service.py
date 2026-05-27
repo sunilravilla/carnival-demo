@@ -758,36 +758,98 @@ def _tool_hangover_recovery_menu(_args: Dict[str, Any]) -> Dict[str, Any]:
 
 
 # ─── Manor Shazam — identify what's playing right now ──────────────────────
-# Mocked DJ set list. Picks pseudo-randomly so the demo doesn't repeat.
-# Track titles are mentioned in text only — no audio embed (zero IP risk).
+# Track DB tagged with `set_name` — same keys as the dashboard widget's
+# MANOR_SETS in [frontend/src/components/music/NowPlayingManor.jsx] so the
+# Shazam result aligns with whatever set the dashboard says is currently live.
+# (Bug B4 fix.)
+#
+# Set keys: sundowner-disco · dinner-funk · marvy-house · klub-rubiks-80s ·
+#           afterhours-grooves · winddown-soul · preview
 _MANOR_TRACKLIST = [
-    {"track": "Tubular Bells — Pt. I", "artist": "Mike Oldfield", "year": 1973, "vibe": "Krautrock / prog",
-     "trivia": "Virgin Records' very first release — the album that built the label."},
+    # 70s disco era — sundowner + dinner sets
+    {"track": "Le Freak", "artist": "Chic", "year": 1978, "vibe": "Disco",
+     "set_name": "sundowner-disco",
+     "trivia": "Nile Rodgers wrote it after being turned away from Studio 54."},
+    {"track": "Dance Away", "artist": "Roxy Music", "year": 1979, "vibe": "Art-rock disco",
+     "set_name": "sundowner-disco",
+     "trivia": "Bryan Ferry at his smoothest. Sundowner-Manor energy in song form."},
     {"track": "Sledgehammer", "artist": "Peter Gabriel", "year": 1986, "vibe": "Soulful funk-rock",
+     "set_name": "dinner-funk",
      "trivia": "Released on Virgin. Stop-motion video changed MTV forever."},
-    {"track": "Anarchy in the U.K.", "artist": "Sex Pistols", "year": 1976, "vibe": "Pure punk",
-     "trivia": "Branson signed the Pistols after EMI dropped them. The bet of a lifetime."},
+    {"track": "Red Red Wine", "artist": "UB40", "year": 1983, "vibe": "Reggae-funk",
+     "set_name": "dinner-funk",
+     "trivia": "Virgin Records signing. A Neil Diamond cover that nobody saw coming."},
+    # House/disco set — DJ Marvy Festival Stage
+    {"track": "Tubular Bells — Pt. I", "artist": "Mike Oldfield", "year": 1973, "vibe": "Krautrock / prog house edit",
+     "set_name": "marvy-house",
+     "trivia": "Virgin Records' very first release — the album that built the label."},
+    # 80s dance — Klub Rubik's
     {"track": "Karma Chameleon", "artist": "Culture Club", "year": 1983, "vibe": "Synth-pop",
+     "set_name": "klub-rubiks-80s",
      "trivia": "Virgin Records UK. Boy George at his peak."},
     {"track": "Don't You Want Me", "artist": "The Human League", "year": 1981, "vibe": "Synth-pop",
+     "set_name": "klub-rubiks-80s",
      "trivia": "Virgin Records. The Christmas #1 that defined an era."},
-    {"track": "Red Red Wine", "artist": "UB40", "year": 1983, "vibe": "Reggae",
-     "trivia": "Virgin Records signing. A Neil Diamond cover that nobody saw coming."},
-    {"track": "Dance Away", "artist": "Roxy Music", "year": 1979, "vibe": "Art-rock disco",
-     "trivia": "Bryan Ferry at his smoothest. Late-Manor energy in song form."},
-    {"track": "Le Freak", "artist": "Chic", "year": 1978, "vibe": "Disco",
-     "trivia": "Nile Rodgers wrote it after being turned away from Studio 54."},
+    # After-hours / wind-down — punk + late grooves
+    {"track": "Anarchy in the U.K.", "artist": "Sex Pistols", "year": 1976, "vibe": "Pure punk",
+     "set_name": "afterhours-grooves",
+     "trivia": "Branson signed the Pistols after EMI dropped them. The bet of a lifetime."},
+    {"track": "Get Up (I Feel Like Being a) Sex Machine", "artist": "James Brown", "year": 1970, "vibe": "Wind-down soul",
+     "set_name": "winddown-soul",
+     "trivia": "Not Virgin, but the soul Branson built the label around."},
 ]
 
 
+# Explicit hour → set lookup — robust across the after-midnight rollover that
+# broke the naive "latest entry where s.h <= now" iteration (the h=3 wind-down
+# entry was winning for ANY current hour ≥ 3).
+# Must stay in sync with MANOR_SETS in [frontend/src/components/music/NowPlayingManor.jsx].
+_MANOR_HOUR_LOOKUP = {
+    16: "marvy-house",  17: "marvy-house",   # preview window — show tonight's headliner
+    18: "sundowner-disco", 19: "sundowner-disco",
+    20: "dinner-funk",     21: "dinner-funk",
+    22: "marvy-house",
+    23: "klub-rubiks-80s", 0: "klub-rubiks-80s",
+    1: "afterhours-grooves", 2: "afterhours-grooves",
+    3: "winddown-soul", 4: "winddown-soul",
+    # 5-15 → daytime, fall back to the marvy-house preview
+}
+
+_MANOR_SET_META = {
+    "sundowner-disco":    {"dj": "DJ House Mother",         "until": "8 PM"},
+    "dinner-funk":        {"dj": "DJ House Mother",         "until": "10 PM"},
+    "marvy-house":        {"dj": "DJ Marvy",                "until": "11:30 PM"},
+    "klub-rubiks-80s":    {"dj": "Resident · Klub Rubik's", "until": "1:30 AM"},
+    "afterhours-grooves": {"dj": "DJ Marvy",                "until": "late"},
+    "winddown-soul":      {"dj": "Resident",                "until": "5 AM"},
+}
+
+
+def _current_manor_set() -> Dict[str, Any]:
+    """Return the set currently 'playing' in The Manor based on local hour.
+    Matches the dashboard widget's currentSet() logic 1:1 so they stay synced."""
+    import datetime as _dt
+    h = _dt.datetime.now().hour
+    set_name = _MANOR_HOUR_LOOKUP.get(h, "marvy-house")
+    preview = (5 <= h < 16)
+    meta = _MANOR_SET_META[set_name]
+    return {"h": h, "set_name": set_name, "dj": meta["dj"], "until": meta["until"], "preview": preview}
+
+
 def _tool_identify_now_playing(_args: Dict[str, Any]) -> Dict[str, Any]:
-    """Manor Shazam — tap to identify the track + auto-save to Cruise Soundtrack.
-    Picks deterministically based on the current minute so two rapid taps don't
-    return wildly different results, but rotation feels live over time.
+    """Manor Shazam — identify the track currently playing.
+
+    Now syncs with the dashboard widget: looks up the currently-live DJ set,
+    then picks a track tagged with that set's `set_name`. So when the widget
+    shows 'DJ Marvy · house & disco', the Shazam result is from that set.
     """
     import datetime as _dt
-    idx = (_dt.datetime.now().minute // 6) % len(_MANOR_TRACKLIST)
-    pick = _MANOR_TRACKLIST[idx]
+    current_set = _current_manor_set()
+    set_tracks = [t for t in _MANOR_TRACKLIST if t["set_name"] == current_set["set_name"]]
+    # Fall back to the whole list if no tracks tagged for this set
+    pool = set_tracks if set_tracks else _MANOR_TRACKLIST
+    idx = (_dt.datetime.now().minute // 6) % len(pool)
+    pick = pool[idx]
     return {
         "card": "now_playing_track",
         "track": pick["track"],
@@ -796,6 +858,8 @@ def _tool_identify_now_playing(_args: Dict[str, Any]) -> Dict[str, Any]:
         "vibe": pick["vibe"],
         "venue": "The Manor",
         "deck": 6,
+        "dj": current_set["dj"],
+        "set_name": current_set["set_name"],
         "trivia": pick["trivia"],
         "added_to_playlist": True,
         "playlist_name": "My Cruise Soundtrack",
@@ -917,7 +981,17 @@ def _tool_arrange_surprise(args: Dict[str, Any]) -> Dict[str, Any]:
     })
 
     # 3) Champagne — real booking via order_champagne (delivered table-side)
-    champagne_card = _tool_order_champagne({"location": f"your table at {preset['restaurant_name']}"})
+    # Pre-positioned at the dinner time — NOT the "~7 min ETA" framing (B2 fix).
+    # Also pass the preset's champagne name + suite-level price so the card
+    # matches the summary's promise (B1 cousin).
+    bottle_name = preset.get("champagne", "").split(" (")[0] or "Möet & Chandon Impérial"
+    champagne_price = 140.00 if "Veuve" in bottle_name else (210.00 if "Dom" in bottle_name else 105.00)
+    champagne_card = _tool_order_champagne({
+        "location": f"your table at {preset['restaurant_name']}",
+        "bottle": bottle_name,
+        "price": champagne_price,
+        "scheduled_time": preset["dinner_time"],
+    })
 
     # 4) Surprise summary card — the headline experience
     summary_card = {
@@ -1227,6 +1301,12 @@ def _tool_create_squad_event(args: Dict[str, Any]) -> Dict[str, Any]:
         "occasion": "Scarlet Night",
         "party_size": party_size,
         "invitees": invitees,
+        # B3 fix: these mock names should render as SUGGESTIONS, not as
+        # confirmed real invitees. Frontend mutes them + shows a "tap to swap"
+        # subtitle. Ruby's natural-reply for this tool reframes accordingly.
+        "is_demo_data": True,
+        "invitee_label": "Suggested invitees (tap to swap)",
+        "invitee_hint": "These are sailors you've cruised with before — tap any name to invite or swap.",
         "salon_window": "7:00 PM – 8:00 PM at Redemption Spa",
         "manor_table_time": "11:00 PM",
         "manor_table_label": f"Group table for {party_size}",
@@ -1376,10 +1456,21 @@ def _tool_recommend_pre_show_drink(args: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _tool_order_champagne(args: Dict[str, Any]) -> Dict[str, Any]:
-    """Shake-for-Champagne — Möet & Chandon Impérial 750ml delivered to a location.
+    """Shake-for-Champagne — bottle delivered to a location.
 
-    Virgin's signature ritual. Mock delivery: bottle dispatched from On The Rocks
-    (Deck 6), tracked via the Sailor App, ~30 min ETA. $105 to the folio.
+    Defaults to Möet & Chandon Impérial 750ml at $105 (Virgin's signature ritual),
+    but accepts overrides so a chained call from a `recommend_drink_now` /
+    `recommend_pre_show_drink` follow-up ("send the Krug to my cabin") can
+    deliver a different bottle. Also accepts a `scheduled_time` so a surprise-
+    mode macro can pre-position the bottle at an upcoming dinner instead of
+    using the immediate ~7-min ETA framing.
+
+    Args:
+        location: where to deliver (defaults to the guest's cabin).
+        bottle: override the bottle name (e.g. "Krug Grande Cuvée").
+        price: override the folio charge (defaults to 105 for Möet).
+        dispatched_from: override the source bar (defaults to "On The Rocks bar, Deck 6").
+        scheduled_time: HH:MM — when set, returns `scheduled_for` and suppresses ETA.
     """
     guest = ship_data.get_guest()
     location = (args.get("location") or "").strip()
@@ -1387,29 +1478,38 @@ def _tool_order_champagne(args: Dict[str, Any]) -> Dict[str, Any]:
         location = f"Cabin {guest.get('cabin', '')} · Deck {guest.get('deck', '')}".strip(" ·")
     location = location or "your current location"
 
-    # ETA is calibrated to feel cinematic but plausible.
-    eta_minutes = 7
-    confirmation_id = f"CH{abs(hash((location, _time.time()))) % 100000:05d}"
-    bottle_price = 105.00
+    bottle = (args.get("bottle") or "Möet & Chandon Impérial").strip()
+    bottle_price = float(args.get("price", 105.00))
+    dispatched_from = (args.get("dispatched_from") or "On The Rocks bar, Deck 6").strip()
+    scheduled_time = (args.get("scheduled_time") or "").strip()
+
+    confirmation_id = f"CH{abs(hash((location, bottle, _time.time()))) % 100000:05d}"
 
     ship_data.add_folio_charge(
-        f"Möet & Chandon Impérial 750ml — delivered to {location}",
+        f"{bottle} 750ml — delivered to {location}",
         bottle_price,
     )
 
-    return {
+    base = {
         "card": "champagne",
-        "bottle": "Möet & Chandon Impérial",
+        "bottle": bottle,
         "volume_ml": 750,
         "price": bottle_price,
         "location": location,
-        "dispatched_from": "On The Rocks bar, Deck 6",
-        "eta_minutes": eta_minutes,
+        "dispatched_from": dispatched_from,
         "deck_path": [6, 5, 4, guest.get("deck", 8)],  # rough route for the tracker
         "confirmation_id": confirmation_id,
-        "includes": ["chilled red Virgin ice bucket", "2 champagne flutes"],
+        "includes": ["chilled ice bucket", "2 flutes"],
         "new_folio_balance": ship_data.get_guest()["folio"]["balance"],
     }
+    if scheduled_time:
+        # Pre-positioned for a future event (used by arrange_surprise).
+        base["scheduled_for"] = _human_time(scheduled_time)
+        base["scheduled_time"] = scheduled_time
+    else:
+        # Live "shake for champagne" path — ETA framing.
+        base["eta_minutes"] = 7
+    return base
 
 
 def _tool_modify_dining(args: Dict[str, Any]) -> Dict[str, Any]:
@@ -1417,8 +1517,25 @@ def _tool_modify_dining(args: Dict[str, Any]) -> Dict[str, Any]:
     new_time = (args.get("new_time") or args.get("time") or "").strip()
     new_party_size = int(args.get("new_party_size") or args.get("party_size") or 0) or None
 
-    if not restaurant_query or not new_time:
-        return {"card": "error", "error": "I need the restaurant name and the new time to make the change."}
+    if not restaurant_query:
+        return {"card": "error", "error": "I need the restaurant name to make the change."}
+
+    # B7 fix: allow party-size-only modifications. If no new_time was supplied
+    # but new_party_size is, preserve the existing reservation's time.
+    if not new_time:
+        if not new_party_size:
+            return {"card": "error", "error": "Tell me the new time or the new party size."}
+        # Look up the current reservation's time and reuse it (party-size-only update).
+        dining = [r for r in ship_data.list_reservations() if r.get("kind") == "dining"]
+        if not dining:
+            return {"card": "error", "error": "You don't have any dining reservations to modify."}
+        # Match same logic as ship_data.modify_reservation: 1 dining → that one;
+        # else fuzzy match.
+        target = dining[0] if len(dining) == 1 else next(
+            (r for r in dining if restaurant_query.lower() in (r.get("restaurant_name") or "").lower()),
+            dining[0],
+        )
+        new_time = target.get("time", "19:00")
 
     changed = ship_data.modify_reservation(restaurant_query, new_time, new_party_size)
     if not changed:
@@ -1577,7 +1694,14 @@ def _natural_reply_for(tool_name: str, tool_result: Dict[str, Any]) -> str:
         return f"Here's {dl} — your moments, your photos, your tracks at The Manor. Shareable when you're ready."
     if tool_name == "create_squad_event":
         ps = tool_result.get("party_size", 4)
-        return f"Squad of {ps} sorted for Scarlet Night — coordinated salon slots, Manor table at 11, pre-toast at On The Rocks. Share link in the card."
+        n_invitees = len(tool_result.get("invitees", []) or [])
+        # B3 fix: explicitly call out that the names are suggested — don't
+        # narrate them as if they were the user's real friends.
+        return (
+            f"Squad of {ps} drafted for Scarlet Night — I've pulled {n_invitees} sailors you've "
+            f"cruised with before as suggested invitees (tap to swap or invite your own). "
+            f"Coordinated salon window 7–8 PM, Manor table at 11."
+        )
     return "Done — anything else?"
 
 
@@ -1858,7 +1982,7 @@ def _build_system_prompt(folio_balance: float, reservations: list, drink_package
         "get_excursion(name), get_today_schedule(), get_folio(), "
         "upgrade_drink_package(package,days), get_weather(), "
         "get_wifi_options(), get_spa_options(), get_ship_info(topic), "
-        "order_champagne(location), "
+        "order_champagne(location, bottle?, price?, dispatched_from?, scheduled_time?), "
         "suggest_outfit(occasion,vibe?), book_salon(service,time), recommend_pre_show_drink(venue), "
         "land_the_look(look_id,salon_time?,manor_time?,party_size?), "
         "hangover_recovery_menu(), identify_now_playing(), "
@@ -1905,7 +2029,18 @@ def _build_system_prompt(folio_balance: float, reservations: list, drink_package
         "When asked to BOOK a spa treatment at a specific time, call book_spa_treatment(treatment,time).\n"
         "  NEVER say 'visit the desk' or 'a spa rep will contact you' — that's not a real action.\n"
         "CRITICAL: Any request to change / move / reschedule a dining reservation TIME →\n"
-        "  call modify_dining(restaurant,new_time). NEVER use book_dining for a time change.\n\n"
+        "  call modify_dining(restaurant,new_time). NEVER use book_dining for a time change.\n"
+        "CRITICAL: Any change to the PARTY SIZE of an existing dining reservation →\n"
+        "  call modify_dining(restaurant,new_party_size=N). NEVER use book_dining for a party-size change.\n"
+        "  'Add 2 more to dinner' / 'make it 4 of us' → modify_dining with the larger party_size.\n"
+        "CRITICAL: If a Sailor wants the bottle/drink you just recommended sent to a location\n"
+        "  ('send it to my cabin', 'send a bottle of that to my table'), call order_champagne with the\n"
+        "  recommended bottle name AND price as args — NEVER let it default silently to Möet when\n"
+        "  the conversation was about a different drink. Example:\n"
+        "    Ruby suggests Krug pour ($28) → user 'send it to my cabin' →\n"
+        '    order_champagne(location="your cabin", bottle="Krug Grande Cuvée", price=28).\n'
+        "  For non-champagne cocktails (Negroni, etc.) that don't ship as bottles, clarify in `say`\n"
+        "  ('bottle service is champagne-only — want a Negroni delivered as a single pour instead?').\n\n"
         f"Available tools: {tools_list}\n\n"
         "Examples:\n"
         'User: "hi"\n'
@@ -1947,6 +2082,18 @@ def _build_system_prompt(folio_balance: float, reservations: list, drink_package
         'User: "send champagne to my cabin"\n'
         '{"tool":"order_champagne","args":{"location":"your cabin"},"say":"Möet & Chandon en route to your cabin — red bucket, two flutes, about 7 minutes.",'
         '"hints":["Track it","What\'s tonight at The Manor?","Book Pink Agave for dinner"]}\n\n'
+        '// FOLLOW-UP after Ruby recommended a drink (B1 chained pattern):\n'
+        'Prior turn: Ruby recommended a Krug pour ($28).\n'
+        'User: "Send it to my cabin instead."\n'
+        '{"tool":"order_champagne","args":{"location":"your cabin","bottle":"Krug Grande Cuvée","price":28},'
+        '"say":"Krug Grande Cuvée on its way to your cabin — chilled, two flutes, about 7 minutes.",'
+        '"hints":["Send another to the pool","Track it","What\'s on at The Manor?"]}\n\n'
+        '// Party-size change on existing dining (B7):\n'
+        'Prior turn: Sailor booked Pink Agave for 2 at 8 PM.\n'
+        'User: "Actually add 2 more — make it 4 of us."\n'
+        '{"tool":"modify_dining","args":{"restaurant":"Pink Agave","new_party_size":4},'
+        '"say":"Pink Agave bumped up to 4 for 8 PM — locked in.",'
+        '"hints":["Add a Manor table after","Send champagne to the table","Check my reservations"]}\n\n'
         'User: "help me with tonights look" / "what should I wear for Scarlet Night"\n'
         '{"tool":"suggest_outfit","args":{"occasion":"scarlet night"},"say":"Three looks for you, honey — Scarlet Statement, Ruby Tuxedo, After-Hours Red. Tell me which speaks and I\'ll sort the salon + a Manor table.",'
         '"hints":["I like Scarlet Statement","Ruby Tuxedo, please","Just book it all"]}\n\n'

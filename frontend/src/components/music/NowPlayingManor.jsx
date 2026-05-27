@@ -14,28 +14,41 @@ const SPOTIFY_PLAYLIST_APP = 'spotify:playlist:37i9dQZF1DXaXB8fQg7xif';
 const APPLE_MUSIC = 'https://music.apple.com/us/search?term=disco%20essentials';
 
 // Tonight's set list — chosen so something is always "live" for the demo.
-// Each entry: start hour 0-23.
+// Each entry: start hour 0-23 + `set_name` key. The set_name must match
+// the backend's _MANOR_SCHEDULE in [backend/app/services/agent_service.py]
+// so the chat "Shazam" tool surfaces a track from THIS set (B4 fix).
 const MANOR_SETS = [
-  { h: 18, dj: 'DJ House Mother',  set: "Sundowner — '70s disco essentials",     until: '8 PM' },
-  { h: 20, dj: 'DJ House Mother',  set: 'Dinner Hour — funk & soul',             until: '10 PM' },
-  { h: 22, dj: 'DJ Marvy',         set: 'Festival Stage takeover — house & disco', until: '11:30 PM' },
-  { h: 23, dj: 'Resident · Klub Rubik\'s', set: "'80s dance party (costume encouraged)", until: '1:30 AM' },
-  { h: 1,  dj: 'DJ Marvy',         set: 'After-hours grooves',                   until: 'late' },
-  { h: 3,  dj: 'Resident',         set: 'Wind-down soul',                        until: '5 AM' },
+  { h: 18, set_name: 'sundowner-disco',    dj: 'DJ House Mother',          set: "Sundowner — '70s disco essentials",     until: '8 PM' },
+  { h: 20, set_name: 'dinner-funk',        dj: 'DJ House Mother',          set: 'Dinner Hour — funk & soul',             until: '10 PM' },
+  { h: 22, set_name: 'marvy-house',        dj: 'DJ Marvy',                 set: 'Festival Stage takeover — house & disco', until: '11:30 PM' },
+  { h: 23, set_name: 'klub-rubiks-80s',    dj: "Resident · Klub Rubik's",  set: "'80s dance party (costume encouraged)", until: '1:30 AM' },
+  { h: 1,  set_name: 'afterhours-grooves', dj: 'DJ Marvy',                 set: 'After-hours grooves',                   until: 'late' },
+  { h: 3,  set_name: 'winddown-soul',      dj: 'Resident',                 set: 'Wind-down soul',                        until: '5 AM' },
 ];
+
+// Explicit hour → set name lookup. The naive "latest start hour ≤ now" loop
+// broke after-midnight (h=3 winddown set was winning for ANY h ≥ 3).
+// Mirrors _MANOR_HOUR_LOOKUP in [backend/app/services/agent_service.py].
+const HOUR_TO_SET_NAME = {
+  16: 'marvy-house',        17: 'marvy-house',
+  18: 'sundowner-disco',    19: 'sundowner-disco',
+  20: 'dinner-funk',        21: 'dinner-funk',
+  22: 'marvy-house',
+  23: 'klub-rubiks-80s',    0: 'klub-rubiks-80s',
+  1: 'afterhours-grooves',  2: 'afterhours-grooves',
+  3: 'winddown-soul',       4: 'winddown-soul',
+  // 5-15 → preview window
+};
 
 function currentSet() {
   const h = new Date().getHours();
-  // Find the latest set whose start <= h.
-  let pick = MANOR_SETS[0];
-  for (const s of MANOR_SETS) {
-    if (s.h <= h) pick = s;
+  const setName = HOUR_TO_SET_NAME[h] || 'marvy-house';
+  const preview = h >= 5 && h < 16;
+  const match = MANOR_SETS.find((s) => s.set_name === setName) || MANOR_SETS[2];
+  if (preview) {
+    return { ...match, set: 'Tonight: house & disco at 10 PM', preview: true };
   }
-  // After 5 AM, fall back to the evening lineup preview.
-  if (h >= 5 && h < 16) {
-    return { h: 22, dj: 'DJ Marvy', set: 'Tonight: house & disco at 10 PM', until: '11:30 PM', preview: true };
-  }
-  return pick;
+  return match;
 }
 
 const S = {

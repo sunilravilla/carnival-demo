@@ -10,10 +10,29 @@ const TYPE_ICON = {
   excursion: '⛵',
   activity: '🎯',
   drink_package: '🍹',
+  // Wave 2 / Wave 3 reservation kinds — B6 fix
+  outfit: '👗',
+  salon: '💅',
+  manor_table: '🎶',
+  squad_event: '👥',
+  surprise: '🎁',
+  flowers: '💐',
+  port_day_plan: '🏝',
+  recovery_menu: '🥴',
 };
 
 function resName(res) {
-  return res.restaurant_name || res.show_name || res.name || res.kind || 'Reservation';
+  // treatment_name is the canonical label for Wave 2 reservations (outfit,
+  // salon, manor_table, surprise, squad_event, port_day_plan, etc.) — must be
+  // in the fallback chain or those reservations render as just "Reservation".
+  return (
+    res.restaurant_name ||
+    res.show_name ||
+    res.treatment_name ||
+    res.name ||
+    res.kind ||
+    'Reservation'
+  );
 }
 
 function resType(res) {

@@ -518,12 +518,21 @@ function ChampagneCard({ payload }) {
           <div style={{ fontWeight: 700, fontSize: 16 }}>{payload.location}</div>
         </div>
         <div style={{ textAlign: "right" }}>
-          <div style={subtle}>ETA</div>
-          <div style={{ fontWeight: 800, fontSize: 18, color: red }}>~{payload.eta_minutes} min</div>
+          {payload.scheduled_for ? (
+            <>
+              <div style={subtle}>Pre-poured at</div>
+              <div style={{ fontWeight: 800, fontSize: 18, color: red }}>{payload.scheduled_for}</div>
+            </>
+          ) : (
+            <>
+              <div style={subtle}>ETA</div>
+              <div style={{ fontWeight: 800, fontSize: 18, color: red }}>~{payload.eta_minutes} min</div>
+            </>
+          )}
         </div>
       </div>
       <div style={{ ...pill("#FFE9E9", red), display: "block", textAlign: "center", padding: "6px 12px", borderRadius: 8 }}>
-        ${(payload.price || 0).toFixed(2)} · Red bucket + 2 flutes included
+        ${(payload.price || 0).toFixed(2)} · Chilled bucket + 2 flutes included
       </div>
     </div>
   );
@@ -987,13 +996,35 @@ function SquadEventCard({ payload }) {
         <div style={{ fontSize: 18, fontWeight: 800, lineHeight: 1.2 }}>Group of {payload.party_size}</div>
       </div>
       <div style={{ padding: "10px 16px", borderBottom: "1px solid #F2EEE7" }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>Squad invited</div>
+        <div style={{ fontSize: 11, fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>
+          {payload.invitee_label || "Squad invited"}
+        </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
           <span style={pill(`${red}1A`, red)}>👤 You</span>
           {invitees.map((n, i) => (
-            <span key={i} style={pill("#F2EEE7", "#0A0A0A")}>👤 {n}</span>
+            <span
+              key={i}
+              title={payload.is_demo_data ? "Suggested sailor — tap to swap or invite your own" : undefined}
+              style={{
+                ...pill("#F2EEE7", payload.is_demo_data ? "#888" : "#0A0A0A"),
+                border: payload.is_demo_data ? "1px dashed #C8C2B5" : "1px solid transparent",
+                fontStyle: payload.is_demo_data ? "italic" : "normal",
+                opacity: payload.is_demo_data ? 0.85 : 1,
+                cursor: payload.is_demo_data ? "pointer" : "default",
+              }}
+            >
+              👤 {n}
+            </span>
           ))}
+          {payload.is_demo_data && (
+            <span style={{ ...pill(`${gold}1A`, "#7A5A1B"), fontSize: 10 }}>+ invite your own</span>
+          )}
         </div>
+        {payload.invitee_hint && (
+          <div style={{ fontSize: 11, color: "#888", fontStyle: "italic", marginTop: 6, lineHeight: 1.3 }}>
+            {payload.invitee_hint}
+          </div>
+        )}
       </div>
       <div style={{ padding: "10px 16px", display: "flex", flexDirection: "column", gap: 6 }}>
         <div style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 13 }}>
