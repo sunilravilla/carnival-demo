@@ -1,33 +1,46 @@
 import { test, expect } from '@playwright/test';
 import { resetGuest, loadDashboard, openChat, sendChat, expectNoCarnivalLeak } from './helpers';
 
-// Bug F regression: calling a macro (e.g. hangover_recovery_menu) twice in
-// the same session must NOT create duplicate rows in the dashboard
-// Today's Reservations list. Dedup helper guards against this.
-test('macro re-fire does not duplicate dashboard reservations', async ({ page }) => {
+// Wave 4 dedup-helper regression, updated for Wave 5 semantics:
+// - hangover_recovery_menu is now preview-only — calling it twice books NOTHING
+// - book_recovery_item(items=all 4) is the booking path — calling it twice
+//   still leaves exactly 1 of each item (dedup helper alive on the new path)
+test('preview macro books nothing, book_recovery_item dedups on repeat', async ({ page }) => {
   await resetGuest(page);
   await loadDashboard(page);
   await openChat(page);
 
-  // Fire the full recovery menu macro twice
-  await sendChat(page, 'Set me up for tomorrow morning, the full recovery menu');
-  await sendChat(page, 'Actually run the full recovery menu again');
-
-  // Re-check reservations endpoint directly — single source of truth
   const apiBase = process.env.API_BASE_URL || 'http://localhost:8000';
-  const res = await page.request.get(`${apiBase}/api/guest/reservations`);
-  expect(res.ok()).toBe(true);
-  const body = await res.json();
-  const rs = Array.isArray(body) ? body : (body.reservations || []);
 
+  // (a) Two preview-only macro calls → no reservations created
+  await sendChat(page, 'Open the hangover recovery menu');
+  await sendChat(page, 'Show me the hangover recovery menu again');
+
+  let res = await page.request.get(`${apiBase}/api/guest/reservations`);
+  expect(res.ok()).toBe(true);
+  let body = await res.json();
+  let rs = Array.isArray(body) ? body : (body.reservations || []);
+  const previewHydration = rs.filter((r: any) =>
+    (r.treatment_name || '').toLowerCase().includes('hydration drip')
+  ).length;
+  const previewBreakfast = rs.filter((r: any) => r.restaurant_id === 'the-wake-breakfast').length;
+  const previewLounger = rs.filter((r: any) => r.kind === 'lounger').length;
+  expect(previewHydration, 'preview macro must not book hydration drip').toBe(0);
+  expect(previewBreakfast, 'preview macro must not book breakfast').toBe(0);
+  expect(previewLounger, 'preview macro must not book lounger').toBe(0);
+
+  // (b) Two full-menu book_recovery_item calls → exactly 1 of each item
+  await sendChat(page, 'Book all four items from the recovery menu — everything');
+  await sendChat(page, 'Actually book the full recovery menu again — everything please');
+
+  res = await page.request.get(`${apiBase}/api/guest/reservations`);
+  body = await res.json();
+  rs = Array.isArray(body) ? body : (body.reservations || []);
   const hydrationCount = rs.filter((r: any) =>
     (r.treatment_name || '').toLowerCase().includes('hydration drip')
   ).length;
-  const breakfastCount = rs.filter((r: any) =>
-    r.restaurant_id === 'the-wake-breakfast'
-  ).length;
+  const breakfastCount = rs.filter((r: any) => r.restaurant_id === 'the-wake-breakfast').length;
   const loungerCount = rs.filter((r: any) => r.kind === 'lounger').length;
-
   expect(hydrationCount, 'hydration drip should appear once after dedup').toBe(1);
   expect(breakfastCount, 'The Wake breakfast should appear once after dedup').toBe(1);
   expect(loungerCount, 'cabana siesta lounger should appear once after dedup').toBe(1);

@@ -489,11 +489,19 @@ def _tool_get_weather(_args: Dict[str, Any]) -> Dict[str, Any]:
             "condition": "Sunny", "icon_key": "sunny",
         }
 
+    today_label = cruise.get("today_label", "Puerto Plata, Dominican Republic")
+    next_port = (cruise.get("next_port") or {}).get("name", "")
     result = {
         "card": "weather",
-        "location": cruise.get("today_label", "Puerto Plata, Dominican Republic"),
+        "location": today_label,
+        # Wave 5 — port labels carried explicitly so the WeatherCard can drop
+        # the hardcoded "Cozumel Tomorrow" Carnival-era label.
+        "port_today_name": today_label,
+        "next_port_name": next_port,
         "port_date": f"Today, Day {cruise.get('current_day', 4)} of {cruise.get('total_days', 6)}",
-        # Keep 'cozumel' key for backward-compat with frontend card renderer.
+        # 'port_today' is the live-fetched current-port forecast.
+        # 'cozumel' key kept as alias for backward-compat with older frontend.
+        "port_today": port_weather,
         "cozumel": port_weather,
         "onboard": {
             "temp_f": 82,
@@ -827,21 +835,23 @@ def _resolve_recovery_items(requested: list) -> list:
 
 
 def _tool_hangover_recovery_menu(_args: Dict[str, Any]) -> Dict[str, Any]:
-    """Cheeky adult-only recovery menu — sass + actual bookings.
+    """Preview-only recovery menu — shows the 4 options without booking anything.
 
-    Returns the FULL 4-item preset and books each one (dedup-guarded).
-    Use book_recovery_item when the Sailor names a subset.
+    Wave 5: this tool no longer creates reservations or folio charges. The
+    Sailor's mental model for "open / show me the recovery menu" is preview,
+    not commit. Booking happens exclusively through book_recovery_item:
+    name specific items, or pass all four ids to book the whole preset.
     """
     total = sum(item["price"] for item in _RECOVERY_ITEMS)
-    conf = f"REC{abs(hash(('recovery', _time.time()))) % 100000:05d}"
-    _book_recovery_items(_RECOVERY_ITEMS, conf)
+    conf = f"REC{abs(hash(('recovery-preview', _time.time()))) % 100000:05d}"
     return {
         "card": "recovery_menu",
         "title": "Late one, honey?",
-        "subtitle": "Ruby's no-judgment recovery menu — sorted.",
+        "subtitle": "Tap an item or tell me which to book.",
         "items": _RECOVERY_ITEMS,
         "confirmation_id": conf,
         "total": total,
+        "preview": True,
         "new_folio_balance": ship_data.get_guest()["folio"]["balance"],
     }
 
@@ -1813,9 +1823,9 @@ def _natural_reply_for(tool_name: str, tool_result: Dict[str, Any]) -> str:
         )
     if tool_name == "hangover_recovery_menu":
         return (
-            "Late one, honey? Recovery menu sorted — hydration drip at Redemption at 10:30, "
-            "green smoothie when you wake, late breakfast at The Wake at 11:30, and a cabana siesta "
-            "to seal it. You'll be vertical by sunset."
+            "Late one, honey? Here's the recovery menu — hydration drip, green smoothie, "
+            "late breakfast at The Wake, cabana siesta at The Perch. Tell me which to book, "
+            "or say 'book everything' and I'll lock all four in."
         )
     if tool_name == "identify_now_playing":
         t = tool_result.get("track", "that track")
@@ -2210,11 +2220,17 @@ def _build_system_prompt(folio_balance: float, reservations: list, drink_package
         "  specific tier, call recommend_drink_packages() — it returns BOTH options as picker cards.\n"
         "  Only call upgrade_drink_package(package=<id>) once the Sailor names a specific tier\n"
         "  ('the $500 one', 'bar-tab-300', '500 bar tab').\n"
-        "CRITICAL — RECOVERY MENU ROUTING: If the Sailor names SPECIFIC recovery items\n"
-        "  ('book hydration spa and smoothie', 'just the IV drip'), call\n"
-        "  book_recovery_item(items=[...]) with the named items. ONLY call hangover_recovery_menu()\n"
-        "  for generic 'set me up for tomorrow morning' / 'full recovery menu' requests where\n"
-        "  the Sailor wants the whole 4-item preset.\n\n"
+        "CRITICAL — RECOVERY MENU ROUTING (Wave 5 — preview vs book):\n"
+        "  hangover_recovery_menu() is PREVIEW ONLY — it shows the 4 options without booking.\n"
+        "  Use it ONLY for 'open the recovery menu', 'show me the recovery menu', 'what's on the\n"
+        "  recovery menu'. The Sailor sees the card and then tells you what to book.\n"
+        "  Booking ALWAYS goes through book_recovery_item(items=[...]):\n"
+        "    - Named subset: 'book hydration spa and smoothie' →\n"
+        '        book_recovery_item(items=["hydration drip","b-complex smoothie"])\n'
+        "    - Full menu: 'book the full recovery menu' / 'set me up for tomorrow morning' /\n"
+        "      'book everything from the menu' →\n"
+        '        book_recovery_item(items=["hydration drip","b-complex smoothie","late breakfast","cabana siesta"])\n'
+        "  NEVER call hangover_recovery_menu when the Sailor said 'book' — that tool no longer books.\n\n"
         f"Available tools: {tools_list}\n\n"
         "Examples:\n"
         'User: "hi"\n'

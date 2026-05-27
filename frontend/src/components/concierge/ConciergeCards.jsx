@@ -491,13 +491,17 @@ function CancelCard({ payload }) {
 const WEATHER_ICONS = { sunny: "☀️", partly_cloudy: "⛅", cloudy: "☁️", rainy: "🌧️" };
 
 function WeatherCard({ payload }) {
-  const coz = payload.cozumel || {};
+  // Wave 5: use port_today (current dynamic name) but fall back to legacy
+  // 'cozumel' key for older fixtures. Attribution + port label now driven by
+  // the brand registry and the backend, not hardcoded Carnival strings.
+  const port = payload.port_today || payload.cozumel || {};
   const onboard = payload.onboard || {};
-  const showSnorkelTip = (coz.icon_key === "sunny" || coz.icon_key === "partly_cloudy") && (coz.uv_index || 0) >= 6;
+  const portTodayName = payload.port_today_name || payload.location || "Today's port";
+  const showSnorkelTip = (port.icon_key === "sunny" || port.icon_key === "partly_cloudy") && (port.uv_index || 0) >= 6;
   const uvLabel = (uv) => uv >= 8 ? "Very High" : uv >= 6 ? "High" : uv >= 3 ? "Moderate" : "Low";
 
   return (
-    <div style={{ ...cardBase, borderColor: "#0EA5E9", padding: 0, overflow: "hidden" }}>
+    <div data-testid="weather-card" style={{ ...cardBase, borderColor: "#0EA5E9", padding: 0, overflow: "hidden" }}>
       {/* Header */}
       <div style={{
         background: "linear-gradient(135deg, #0EA5E9 0%, #0D9488 100%)",
@@ -508,7 +512,7 @@ function WeatherCard({ payload }) {
           <span style={{ fontSize: 20 }}>🌤</span>
           <span style={{ color: "white", fontWeight: 700, fontSize: 15 }}>Weather Update</span>
         </div>
-        <span style={{ color: "rgba(255,255,255,0.8)", fontSize: 12 }}>Marina ✦</span>
+        <span style={{ color: "rgba(255,255,255,0.8)", fontSize: 12 }}>{branding.avatarName} ✦</span>
       </div>
 
       {/* Two-column weather */}
@@ -522,23 +526,23 @@ function WeatherCard({ payload }) {
           <div style={{ fontSize: 12, color: "#64748B", marginTop: 6 }}>Seas: {onboard.sea_state}</div>
         </div>
 
-        {/* Right: Cozumel */}
+        {/* Right: Today's port (live) */}
         <div style={{ flex: 1, padding: "14px 16px", background: "#F0FDF4" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
-            <div style={{ fontSize: 11, color: "#64748B", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>Cozumel Tomorrow</div>
+            <div style={{ fontSize: 11, color: "#64748B", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>{portTodayName} · Today</div>
             {payload.live && (
               <span style={{ background: "#F59E0B", color: "white", fontSize: 9, fontWeight: 700, padding: "2px 5px", borderRadius: 999 }}>LIVE</span>
             )}
           </div>
-          <div style={{ fontSize: 32 }}>{WEATHER_ICONS[coz.icon_key] || "☀️"}</div>
-          <div style={{ fontSize: 26, fontWeight: 800, color: "#1E293B", lineHeight: 1.1 }}>{coz.temp_f}°F</div>
-          <div style={{ fontSize: 13, color: "#475569", marginTop: 4 }}>{coz.condition}</div>
+          <div style={{ fontSize: 32 }}>{WEATHER_ICONS[port.icon_key] || "☀️"}</div>
+          <div style={{ fontSize: 26, fontWeight: 800, color: "#1E293B", lineHeight: 1.1 }}>{port.temp_f}°F</div>
+          <div style={{ fontSize: 13, color: "#475569", marginTop: 4 }}>{port.condition}</div>
           <div style={{ fontSize: 12, color: "#64748B", marginTop: 6 }}>
-            {coz.wind_mph && `Wind: ${coz.wind_mph} mph`}
-            {coz.uv_index != null && ` · UV: ${uvLabel(coz.uv_index)} (${coz.uv_index})`}
+            {port.wind_mph && `Wind: ${port.wind_mph} mph`}
+            {port.uv_index != null && ` · UV: ${uvLabel(port.uv_index)} (${port.uv_index})`}
           </div>
-          {coz.humidity != null && (
-            <div style={{ fontSize: 12, color: "#64748B", marginTop: 2 }}>Humidity: {coz.humidity}%</div>
+          {port.humidity != null && (
+            <div style={{ fontSize: 12, color: "#64748B", marginTop: 2 }}>Humidity: {port.humidity}%</div>
           )}
         </div>
       </div>

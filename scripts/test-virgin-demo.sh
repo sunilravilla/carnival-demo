@@ -803,28 +803,52 @@ else
   fail "expected 2 items in card, got: $ITEM_COUNT"
 fi
 
-# ── W4.B2 · macro called twice → reservations dedup, not double-listed ────
-head_ "W4.B2 · Double-call recovery menu → no duplicate reservations"
+# ── W4.B2 · book_recovery_item called twice → dedup (preview macro must not book) ──
+# Wave 5: hangover_recovery_menu became preview-only. The dedup helper is now
+# exercised through book_recovery_item instead. Verify both halves:
+#   (a) calling the preview macro twice books NOTHING
+#   (b) book_recovery_item(items=[all 4]) called twice still leaves exactly 1
+#       of each item — dedup helper alive and working through the booking path
+head_ "W4.B2 · Preview macro books nothing · book_recovery_item dedups on repeat"
 curl -s -X POST "$API/api/guest/reset" -H "Content-Type: application/json" \
   -d "{\"phone\":\"$PRIMARY_PHONE\"}" >/dev/null
 curl -s -X POST "$API/api/guest/lookup" -H "Content-Type: application/json" \
   -d "{\"identifier\":\"$PRIMARY_PHONE\"}" >/dev/null
-ruby_say "Set me up for tomorrow morning, the full recovery menu" "w4-b2a-$RANDOM" >/dev/null
-ruby_say "Set me up for tomorrow morning, the full recovery menu again please" "w4-b2b-$RANDOM" >/dev/null
+# (a) Two preview calls → no reservations
+ruby_say "Open the hangover recovery menu" "w4-b2a-$RANDOM" >/dev/null
+ruby_say "Show me the hangover recovery menu again" "w4-b2b-$RANDOM" >/dev/null
 RES_JSON=$(curl -s "$API/api/guest/reservations")
-HYDRATION_COUNT=$(echo "$RES_JSON" | python3 -c "import sys,json
+PREVIEW_HYDR=$(echo "$RES_JSON" | python3 -c "import sys,json
 d=json.load(sys.stdin)
 rs = d.get('reservations', d if isinstance(d,list) else [])
 print(sum(1 for r in rs if 'hydration' in (r.get('treatment_name','') or '').lower()))")
-BREAKFAST_COUNT=$(echo "$RES_JSON" | python3 -c "import sys,json
+PREVIEW_BREAK=$(echo "$RES_JSON" | python3 -c "import sys,json
 d=json.load(sys.stdin)
 rs = d.get('reservations', d if isinstance(d,list) else [])
 print(sum(1 for r in rs if r.get('restaurant_id') == 'the-wake-breakfast'))")
-info "hydration=$HYDRATION_COUNT, the-wake-breakfast=$BREAKFAST_COUNT (each should be 1)"
-if [[ "$HYDRATION_COUNT" == "1" && "$BREAKFAST_COUNT" == "1" ]]; then
-  pass "macro re-fire did not duplicate reservations (dedup helper working)"
+info "after 2 preview macro calls: hydration=$PREVIEW_HYDR breakfast=$PREVIEW_BREAK (both should be 0)"
+if [[ "$PREVIEW_HYDR" == "0" && "$PREVIEW_BREAK" == "0" ]]; then
+  pass "preview-only recovery macro did NOT auto-book any items"
 else
-  fail "duplicate reservations after macro re-fire (hydration=$HYDRATION_COUNT breakfast=$BREAKFAST_COUNT)"
+  fail "preview macro is still creating reservations (hydration=$PREVIEW_HYDR breakfast=$PREVIEW_BREAK)"
+fi
+# (b) Two book_recovery_item(all 4) calls → exactly 1 of each item
+ruby_say "Book all four items from the recovery menu" "w4-b2c-$RANDOM" >/dev/null
+ruby_say "Actually book the full recovery menu again — everything please" "w4-b2d-$RANDOM" >/dev/null
+RES_JSON=$(curl -s "$API/api/guest/reservations")
+HYDR_COUNT=$(echo "$RES_JSON" | python3 -c "import sys,json
+d=json.load(sys.stdin)
+rs = d.get('reservations', d if isinstance(d,list) else [])
+print(sum(1 for r in rs if 'hydration' in (r.get('treatment_name','') or '').lower()))")
+BREAK_COUNT=$(echo "$RES_JSON" | python3 -c "import sys,json
+d=json.load(sys.stdin)
+rs = d.get('reservations', d if isinstance(d,list) else [])
+print(sum(1 for r in rs if r.get('restaurant_id') == 'the-wake-breakfast'))")
+info "after 2 full-menu book_recovery_item calls: hydration=$HYDR_COUNT breakfast=$BREAK_COUNT (each should be 1)"
+if [[ "$HYDR_COUNT" == "1" && "$BREAK_COUNT" == "1" ]]; then
+  pass "book_recovery_item dedup intact across full-menu re-fire"
+else
+  fail "duplicates from book_recovery_item re-fire (hydration=$HYDR_COUNT breakfast=$BREAK_COUNT)"
 fi
 
 # ── W4.B3 · upgrade_drink_package returns real charged + credit + balance ─
@@ -895,6 +919,65 @@ if [[ -n "$SET_LABEL" ]] && [[ -n "$DJ_NAME" ]]; then
   pass "now_playing payload carries the connecting set_label + dj"
 else
   fail "now_playing card missing set_label/dj — frontend can't show dashboard link"
+fi
+
+# Re-pin primary phone (cleanup)
+curl -s -X POST "$API/api/guest/lookup" -H "Content-Type: application/json" \
+  -d "{\"identifier\":\"$PRIMARY_PHONE\"}" >/dev/null
+
+
+# ===========================================================================
+# WAVE 5 — preview-only recovery macro + weather card brand residue
+# ===========================================================================
+echo
+echo "${BOLD}════════════════════════════════════════════════${NC}"
+echo "${BOLD}  WAVE 5 — preview semantics + weather brand fixes${NC}"
+echo "${BOLD}════════════════════════════════════════════════${NC}"
+
+# ── W5.1 · 'Open the recovery menu' is preview-only — no reservations created ──
+head_ "W5.1 · 'Open the recovery menu' previews without booking anything"
+curl -s -X POST "$API/api/guest/reset" -H "Content-Type: application/json" \
+  -d "{\"phone\":\"$PRIMARY_PHONE\"}" >/dev/null
+curl -s -X POST "$API/api/guest/lookup" -H "Content-Type: application/json" \
+  -d "{\"identifier\":\"$PRIMARY_PHONE\"}" >/dev/null
+R=$(ruby_say "Open the hangover recovery menu" "w5-1-$RANDOM")
+CARD_TYPE=$(echo "$R" | extract_card)
+PREVIEW=$(echo "$R" | extract_field "preview")
+BOT=$(echo "$R" | extract_bot)
+info "card: $CARD_TYPE | preview flag: '$PREVIEW' | Ruby: ${BOT:0:150}"
+RES_JSON=$(curl -s "$API/api/guest/reservations")
+RECOVERY_HITS=$(echo "$RES_JSON" | python3 -c "import sys,json
+d=json.load(sys.stdin)
+rs = d.get('reservations', d if isinstance(d,list) else [])
+print(sum(1 for r in rs if 'hydration' in (r.get('treatment_name','') or '').lower()
+        or r.get('restaurant_id') == 'the-wake-breakfast'
+        or r.get('kind') == 'lounger'))")
+info "recovery-related reservations after preview: $RECOVERY_HITS (should be 0)"
+if [[ "$CARD_TYPE" == "recovery_menu" ]] && [[ "$PREVIEW" == "True" ]] && [[ "$RECOVERY_HITS" == "0" ]]; then
+  pass "preview macro returns card with preview=true and books NOTHING"
+else
+  fail "preview semantics broken (card=$CARD_TYPE preview=$PREVIEW reservations=$RECOVERY_HITS)"
+fi
+
+# ── W5.2 · Weather card payload carries dynamic port labels, no 'Marina' ───
+head_ "W5.2 · Weather payload carries port_today_name + next_port_name (no Cozumel/Marina)"
+R=$(ruby_say "What's the weather like" "w5-2-$RANDOM")
+CARD_TYPE=$(echo "$R" | extract_card)
+PORT_TODAY=$(echo "$R" | extract_field "port_today_name")
+NEXT_PORT=$(echo "$R" | extract_field "next_port_name")
+BOT=$(echo "$R" | extract_bot)
+RAW_JSON=$(echo "$R" | python3 -c "import sys,json; print(json.dumps(json.load(sys.stdin).get('card_payload') or {}))")
+info "card: $CARD_TYPE | port_today_name='$PORT_TODAY' | next_port_name='$NEXT_PORT'"
+# port_today_name must be a real Virgin port (not empty, not 'Cozumel'). Backend
+# response payload must also not contain any 'Marina' literal — that hardcoding
+# only lived in the frontend, but worth defending against regression.
+if [[ "$CARD_TYPE" == "weather" ]] \
+   && [[ -n "$PORT_TODAY" ]] \
+   && [[ "$PORT_TODAY" != *"Cozumel"* ]] \
+   && [[ "$RAW_JSON" != *"\"Marina\""* ]]; then
+  pass "weather payload uses dynamic Virgin port name + no Marina literal"
+else
+  fail "weather payload still leaks Carnival residue (port_today='$PORT_TODAY')"
 fi
 
 # Re-pin primary phone (cleanup)

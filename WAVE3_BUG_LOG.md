@@ -3,6 +3,7 @@
 End-state catalog from the discovery-then-fix sweep.
 **Wave 3 final: curl 77/77 · Playwright 14/14 · all bugs closed.**
 **Wave 4 final: curl 83/83 · Playwright 19/19 · all 6 user-found bugs closed.**
+**Wave 5 final: curl 86/86 · Playwright 20/20 · 2 more user-found bugs closed.**
 
 ---
 
@@ -102,7 +103,35 @@ what's *shown* match what's *said*? do the suggested chips actually work?").
 
 ---
 
-## Out of scope / deferred to Wave 4 (now Wave 5)
+---
+
+## Wave 5 — preview-only macro + weather card residue (all CLOSED ✅)
+
+After Wave 4 shipped 83/83 + 19/19, the user's next click-through surfaced
+two more bugs that fell through:
+
+| # | Bug | Status | Fix |
+|---|---|---|---|
+| W5.1 | "Cabana siesta in My Reservations even though I only booked spa and smoothie." User flow was *open the recovery menu* (preview intent) → *book hydration and smoothie* (subset intent). First call auto-booked all 4 items via the macro; second call dedup'd 2 of them, leaving cabana siesta + breakfast as orphan reservations. | ✅ closed | `_tool_hangover_recovery_menu` is now **preview-only** — no `_book_recovery_items`, no folio charges, returns `preview: true` flag. All booking flows through `book_recovery_item` (named subset OR all 4 ids = full menu). System prompt CRITICAL rule clarifies: macro is for "open / show me", booking is for "book / set me up". Natural reply reframed to "Tell me which to book". |
+| W5.2 | Weather card showed "Cozumel TOMORROW" (Carnival itinerary port) and "Marina ✦" (Carnival agent name) — both hardcoded UI residue that survived the Wave 1 reskin. | ✅ closed | `WeatherCard` attribution now reads `branding.avatarName + " ✦"` (Ruby for Virgin, Marina if anyone flips back to Carnival). Right-panel port label now reads `payload.port_today_name` + " · Today" (e.g. "Puerto Plata · Today"). Backend `_tool_get_weather` extended to surface `port_today_name` + `next_port_name` explicitly; legacy `cozumel` key kept as alias for back-compat. `VoyageProgressBar` also trimmed of stale Cozumel/Belize/CelebKey constants (benign but text-grep-able residue). |
+
+### Wave 5 test updates
+
+- **W4.B2 / 15-no-duplicates rewritten** for new semantics: (a) two preview-macro calls → 0 reservations; (b) two `book_recovery_item(items=all 4)` calls → exactly 1 of each (dedup helper still exercised, just on the booking path now).
+- **W5.1** curl: `hangover_recovery_menu` returns `preview: true` and creates 0 reservations.
+- **W5.2** curl: weather payload carries non-empty `port_today_name`, never "Cozumel", and no "Marina" literal anywhere in the JSON.
+- **16-weather-card-brand.spec.ts** Playwright: weather card contains "Ruby" + a Virgin port, never "Marina" or "Cozumel". Uses new `data-testid="weather-card"` scope.
+
+### Wave 5 stop condition (met)
+
+- Curl: 86/86 ✅
+- Playwright: 20/20 ✅
+- "Open the recovery menu" + "book spa and smoothie" → only those 2 items in reservations, no cabana siesta orphan
+- "What's the weather like?" → card shows "Ruby ✦" + "Puerto Plata · Today", zero Carnival residue
+
+---
+
+## Out of scope / deferred to Wave 6
 
 - B10: Recovery menu cancellation atomicity (per-item reversal)
 - Per-member squad state (real multi-guest coordination model)
