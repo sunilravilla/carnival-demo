@@ -607,6 +607,418 @@ function SalonBookingCard({ payload }) {
   );
 }
 
+// ── Virgin: outfit confirmation card (from land_the_look macro) ────────────
+function OutfitConfirmedCard({ payload }) {
+  const red = "#CC0000";
+  const tolopea = "#2E0444";
+  return (
+    <div style={{ ...cardBase, borderColor: "#F0D8D8", overflow: "hidden", padding: 0 }}>
+      <div style={headerStrip(red)} />
+      <div style={{
+        display: "flex", gap: 12, padding: 14, alignItems: "center",
+        background: `linear-gradient(135deg, ${tolopea}10 0%, ${red}15 100%)`,
+      }}>
+        <img
+          src={payload.image}
+          alt={payload.look_name}
+          style={{ width: 72, height: 72, borderRadius: 10, objectFit: "cover", background: "#fff", flexShrink: 0 }}
+          onError={(e) => { e.target.style.visibility = "hidden"; }}
+        />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ ...pill(`${red}1A`, red), marginBottom: 6 }}>✨ {payload.occasion || "Tonight"}</div>
+          <div style={{ fontWeight: 800, fontSize: 16, color: "#0A0A0A", lineHeight: 1.15 }}>
+            {payload.look_name}
+          </div>
+          <div style={{ ...subtle, marginTop: 4, lineHeight: 1.35 }}>{payload.summary}</div>
+        </div>
+      </div>
+      {payload.vibe && (
+        <div style={{ padding: "10px 14px", fontSize: 12, fontStyle: "italic", color: red, borderTop: "1px solid #F2EEE7" }}>
+          {payload.vibe}
+        </div>
+      )}
+      {payload.confirmation_id && (
+        <div style={{ padding: "6px 14px 12px", fontSize: 11, color: "#888", fontFamily: "ui-monospace, monospace" }}>
+          Look saved · #{payload.confirmation_id}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Virgin: Manor table reservation card (from land_the_look macro) ─────────
+function ManorTableCard({ payload }) {
+  const ink = "#0A0A0A";
+  const red = "#CC0000";
+  const gold = "#D4A862";
+  return (
+    <div style={{ ...cardBase, borderColor: "#1A1A1A33", background: ink, color: "#fff" }}>
+      <div style={{ ...headerStrip(red), marginLeft: 0 - 16, marginRight: 0 - 16 }} />
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+        <h3 style={{ ...title, color: gold, marginBottom: 0 }}>🎶 The Manor — Reserved</h3>
+        <span style={pill(`${gold}26`, gold)}>#{payload.confirmation_id}</span>
+      </div>
+      <div style={{ fontSize: 12, opacity: 0.75, marginBottom: 10 }}>
+        Deck {payload.deck || 6} · Branson's love letter to Virgin Records
+      </div>
+      <div style={{ ...row }}>
+        <div>
+          <div style={{ fontSize: 11, opacity: 0.7, textTransform: "uppercase", letterSpacing: 1 }}>Table for</div>
+          <div style={{ fontWeight: 800, fontSize: 18 }}>{payload.party_size || 2}</div>
+        </div>
+        <div style={{ textAlign: "right" }}>
+          <div style={{ fontSize: 11, opacity: 0.7, textTransform: "uppercase", letterSpacing: 1 }}>Tonight</div>
+          <div style={{ fontWeight: 800, fontSize: 18, color: gold }}>{payload.time_human}</div>
+        </div>
+      </div>
+      {payload.note && (
+        <div style={{ marginTop: 10, fontSize: 12, opacity: 0.85, lineHeight: 1.4 }}>{payload.note}</div>
+      )}
+    </div>
+  );
+}
+
+// ── Virgin: Recovery Menu (Hangover Saver) ──────────────────────────────────
+function RecoveryMenuCard({ payload }) {
+  const red = "#CC0000";
+  const tolopea = "#2E0444";
+  const gold = "#D4A862";
+  const items = payload.items || [];
+  return (
+    <div style={{ ...cardBase, borderColor: "#E7D8B8", padding: 0, overflow: "hidden" }}>
+      <div style={{
+        padding: "14px 16px",
+        background: `linear-gradient(135deg, ${tolopea} 0%, ${red} 100%)`,
+        color: "#fff",
+      }}>
+        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 2, color: gold, textTransform: "uppercase", marginBottom: 4 }}>
+          Recovery menu
+        </div>
+        <div style={{ fontSize: 18, fontWeight: 800, lineHeight: 1.2 }}>{payload.title || "Late one, honey?"}</div>
+        {payload.subtitle && <div style={{ fontSize: 12, opacity: 0.85, marginTop: 3 }}>{payload.subtitle}</div>}
+      </div>
+      <div>
+        {items.map((it, i) => (
+          <div key={i} style={{
+            display: "flex", alignItems: "center", gap: 12,
+            padding: "10px 16px",
+            borderTop: i === 0 ? "none" : "1px solid #F2EEE7",
+          }}>
+            <div style={{ fontSize: 22, width: 28, textAlign: "center", flexShrink: 0 }}>{it.icon}</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#0A0A0A", lineHeight: 1.25 }}>{it.title}</div>
+              <div style={{ fontSize: 11, color: "#666", marginTop: 2 }}>{it.detail}</div>
+            </div>
+            <div style={{ textAlign: "right", flexShrink: 0 }}>
+              <div style={{ fontSize: 11, color: "#888" }}>{it.time}</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: red }}>
+                {it.price === 0 ? "Included" : `$${(it.price || 0).toFixed(0)}`}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div style={{ padding: "8px 16px 12px", borderTop: "1px solid #F2EEE7", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 11, color: "#888" }}>
+        <span>Conf #{payload.confirmation_id}</span>
+        <span>Spa + lounger to folio · breakfast included</span>
+      </div>
+    </div>
+  );
+}
+
+// ── Virgin: Manor Shazam — Now Playing track card ───────────────────────────
+function NowPlayingTrackCard({ payload }) {
+  const red = "#CC0000";
+  const ink = "#0A0A0A";
+  const gold = "#D4A862";
+  return (
+    <div style={{ ...cardBase, borderColor: "#1A1A1A33", background: ink, color: "#fff", padding: 0, overflow: "hidden" }}>
+      <div style={{ padding: "12px 16px 10px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 2, color: gold, textTransform: "uppercase", display: "flex", alignItems: "center", gap: 6 }}>
+          <span style={{ width: 6, height: 6, borderRadius: "50%", background: red, boxShadow: `0 0 6px ${red}`, display: "inline-block" }} />
+          Now · {payload.venue || "The Manor"} · Deck {payload.deck || 6}
+        </div>
+        {payload.year && <div style={{ fontSize: 11, color: gold }}>{payload.year}</div>}
+      </div>
+      <div style={{ padding: "0 16px 8px" }}>
+        <div style={{ fontSize: 18, fontWeight: 800, lineHeight: 1.2 }}>🎧 {payload.track}</div>
+        <div style={{ fontSize: 13, opacity: 0.85, marginTop: 3 }}>{payload.artist}{payload.vibe ? ` · ${payload.vibe}` : ""}</div>
+      </div>
+      {payload.trivia && (
+        <div style={{ padding: "10px 16px", fontSize: 12, fontStyle: "italic", color: "rgba(255,255,255,0.85)", borderTop: "1px solid rgba(255,255,255,0.10)" }}>
+          {payload.trivia}
+        </div>
+      )}
+      <div style={{ display: "flex", gap: 8, padding: "10px 16px 14px", borderTop: "1px solid rgba(255,255,255,0.10)" }}>
+        {payload.added_to_playlist && (
+          <span style={pill(`${gold}26`, gold)}>✓ Saved to {payload.playlist_name || "Cruise Soundtrack"}</span>
+        )}
+        {payload.spotify_search_url && (
+          <a
+            href={payload.spotify_search_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              ...pill(`${red}30`, "#fff"),
+              textDecoration: "none",
+              border: `1px solid ${red}66`,
+              cursor: "pointer",
+            }}
+          >
+            Open in Spotify ↗
+          </a>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Virgin: Surprise Mode — headline coordination card ────────────────────
+function SurpriseSummaryCard({ payload }) {
+  const red = "#CC0000";
+  const tolopea = "#2E0444";
+  const gold = "#D4A862";
+  const rows = [
+    { icon: "💐", label: "Flowers", value: `${payload.flowers?.item} · to ${payload.flowers?.location}` },
+    { icon: "🍽", label: "Table", value: `${payload.restaurant} · ${payload.dinner_time_human}` },
+    { icon: "🍾", label: "Champagne", value: payload.champagne },
+    { icon: "🍰", label: "Dessert", value: payload.dessert },
+  ].filter(r => r.value);
+  return (
+    <div style={{ ...cardBase, borderColor: "#F0D8D8", padding: 0, overflow: "hidden" }}>
+      <div style={{
+        padding: "14px 16px",
+        background: `linear-gradient(135deg, ${tolopea} 0%, ${red} 100%)`,
+        color: "#fff",
+      }}>
+        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 2, color: gold, textTransform: "uppercase", marginBottom: 4 }}>
+          🎁 {payload.occasion || "Surprise"} for {payload.recipient}
+        </div>
+        <div style={{ fontSize: 18, fontWeight: 800, lineHeight: 1.2 }}>{payload.headline}</div>
+      </div>
+      <div>
+        {rows.map((r, i) => (
+          <div key={i} style={{
+            display: "flex", alignItems: "center", gap: 12,
+            padding: "10px 16px",
+            borderTop: i === 0 ? "none" : "1px solid #F2EEE7",
+          }}>
+            <div style={{ fontSize: 20, width: 28, textAlign: "center", flexShrink: 0 }}>{r.icon}</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: 1 }}>{r.label}</div>
+              <div style={{ fontSize: 13, color: "#0A0A0A", lineHeight: 1.3, marginTop: 2 }}>{r.value}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+      {payload.extras && (
+        <div style={{ padding: "10px 16px", borderTop: "1px solid #F2EEE7", fontSize: 12, fontStyle: "italic", color: red }}>
+          ✨ {payload.extras}
+        </div>
+      )}
+      <div style={{ padding: "8px 16px 12px", fontSize: 11, color: "#888", fontFamily: "ui-monospace, monospace" }}>
+        #{payload.confirmation_id}
+      </div>
+    </div>
+  );
+}
+
+// ── Virgin: Pre-Board Bimini — port day plan ───────────────────────────────
+function PortDayPlanCard({ payload }) {
+  const viking = "#6DBDD6";
+  const tolopea = "#2E0444";
+  const gold = "#D4A862";
+  const agenda = payload.agenda || [];
+  return (
+    <div style={{ ...cardBase, borderColor: "#B8D8E0", padding: 0, overflow: "hidden" }}>
+      <div style={{
+        padding: "14px 16px",
+        background: `linear-gradient(135deg, ${tolopea} 0%, ${viking} 100%)`,
+        color: "#fff",
+      }}>
+        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 2, color: gold, textTransform: "uppercase", marginBottom: 4 }}>
+          🏝 Tomorrow · {payload.port}
+        </div>
+        <div style={{ fontSize: 18, fontWeight: 800, lineHeight: 1.2 }}>Pre-staged for {payload.party_size}</div>
+        {payload.weather && (
+          <div style={{ fontSize: 12, opacity: 0.9, marginTop: 4 }}>
+            ☀️ {payload.weather.temp_f}°F · {payload.weather.condition} · UV {payload.weather.uv} · Seas: {payload.weather.sea_state}
+          </div>
+        )}
+      </div>
+      <div style={{ padding: "8px 0" }}>
+        {agenda.map((item, i) => (
+          <div key={i} style={{
+            display: "flex", alignItems: "center", gap: 12,
+            padding: "8px 16px",
+          }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: tolopea, width: 56, fontFamily: "ui-monospace, monospace", flexShrink: 0 }}>
+              {item.time}
+            </div>
+            <div style={{ fontSize: 13, color: "#0A0A0A", lineHeight: 1.3 }}>{item.what}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ padding: "8px 16px 12px", borderTop: "1px solid #F2EEE7", fontSize: 11, color: "#888", fontFamily: "ui-monospace, monospace" }}>
+        Plan #{payload.confirmation_id} · cabana: {payload.cabana_tier}
+      </div>
+    </div>
+  );
+}
+
+// ── Virgin: Pack Forecaster — tailored packing list ────────────────────────
+function PackingListCard({ payload }) {
+  const red = "#CC0000";
+  const tolopea = "#2E0444";
+  const tagColor = {
+    essential: { bg: `${red}1A`, fg: red, label: "ESSENTIAL" },
+    recommended: { bg: `${tolopea}1A`, fg: tolopea, label: "RECOMMENDED" },
+    optional: { bg: "#F2EEE7", fg: "#888", label: "OPTIONAL" },
+  };
+  const sections = payload.sections || [];
+  return (
+    <div style={{ ...cardBase, borderColor: "#E0DAD0", padding: 0, overflow: "hidden" }}>
+      <div style={{ padding: "14px 16px", background: tolopea, color: "#fff" }}>
+        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 2, color: "#D4A862", textTransform: "uppercase", marginBottom: 4 }}>
+          🎒 Pack Forecaster
+        </div>
+        <div style={{ fontSize: 18, fontWeight: 800, lineHeight: 1.2 }}>{payload.title}</div>
+        {payload.subtitle && <div style={{ fontSize: 12, opacity: 0.85, marginTop: 3 }}>{payload.subtitle}</div>}
+      </div>
+      {sections.map((sec, i) => (
+        <div key={i} style={{ padding: "10px 16px", borderTop: i === 0 ? "none" : "1px solid #F2EEE7" }}>
+          <div style={{ fontSize: 13, fontWeight: 800, color: "#0A0A0A", marginBottom: 2 }}>{sec.title}</div>
+          {sec.subtitle && <div style={{ fontSize: 11, color: "#888", marginBottom: 6 }}>{sec.subtitle}</div>}
+          <div>
+            {(sec.items || []).map((it, j) => {
+              const t = tagColor[it.tag] || tagColor.optional;
+              return (
+                <div key={j} style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 0", fontSize: 13, color: "#0A0A0A" }}>
+                  <input type="checkbox" style={{ accentColor: red, cursor: "pointer", flexShrink: 0 }} />
+                  <span style={{ flex: 1, lineHeight: 1.3 }}>{it.name}</span>
+                  <span style={{ ...pill(t.bg, t.fg), fontSize: 9, padding: "2px 6px", flexShrink: 0 }}>{t.label}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── Virgin: Voyage Diary — illustrated per-day recap ───────────────────────
+function VoyageDiaryCard({ payload }) {
+  const red = "#CC0000";
+  const tolopea = "#2E0444";
+  const gold = "#D4A862";
+  const moments = payload.moments || [];
+  const stats = payload.stats || {};
+  return (
+    <div style={{ ...cardBase, borderColor: "#E7D8B8", padding: 0, overflow: "hidden" }}>
+      {payload.header_image && (
+        <div style={{ height: 110, position: "relative", overflow: "hidden" }}>
+          <img
+            src={payload.header_image}
+            alt=""
+            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+            onError={(e) => { e.target.style.visibility = "hidden"; }}
+          />
+          <div style={{
+            position: "absolute", inset: 0,
+            background: `linear-gradient(180deg, transparent 30%, ${tolopea}E6 100%)`,
+          }} />
+          <div style={{ position: "absolute", left: 16, bottom: 10, color: "#fff" }}>
+            <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 2, color: gold, textTransform: "uppercase" }}>
+              📔 {payload.day_label}
+            </div>
+            <div style={{ fontSize: 17, fontWeight: 800, marginTop: 2 }}>{payload.title}</div>
+          </div>
+        </div>
+      )}
+      <div style={{ padding: "10px 16px", display: "flex", gap: 16, borderBottom: "1px solid #F2EEE7" }}>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ fontSize: 16, fontWeight: 800, color: red }}>{stats.venues || 0}</div>
+          <div style={{ fontSize: 10, color: "#888", textTransform: "uppercase", letterSpacing: 1 }}>Venues</div>
+        </div>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ fontSize: 16, fontWeight: 800, color: red }}>{stats.photos || 0}</div>
+          <div style={{ fontSize: 10, color: "#888", textTransform: "uppercase", letterSpacing: 1 }}>Photos</div>
+        </div>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ fontSize: 16, fontWeight: 800, color: red }}>{stats.music_plays || 0}</div>
+          <div style={{ fontSize: 10, color: "#888", textTransform: "uppercase", letterSpacing: 1 }}>Tracks</div>
+        </div>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ fontSize: 16, fontWeight: 800, color: red }}>${(stats.folio_today || 0).toFixed(0)}</div>
+          <div style={{ fontSize: 10, color: "#888", textTransform: "uppercase", letterSpacing: 1 }}>Today</div>
+        </div>
+      </div>
+      <div style={{ padding: "8px 16px" }}>
+        {moments.map((m, i) => (
+          <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "5px 0", fontSize: 13, color: "#0A0A0A" }}>
+            <div style={{ width: 22, textAlign: "center", flexShrink: 0 }}>{m.icon}</div>
+            <div style={{ flex: 1, lineHeight: 1.3 }}>{m.label}</div>
+            {m.value && <div style={{ fontSize: 12, color: "#888", fontFamily: "ui-monospace, monospace" }}>{m.value}</div>}
+          </div>
+        ))}
+      </div>
+      {payload.shareable_footer && (
+        <div style={{ padding: "10px 16px", borderTop: "1px solid #F2EEE7", fontSize: 12, fontStyle: "italic", color: red, textAlign: "center" }}>
+          {payload.shareable_footer}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Virgin: Squad Mode — cosmetic group coordination card ──────────────────
+function SquadEventCard({ payload }) {
+  const red = "#CC0000";
+  const tolopea = "#2E0444";
+  const gold = "#D4A862";
+  const invitees = payload.invitees || [];
+  return (
+    <div style={{ ...cardBase, borderColor: "#F0D8D8", padding: 0, overflow: "hidden" }}>
+      <div style={{ padding: "14px 16px", background: `linear-gradient(135deg, ${tolopea} 0%, ${red} 100%)`, color: "#fff" }}>
+        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 2, color: gold, textTransform: "uppercase", marginBottom: 4 }}>
+          👥 Squad · {payload.occasion}
+        </div>
+        <div style={{ fontSize: 18, fontWeight: 800, lineHeight: 1.2 }}>Group of {payload.party_size}</div>
+      </div>
+      <div style={{ padding: "10px 16px", borderBottom: "1px solid #F2EEE7" }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>Squad invited</div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+          <span style={pill(`${red}1A`, red)}>👤 You</span>
+          {invitees.map((n, i) => (
+            <span key={i} style={pill("#F2EEE7", "#0A0A0A")}>👤 {n}</span>
+          ))}
+        </div>
+      </div>
+      <div style={{ padding: "10px 16px", display: "flex", flexDirection: "column", gap: 6 }}>
+        <div style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 13 }}>
+          <span style={{ width: 22, textAlign: "center" }}>💅</span>
+          <span style={{ flex: 1, color: "#0A0A0A" }}>{payload.salon_window}</span>
+        </div>
+        <div style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 13 }}>
+          <span style={{ width: 22, textAlign: "center" }}>🍸</span>
+          <span style={{ flex: 1, color: "#0A0A0A" }}>{payload.rendezvous}</span>
+        </div>
+        <div style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 13 }}>
+          <span style={{ width: 22, textAlign: "center" }}>🎶</span>
+          <span style={{ flex: 1, color: "#0A0A0A" }}>{payload.manor_table_label} · {payload.manor_table_time}</span>
+        </div>
+      </div>
+      {payload.share_link && (
+        <div style={{ padding: "8px 16px 12px", borderTop: "1px solid #F2EEE7", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span style={{ fontSize: 11, color: "#888", fontFamily: "ui-monospace, monospace" }}>#{payload.confirmation_id}</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: red }}>Send the squad link ↗</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Virgin: Pre-show drink pairing recommendation ───────────────────────────
 function DrinkPairingCard({ payload }) {
   const purple = "#2E0444";
@@ -636,8 +1048,17 @@ const REGISTRY = {
   error: ErrorCard,
   champagne: ChampagneCard,
   outfit_suggestion: OutfitSuggestionCard,
+  outfit_confirmed: OutfitConfirmedCard,
   salon_booking: SalonBookingCard,
+  manor_table: ManorTableCard,
   drink_pairing: DrinkPairingCard,
+  recovery_menu: RecoveryMenuCard,
+  now_playing_track: NowPlayingTrackCard,
+  surprise_summary: SurpriseSummaryCard,
+  port_day_plan: PortDayPlanCard,
+  packing_list: PackingListCard,
+  voyage_diary: VoyageDiaryCard,
+  squad_event: SquadEventCard,
 };
 
 function SingleCard({ payload, onAction }) {

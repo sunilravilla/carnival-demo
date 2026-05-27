@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 220" width="800" height="220" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <radialGradient id="d5spot" cx="0.5" cy="0.3" r="0.7">
+      <stop offset="0" stop-color="#CC0000" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#2E0444" stop-opacity="0.95"/>
+    </radialGradient>
+  </defs>
+  <rect width="800" height="220" fill="#0A0A0A"/>
+  <rect width="800" height="220" fill="url(#d5spot)"/>
+  <!-- Scarlet Night: confetti rain + dance silhouettes -->
+  <g fill="#D4A862" opacity="0.85">
+    <rect x="80" y="30" width="4" height="10" rx="1" transform="rotate(20 82 35)"/>
+    <rect x="200" y="50" width="4" height="10" rx="1" transform="rotate(-15 202 55)"/>
+    <rect x="320" y="20" width="4" height="10" rx="1" transform="rotate(35 322 25)"/>
+    <rect x="450" y="60" width="4" height="10" rx="1" transform="rotate(-25 452 65)"/>
+    <rect x="580" y="35" width="4" height="10" rx="1" transform="rotate(15 582 40)"/>
+    <rect x="700" y="55" width="4" height="10" rx="1" transform="rotate(-30 702 60)"/>
+  </g>
+  <g fill="#FFFFFF" opacity="0.55">
+    <rect x="140" y="40" width="3" height="8" transform="rotate(-20 141 44)"/>
+    <rect x="260" y="80" width="3" height="8" transform="rotate(40 261 84)"/>
+    <rect x="500" y="40" width="3" height="8" transform="rotate(-20 501 44)"/>
+    <rect x="640" y="80" width="3" height="8" transform="rotate(40 641 84)"/>
+  </g>
+  <!-- Dance silhouettes -->
+  <g fill="#0A0A0A" opacity="0.6">
+    <ellipse cx="280" cy="190" rx="22" ry="6"/>
+    <path d="M 270 150 Q 280 130 290 150 L 295 190 L 265 190 Z"/>
+    <circle cx="280" cy="135" r="10"/>
+    <ellipse cx="430" cy="190" rx="22" ry="6"/>
+    <path d="M 420 145 Q 430 125 440 145 L 445 190 L 415 190 Z"/>
+    <circle cx="430" cy="130" r="10"/>
+    <ellipse cx="540" cy="190" rx="22" ry="6"/>
+    <path d="M 530 155 Q 540 135 550 155 L 555 190 L 525 190 Z"/>
+    <circle cx="540" cy="140" r="10"/>
+  </g>
+</svg>

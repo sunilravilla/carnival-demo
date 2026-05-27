@@ -57,7 +57,7 @@ export default function DashboardPage({ onAdminClick, onSwitchGuest, isCheckingA
         {isVirgin && <RockStarPerks />}
         {isVirgin && <TonightsLook onAction={openMarinaPanelWithMessage} />}
         {isVirgin && <ShakeForChampagne />}
-        {isVirgin && <NowPlayingManor />}
+        {isVirgin && <NowPlayingManor onAction={openMarinaPanelWithMessage} />}
         <ReservationWidget />
         <FolioWidget />
         <QuickActions onAction={openMarinaPanelWithMessage} />

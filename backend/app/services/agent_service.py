@@ -632,16 +632,22 @@ def _match_salon_service(query: str) -> Optional[Dict[str, Any]]:
 
 
 def _tool_book_salon(args: Dict[str, Any]) -> Dict[str, Any]:
-    """Book a salon service at Redemption Spa (Deck 5 salon side)."""
+    """Book a salon service at Redemption Spa (Deck 5 salon side).
+
+    Optional `look_id` is folded into the confirmation hash so that booking a
+    blow-out for two different looks (Scarlet Statement vs Ruby Tuxedo) yields
+    different confirmation numbers — used by the `land_the_look` macro.
+    """
     service_query = (args.get("service") or args.get("name") or "").strip()
     time = args.get("time", "17:00")
+    look_id = args.get("look_id")  # optional; only set when called from land_the_look
 
     service = _match_salon_service(service_query)
     if not service:
         menu = ", ".join(s["name"] for s in _SALON_MENU)
         return {"card": "error", "error": f"I didn't recognise that salon service. Try: {menu}."}
 
-    confirmation_id = f"SAL{abs(hash((service['name'], time))) % 100000:05d}"
+    confirmation_id = f"SAL{abs(hash((service['name'], time, look_id))) % 100000:05d}"
 
     ship_data.add_reservation("salon", {
         "treatment_name": service["name"],
@@ -663,6 +669,678 @@ def _tool_book_salon(args: Dict[str, Any]) -> Dict[str, Any]:
         "location": "Redemption Spa Salon, Deck 5",
         "confirmation_id": confirmation_id,
         "new_folio_balance": ship_data.get_guest()["folio"]["balance"],
+    }
+
+
+# ─── Tonight's Look — bug fix: macro tool to land the whole look ────────────
+# Maps each look's id to (cocktail name, venue, deck, price, vibe-line).
+# Genuinely different per look so the 3 outfit choices feel distinct.
+_LOOK_COCKTAIL = {
+    "scarlet-statement": {
+        "drink": "Disco Nap (espresso martini, smoky twist)",
+        "venue": "On The Rocks", "deck": 6, "price": 17,
+        "vibe": "Sleek silk + gold heels deserves caffeine + crema. You're ready to own the pool deck.",
+    },
+    "ruby-tux": {
+        "drink": "Negroni",
+        "venue": "On The Rocks", "deck": 6, "price": 16,
+        "vibe": "Sharp suit, sharp drink. Branson energy — exactly the late-night Manor mood.",
+    },
+    "after-hours": {
+        "drink": "Mezcal Mule",
+        "venue": "Loose Cannon", "deck": 6, "price": 16,
+        "vibe": "Floor-length drama + slow-burn agave. For arriving second and leaving last.",
+    },
+}
+
+# Display data for outfit_confirmed card (matches frontend lookbook).
+_LOOK_DETAILS = {
+    "scarlet-statement": {
+        "name": "Scarlet Statement", "image": "/looks/scarlet-statement.svg",
+        "summary": "Crimson silk slip + bare-shoulder jacket. Gold strappy heel. Hair: sleek bun.",
+    },
+    "ruby-tux": {
+        "name": "Ruby Tuxedo", "image": "/looks/ruby-tux.svg",
+        "summary": "Tailored red tux + black silk tee + crisp loafers. Optional black bow.",
+    },
+    "after-hours": {
+        "name": "After-Hours Red", "image": "/looks/after-hours.svg",
+        "summary": "Floor-length scarlet column dress, slit. Drop earrings, gold cuff.",
+    },
+}
+
+
+# ─── Hangover Saver — one cohesive "Recovery Menu" card ────────────────────
+# Per Plan agent: a single well-designed card beats 4 noisy ones. Books two
+# real reservations under the hood (hydration drip + late breakfast) so the
+# menu items echo into My Reservations + folio.
+_RECOVERY_ITEMS = [
+    {"icon": "💧", "title": "Hydration drip — Redemption Spa", "detail": "30 min IV vitamin boost · Deck 5", "price": 95, "time": "10:30", "book_as": "spa"},
+    {"icon": "🥬", "title": "B-Complex green smoothie — B-Complex gym", "detail": "Ginger, spinach, mango · grab-and-go · Deck 5", "price": 12, "time": "11:00", "book_as": None},
+    {"icon": "🍳", "title": "Late breakfast at The Wake", "detail": "Eggs Benedict + bottomless mimosas", "price": 0, "time": "11:30", "book_as": "dining"},
+    {"icon": "😎", "title": "Cabana siesta at The Perch", "detail": "Reserved lounger · Deck 16 aft", "price": 25, "time": "13:30", "book_as": None},
+]
+
+
+def _tool_hangover_recovery_menu(_args: Dict[str, Any]) -> Dict[str, Any]:
+    """Cheeky adult-only recovery menu — sass + actual bookings."""
+    total = sum(item["price"] for item in _RECOVERY_ITEMS)
+    conf = f"REC{abs(hash(('recovery', _time.time()))) % 100000:05d}"
+
+    # Real reservations for the bookable items
+    ship_data.add_reservation("spa", {
+        "treatment_name": "Hydration drip — Redemption Spa",
+        "time": "10:30", "time_human": _human_time("10:30"),
+        "duration_min": 30, "price": 95,
+        "confirmation_id": f"SPA{abs(hash(('hydration', conf))) % 100000:05d}",
+    })
+    # NOTE: distinct restaurant_id from the real "the-wake" dinner slot so the
+    # duplicate-guard in _tool_book_dining doesn't block a later dinner booking.
+    ship_data.add_reservation("dining", {
+        "restaurant_id": "the-wake-breakfast",
+        "restaurant_name": "The Wake (late breakfast)",
+        "time": "11:30", "time_human": _human_time("11:30"),
+        "party_size": 1,
+        "confirmation_id": f"BR{abs(hash(('wake-bf', conf))) % 100000:05d}",
+    })
+    ship_data.add_folio_charge("Redemption Spa — Hydration drip", 95)
+    ship_data.add_folio_charge("The Perch — Reserved lounger", 25)
+
+    return {
+        "card": "recovery_menu",
+        "title": "Late one, honey?",
+        "subtitle": "Ruby's no-judgment recovery menu — sorted.",
+        "items": _RECOVERY_ITEMS,
+        "confirmation_id": conf,
+        "total": total,
+        "new_folio_balance": ship_data.get_guest()["folio"]["balance"],
+    }
+
+
+# ─── Manor Shazam — identify what's playing right now ──────────────────────
+# Mocked DJ set list. Picks pseudo-randomly so the demo doesn't repeat.
+# Track titles are mentioned in text only — no audio embed (zero IP risk).
+_MANOR_TRACKLIST = [
+    {"track": "Tubular Bells — Pt. I", "artist": "Mike Oldfield", "year": 1973, "vibe": "Krautrock / prog",
+     "trivia": "Virgin Records' very first release — the album that built the label."},
+    {"track": "Sledgehammer", "artist": "Peter Gabriel", "year": 1986, "vibe": "Soulful funk-rock",
+     "trivia": "Released on Virgin. Stop-motion video changed MTV forever."},
+    {"track": "Anarchy in the U.K.", "artist": "Sex Pistols", "year": 1976, "vibe": "Pure punk",
+     "trivia": "Branson signed the Pistols after EMI dropped them. The bet of a lifetime."},
+    {"track": "Karma Chameleon", "artist": "Culture Club", "year": 1983, "vibe": "Synth-pop",
+     "trivia": "Virgin Records UK. Boy George at his peak."},
+    {"track": "Don't You Want Me", "artist": "The Human League", "year": 1981, "vibe": "Synth-pop",
+     "trivia": "Virgin Records. The Christmas #1 that defined an era."},
+    {"track": "Red Red Wine", "artist": "UB40", "year": 1983, "vibe": "Reggae",
+     "trivia": "Virgin Records signing. A Neil Diamond cover that nobody saw coming."},
+    {"track": "Dance Away", "artist": "Roxy Music", "year": 1979, "vibe": "Art-rock disco",
+     "trivia": "Bryan Ferry at his smoothest. Late-Manor energy in song form."},
+    {"track": "Le Freak", "artist": "Chic", "year": 1978, "vibe": "Disco",
+     "trivia": "Nile Rodgers wrote it after being turned away from Studio 54."},
+]
+
+
+def _tool_identify_now_playing(_args: Dict[str, Any]) -> Dict[str, Any]:
+    """Manor Shazam — tap to identify the track + auto-save to Cruise Soundtrack.
+    Picks deterministically based on the current minute so two rapid taps don't
+    return wildly different results, but rotation feels live over time.
+    """
+    import datetime as _dt
+    idx = (_dt.datetime.now().minute // 6) % len(_MANOR_TRACKLIST)
+    pick = _MANOR_TRACKLIST[idx]
+    return {
+        "card": "now_playing_track",
+        "track": pick["track"],
+        "artist": pick["artist"],
+        "year": pick["year"],
+        "vibe": pick["vibe"],
+        "venue": "The Manor",
+        "deck": 6,
+        "trivia": pick["trivia"],
+        "added_to_playlist": True,
+        "playlist_name": "My Cruise Soundtrack",
+        "spotify_search_url": (
+            "https://open.spotify.com/search/"
+            + (pick["track"] + " " + pick["artist"]).replace(" ", "%20")
+        ),
+    }
+
+
+# ─── Recommend a drink right now based on mood + time of day ───────────────
+_MOOD_DRINKS = {
+    "tired": {
+        "drink": "Disco Nap (espresso martini)", "venue": "On The Rocks", "deck": 6, "price": 17,
+        "caption": "Late afternoon dip + a long night ahead — caffeine plus crema is the move.",
+    },
+    "celebratory": {
+        "drink": "Krug pour", "venue": "Red Bar (behind The Wake)", "deck": 7, "price": 28,
+        "caption": "Toast worthy of the moment. Quiet luxury, served properly.",
+    },
+    "winding down": {
+        "drink": "Smoked Old Fashioned", "venue": "On The Rocks", "deck": 6, "price": 16,
+        "caption": "Slow-burn whisky, hint of smoke. For the kind of evening that doesn't need volume.",
+    },
+    "fired up": {
+        "drink": "Mezcal Mule", "venue": "Pink Agave bar", "deck": 5, "price": 17,
+        "caption": "Agave with a kick. Pre-Manor accelerator.",
+    },
+    "fancy": {
+        "drink": "French 75", "venue": "Red Bar", "deck": 7, "price": 17,
+        "caption": "Gin + champagne. Always the right answer when you're feeling formal.",
+    },
+}
+
+
+def _tool_recommend_drink_now(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Mood-based 'right-now' cocktail picker. Distinct from
+    recommend_pre_show_drink which keys off venue."""
+    mood = (args.get("mood") or "celebratory").strip().lower()
+    # Fuzzy mood resolution
+    for key in _MOOD_DRINKS:
+        if key in mood or mood in key:
+            mood = key
+            break
+    pick = _MOOD_DRINKS.get(mood, _MOOD_DRINKS["celebratory"])
+    return {
+        "card": "drink_pairing",
+        "drink": pick["drink"],
+        "venue": pick["venue"],
+        "deck": pick["deck"],
+        "price": pick["price"],
+        "note": pick["caption"],
+    }
+
+
+# ─── Surprise Mode — premium romance/celebration macro ─────────────────────
+_SURPRISE_PRESETS = {
+    "anniversary": {
+        "headline": "Anniversary night, sorted.",
+        "flowers": {"item": "Long-stem red roses (24)", "price": 110, "location": "your cabin"},
+        "restaurant_id": "the-wake",
+        "restaurant_name": "The Wake",
+        "dinner_time": "20:00",
+        "champagne": "Möet & Chandon Impérial (pre-poured table-side)",
+        "dessert": "Chocolate Soufflé with your partner's name in chocolate script",
+        "extras": "Live cellist for first 15 min · table near the wake windows",
+    },
+    "birthday": {
+        "headline": "Birthday locked in.",
+        "flowers": {"item": "Mixed peony bouquet", "price": 95, "location": "your cabin"},
+        "restaurant_id": "pink-agave",
+        "restaurant_name": "Pink Agave",
+        "dinner_time": "20:30",
+        "champagne": "Veuve Clicquot Yellow Label",
+        "dessert": "Tres Leches with sparkler + name in agave syrup",
+        "extras": "Mariachi cameo at 9:15 · mezcal flight comp'd",
+    },
+    "proposal": {
+        "headline": "Question of the year, sorted.",
+        "flowers": {"item": "Single white rose + petals path", "price": 140, "location": "your cabin"},
+        "restaurant_id": "the-wake",
+        "restaurant_name": "The Wake",
+        "dinner_time": "19:30",
+        "champagne": "Dom Pérignon Vintage",
+        "dessert": "Stargazer raspberry tart, served on its own",
+        "extras": "Reserved private alcove · photographer on standby · ring kept by RockStar Agent",
+    },
+}
+
+
+def _tool_arrange_surprise(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Coordinate a 4-touchpoint premium surprise (flowers + dining + champagne
+    + dessert). Returns one headline `surprise_summary` card plus the actual
+    dining + champagne cards so real reservations + folio updates happen.
+    """
+    occasion = (args.get("occasion") or "anniversary").strip().lower()
+    if "birthday" in occasion: occasion = "birthday"
+    elif "propos" in occasion or "engage" in occasion or "ring" in occasion: occasion = "proposal"
+    else: occasion = "anniversary"
+
+    recipient = (args.get("recipient") or args.get("partner") or "your partner").strip()
+    preset = _SURPRISE_PRESETS[occasion]
+
+    # 1) Flowers — reservation only (no separate card; surfaces in summary)
+    flowers_conf = f"FLW{abs(hash(('flowers', occasion, _time.time()))) % 100000:05d}"
+    ship_data.add_reservation("flowers", {
+        "treatment_name": preset["flowers"]["item"],
+        "time": "17:00", "time_human": _human_time("17:00"),
+        "price": preset["flowers"]["price"],
+        "confirmation_id": flowers_conf,
+    })
+    ship_data.add_folio_charge(f"Surprise — {preset['flowers']['item']}", preset["flowers"]["price"])
+
+    # 2) Dining — real booking via book_dining
+    dining_card = _tool_book_dining({
+        "restaurant": preset["restaurant_name"],
+        "time": preset["dinner_time"],
+        "party_size": 2,
+    })
+
+    # 3) Champagne — real booking via order_champagne (delivered table-side)
+    champagne_card = _tool_order_champagne({"location": f"your table at {preset['restaurant_name']}"})
+
+    # 4) Surprise summary card — the headline experience
+    summary_card = {
+        "card": "surprise_summary",
+        "occasion": occasion.capitalize(),
+        "recipient": recipient,
+        "headline": preset["headline"],
+        "flowers": preset["flowers"],
+        "restaurant": preset["restaurant_name"],
+        "dinner_time_human": _human_time(preset["dinner_time"]),
+        "champagne": preset["champagne"],
+        "dessert": preset["dessert"],
+        "extras": preset["extras"],
+        "confirmation_id": f"SURP{abs(hash(('surprise', occasion, _time.time()))) % 100000:05d}",
+    }
+
+    # Surprise booking marker (so it shows in My Reservations as a coordinated event)
+    ship_data.add_reservation("surprise", {
+        "treatment_name": f"{occasion.capitalize()} surprise for {recipient}",
+        "time": preset["dinner_time"], "time_human": _human_time(preset["dinner_time"]),
+        "confirmation_id": summary_card["confirmation_id"],
+    })
+
+    return {
+        "occasion": occasion,
+        "recipient": recipient,
+        "new_folio_balance": ship_data.get_guest()["folio"]["balance"],
+        "cards": [summary_card, dining_card, champagne_card],
+    }
+
+
+# ─── Pre-Boarder for Bimini — port-day automation macro ────────────────────
+def _tool_prebook_bimini_day(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Pre-stage a full day at the Beach Club at Bimini: cabana + lunch slot +
+    sunset cocktail + departure reminder. Returns a port_day_plan summary card
+    plus the real cabana excursion + lunch dining + cocktail pairing cards.
+    """
+    cabana_tier = (args.get("cabana_tier") or "private").strip().lower()
+    lunch_time = (args.get("lunch_time") or "13:00").strip()
+    party_size = int(args.get("party_size") or 2)
+
+    # Cabana — use the existing Bimini cabana excursion (matches data file)
+    excursion = ship_data.find_excursion("bimini-cabana") or ship_data.find_excursion("bimini-beach-club")
+    excursion_card = None
+    if excursion:
+        conf = f"EXC{abs(hash(('bimini-cabana', _time.time()))) % 100000:05d}"
+        ship_data.add_reservation("excursion", {
+            "excursion_id": excursion["id"],
+            "excursion_name": excursion["name"],
+            "treatment_name": excursion["name"],
+            "time": excursion.get("meet_time", "10:00"),
+            "time_human": _human_time(excursion.get("meet_time", "10:00")),
+            "party_size": party_size,
+            "price": excursion.get("price_per_guest", 0),
+            "confirmation_id": conf,
+        })
+        if excursion.get("price_per_guest", 0) > 0:
+            ship_data.add_folio_charge(
+                f"{excursion['name']} (×{party_size})",
+                excursion["price_per_guest"] * party_size,
+            )
+        excursion_card = {
+            "card": "excursion",
+            "excursion": excursion,
+            "time_human": _human_time(excursion.get("meet_time", "10:00")),
+            "party_size": party_size,
+            "confirmation_id": conf,
+        }
+
+    # Lunch — Beach Club buffet (mocked as a dining reservation)
+    lunch_conf = f"LUN{abs(hash(('bimini-lunch', lunch_time))) % 100000:05d}"
+    ship_data.add_reservation("dining", {
+        "restaurant_id": "bimini-beach-club-lunch",
+        "restaurant_name": "Beach Club lunch buffet",
+        "time": lunch_time, "time_human": _human_time(lunch_time),
+        "party_size": party_size,
+        "confirmation_id": lunch_conf,
+    })
+    lunch_card = {
+        "card": "dining",
+        "restaurant": {
+            "name": "Beach Club lunch buffet",
+            "cuisine": "Beach Club buffet — included",
+            "location": "Bimini Beach Club, beachside pavilion",
+            "headline_dish": "Conch fritters, jerk chicken, fresh ceviche",
+            "cover_charge": 0,
+        },
+        "time": lunch_time, "time_human": _human_time(lunch_time),
+        "date": _cruise_date(1),  # tomorrow if Bimini is next port
+        "party_size": party_size,
+        "confirmation_id": lunch_conf,
+    }
+
+    # Sunset cocktail — drink_pairing card pre-staged for ~18:30
+    cocktail_card = {
+        "card": "drink_pairing",
+        "drink": "Bimini Punch (rum, passionfruit, mint)",
+        "venue": "Beach Club Beach Bar",
+        "deck": 0,
+        "price": 16,
+        "note": "Waiting for you at 6:30 PM. Last call before the tender back.",
+    }
+
+    # Port-day plan summary (lead card)
+    plan_card = {
+        "card": "port_day_plan",
+        "port": "Bimini, Bahamas",
+        "weather": {"temp_f": 84, "condition": "Sunny", "uv": 9, "sea_state": "Glass calm"},
+        "cabana_tier": cabana_tier,
+        "party_size": party_size,
+        "agenda": [
+            {"time": "09:30", "what": "Tender from ship to Beach Club"},
+            {"time": "10:00", "what": "Cabana check-in + cold towels"},
+            {"time": (lunch_time), "what": "Beach Club lunch buffet"},
+            {"time": "14:30", "what": "Pool volleyball / DJ takeover"},
+            {"time": "18:30", "what": "Sunset cocktail at the Beach Bar"},
+            {"time": "20:00", "what": "Last tender back — don't miss it"},
+        ],
+        "confirmation_id": f"BIM{abs(hash(('bimini-day', _time.time()))) % 100000:05d}",
+    }
+
+    # Port-day-plan reservation marker
+    ship_data.add_reservation("port_day_plan", {
+        "treatment_name": "Bimini Beach Club — full day plan",
+        "time": "09:30", "time_human": "9:30 AM",
+        "confirmation_id": plan_card["confirmation_id"],
+    })
+
+    cards = [plan_card]
+    if excursion_card: cards.append(excursion_card)
+    cards.append(lunch_card)
+    cards.append(cocktail_card)
+
+    return {
+        "port": "Bimini, Bahamas",
+        "party_size": party_size,
+        "new_folio_balance": ship_data.get_guest()["folio"]["balance"],
+        "cards": cards,
+    }
+
+
+# ─── Pack Forecaster — AI-tailored packing list for the voyage ─────────────
+def _tool_generate_packing_list(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Tailored packing list — adult-only, no formal night, RED for Scarlet
+    Night, swimwear for Bimini, no kid gear."""
+    occasion = (args.get("occasion") or "voyage").strip().lower()
+    cruise = ship_data.get_cruise()
+    sections = [
+        {
+            "title": "🔴 Scarlet Night — required",
+            "subtitle": "Tomorrow. Red is non-negotiable.",
+            "items": [
+                {"name": "Red dress / red suit / red blouse + skirt", "tag": "essential"},
+                {"name": "Bold red lip or red accessory", "tag": "recommended"},
+                {"name": "Comfortable dance shoes — pool deck takeover", "tag": "essential"},
+                {"name": "Sequins / metallics that catch the red lights", "tag": "optional"},
+            ],
+        },
+        {
+            "title": "🏝 Bimini Beach Club",
+            "subtitle": "Day at the private beach.",
+            "items": [
+                {"name": "Swimwear (2-3 sets, rotate to dry)", "tag": "essential"},
+                {"name": "Linen overshirt / cover-up", "tag": "essential"},
+                {"name": "Reef-safe sunscreen SPF 50+", "tag": "essential"},
+                {"name": "Wide-brim hat", "tag": "recommended"},
+                {"name": "Slim-strap sandals or pool slides", "tag": "essential"},
+                {"name": "Light beach tote (raffia or canvas)", "tag": "recommended"},
+            ],
+        },
+        {
+            "title": "🎶 The Manor late-night",
+            "subtitle": "Two-story nightclub. Built to dance.",
+            "items": [
+                {"name": "1-2 going-out outfits (sleek, room to move)", "tag": "essential"},
+                {"name": "Comfortable heels OR sharp sneakers — your call", "tag": "essential"},
+                {"name": "Small crossbody bag", "tag": "recommended"},
+                {"name": "Light layer for the deck walk back", "tag": "optional"},
+            ],
+        },
+        {
+            "title": "💆 Spa & wellness",
+            "subtitle": "Redemption Spa + B-Complex gym.",
+            "items": [
+                {"name": "Activewear for group fitness classes", "tag": "recommended"},
+                {"name": "Flip-flops for the Mud Room", "tag": "essential"},
+                {"name": "Hair tie + claw clip for spa/gym", "tag": "essential"},
+                {"name": "Plain swimsuit for hydrotherapy pool", "tag": "recommended"},
+            ],
+        },
+        {
+            "title": "👗 Daily casuals",
+            "subtitle": "Smart-casual everywhere — no tie, no formal night.",
+            "items": [
+                {"name": "5 day outfits (light layers, breathable)", "tag": "essential"},
+                {"name": "1-2 dinner outfits (no formal needed)", "tag": "essential"},
+                {"name": "Comfortable walking shoes", "tag": "essential"},
+                {"name": "Sunglasses + reading glasses", "tag": "recommended"},
+            ],
+        },
+        {
+            "title": "📱 Tech & docs",
+            "subtitle": "What you'll actually use.",
+            "items": [
+                {"name": "Phone (Sailor App = your room key, muster, payments)", "tag": "essential"},
+                {"name": "Portable charger", "tag": "recommended"},
+                {"name": "Passport / ID — soft copy in phone + paper backup", "tag": "essential"},
+                {"name": "Travel insurance card", "tag": "optional"},
+            ],
+        },
+    ]
+    return {
+        "card": "packing_list",
+        "title": "Your Scarlet Lady packing list",
+        "subtitle": f"Tailored for the {cruise.get('itinerary_name', 'voyage')} — no formal nights, kids-free, RED required for Scarlet Night.",
+        "ship": cruise.get("ship", "Scarlet Lady"),
+        "sections": sections,
+    }
+
+
+# ─── Voyage Diary — aggregate today's moments from reservations + folio ────
+def _tool_get_voyage_diary(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Per-day visual recap. Aggregates real bookings + folio items by date,
+    adds mocked photo count + music plays, returns a stylized diary card."""
+    day_arg = args.get("day")
+    cruise = ship_data.get_cruise()
+    guest = ship_data.get_guest()
+    current_day = cruise.get("current_day", 4)
+    try:
+        day = int(day_arg) if day_arg is not None else current_day
+    except (TypeError, ValueError):
+        day = current_day
+    day = max(1, min(day, cruise.get("total_days", 6)))
+
+    itinerary = cruise.get("itinerary", [])
+    day_label = itinerary[day - 1] if day - 1 < len(itinerary) else "At Sea"
+    day_date = _cruise_date(day - 1)
+
+    folio_today = [it for it in guest.get("folio", {}).get("items", []) if it.get("date") == day_date]
+    reservations = guest.get("reservations", [])
+    res_names = [
+        r.get("restaurant_name") or r.get("show_name") or r.get("treatment_name") or "Reservation"
+        for r in reservations
+    ]
+
+    # Mocked colour: photo count + music plays based on a deterministic-ish hash of the day
+    photos = 8 + (day * 3) % 15
+    plays = 6 + (day * 5) % 11
+
+    # Bullet list of moments
+    moments = []
+    for it in folio_today[:6]:
+        moments.append({"icon": "💳", "label": it.get("desc", ""), "value": f"${it.get('amount', 0):.2f}"})
+    for r in reservations[:6]:
+        nm = r.get("restaurant_name") or r.get("show_name") or r.get("treatment_name") or "Reservation"
+        t = r.get("time_human") or r.get("time") or ""
+        moments.append({"icon": "📌", "label": nm, "value": t})
+    if photos:
+        moments.append({"icon": "📸", "label": "Photos taken", "value": str(photos)})
+    if plays:
+        moments.append({"icon": "🎧", "label": "Tracks ID'd at The Manor", "value": str(plays)})
+    if not moments:
+        moments.append({"icon": "✨", "label": "A quiet chapter — sometimes the best kind.", "value": ""})
+
+    # Header SVG per day (rotates through 5 day SVGs)
+    header_svg = f"/diary/day-{((day - 1) % 5) + 1}.svg"
+
+    return {
+        "card": "voyage_diary",
+        "day_label": f"Day {day} of {cruise.get('total_days', 6)} · {day_label}",
+        "title": f"Today's chapter — {guest.get('primary_first_name', 'Sailor')}",
+        "ship": cruise.get("ship", "Scarlet Lady"),
+        "moments": moments,
+        "stats": {
+            "venues": len(set(r.get("restaurant_name") for r in reservations if r.get("restaurant_name"))),
+            "photos": photos,
+            "music_plays": plays,
+            "folio_today": round(sum(it.get("amount", 0) for it in folio_today), 2),
+        },
+        "header_image": header_svg,
+        "shareable_footer": "Tap to share your Scarlet Lady chapter →",
+    }
+
+
+# ─── Scarlet Night Squad Mode — cosmetic group coordination ────────────────
+_SQUAD_MOCK_INVITEES = ["Lisa P.", "Marcus T.", "Priya R.", "Andre J.", "Sofia M.", "Wei C."]
+
+
+def _tool_create_squad_event(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Cosmetic-only — single squad_event card showing coordinated salon + Manor
+    table for a group. Does NOT insert per-member reservations (we don't have a
+    multi-guest data model yet). This is a demo moment, not a real coordination."""
+    party_size = int(args.get("party_size") or 4)
+    party_size = max(2, min(party_size, 8))
+    invitees = _SQUAD_MOCK_INVITEES[: max(0, party_size - 1)]
+    conf = f"SQD{abs(hash(('squad', _time.time()))) % 100000:05d}"
+
+    # Add a single squad_event reservation so it shows in My Reservations
+    ship_data.add_reservation("squad_event", {
+        "treatment_name": f"Scarlet Night squad for {party_size}",
+        "time": "23:00", "time_human": _human_time("23:00"),
+        "confirmation_id": conf,
+    })
+
+    return {
+        "card": "squad_event",
+        "occasion": "Scarlet Night",
+        "party_size": party_size,
+        "invitees": invitees,
+        "salon_window": "7:00 PM – 8:00 PM at Redemption Spa",
+        "manor_table_time": "11:00 PM",
+        "manor_table_label": f"Group table for {party_size}",
+        "rendezvous": "Meet at On The Rocks (Deck 6) at 10:30 for a pre-toast",
+        "confirmation_id": conf,
+        "share_link": f"https://sailor.virginvoyages.com/squad/{conf}",
+    }
+
+
+def _tool_land_the_look(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Macro: confirm the chosen look + book salon + reserve Manor table + pair
+    a cocktail — returned as 4 cards in one turn. Look-specific cocktail and
+    salon confirmation IDs so each look feels distinct.
+    """
+    raw = (args.get("look_id") or args.get("look") or "scarlet-statement").strip().lower()
+    # Fuzzy resolution — tolerate slugs, human names, and trailing descriptors.
+    # Normalise spaces↔hyphens, then try several reductions.
+    def _resolve(s: str) -> Optional[str]:
+        if s in _LOOK_DETAILS:
+            return s
+        slug = s.replace(" ", "-")
+        if slug in _LOOK_DETAILS:
+            return slug
+        # Substring match against canonical IDs and human names
+        for canonical, details in _LOOK_DETAILS.items():
+            name_slug = details["name"].lower().replace(" ", "-")
+            if slug == name_slug or slug in canonical or canonical in slug or name_slug in slug or slug in name_slug:
+                return canonical
+        # Keyword-based fallback
+        if "scarlet" in s or "statement" in s: return "scarlet-statement"
+        if "ruby" in s or "tux" in s:          return "ruby-tux"
+        if "after" in s or "column" in s:      return "after-hours"
+        return None
+
+    look_id = _resolve(raw)
+    if look_id is None:
+        return {"card": "error", "error": f"I don't know the '{raw}' look. Try Scarlet Statement, Ruby Tuxedo, or After-Hours Red."}
+
+    salon_time = (args.get("salon_time") or "19:00").strip()
+    manor_time = (args.get("manor_time") or "23:00").strip()
+    party_size = int(args.get("party_size") or 2)
+
+    look = _LOOK_DETAILS[look_id]
+    pairing = _LOOK_COCKTAIL[look_id]
+
+    # 1) outfit_confirmed — record the choice as a reservation so it shows in My Reservations
+    outfit_conf = f"OUT{abs(hash((look_id, salon_time))) % 100000:05d}"
+    ship_data.add_reservation("outfit", {
+        "treatment_name": f"Tonight's Look — {look['name']}",
+        "look_id": look_id,
+        "time": manor_time,
+        "time_human": _human_time(manor_time),
+        "confirmation_id": outfit_conf,
+    })
+    outfit_card = {
+        "card": "outfit_confirmed",
+        "look_id": look_id,
+        "look_name": look["name"],
+        "image": look["image"],
+        "summary": look["summary"],
+        "vibe": pairing["vibe"],
+        "occasion": "Scarlet Night",
+        "confirmation_id": outfit_conf,
+    }
+
+    # 2) salon_booking — blow-out (sensible default for every look)
+    salon_card = _tool_book_salon({
+        "service": "blow-out",
+        "time": salon_time,
+        "look_id": look_id,  # makes confirmation unique per look
+    })
+
+    # 3) manor_table — new reservation kind
+    manor_conf = f"MAN{abs(hash((look_id, manor_time, party_size))) % 100000:05d}"
+    ship_data.add_reservation("manor_table", {
+        "treatment_name": f"The Manor table for {party_size}",
+        "venue": "The Manor",
+        "deck": 6,
+        "time": manor_time,
+        "time_human": _human_time(manor_time),
+        "party_size": party_size,
+        "confirmation_id": manor_conf,
+    })
+    manor_card = {
+        "card": "manor_table",
+        "venue": "The Manor",
+        "deck": 6,
+        "time": manor_time,
+        "time_human": _human_time(manor_time),
+        "party_size": party_size,
+        "confirmation_id": manor_conf,
+        "note": "Reserved table near the dance floor. Your name's at the door.",
+    }
+
+    # 4) drink_pairing — look-specific cocktail (reuses existing card type)
+    drink_card = {
+        "card": "drink_pairing",
+        "drink": pairing["drink"],
+        "venue": pairing["venue"],
+        "deck": pairing["deck"],
+        "price": pairing["price"],
+        "note": f"Pre-Manor sip — {pairing['vibe']}",
+    }
+
+    return {
+        # Top-level fields are read by _natural_reply_for and the system for context
+        "look_id": look_id,
+        "look_name": look["name"],
+        "salon_time_human": _human_time(salon_time),
+        "manor_time_human": _human_time(manor_time),
+        "cocktail": pairing["drink"],
+        "new_folio_balance": ship_data.get_guest()["folio"]["balance"],
+        # The 4-card multi-card response
+        "cards": [outfit_card, salon_card, manor_card, drink_card],
     }
 
 
@@ -859,7 +1537,79 @@ def _natural_reply_for(tool_name: str, tool_result: Dict[str, Any]) -> str:
         d = tool_result.get("drink", "a cocktail")
         v = tool_result.get("venue", "the bar")
         return f"{d} at {v} — that's the move. Want me to set a table?"
+    if tool_name == "land_the_look":
+        ln = tool_result.get("look_name", "your look")
+        st = tool_result.get("salon_time_human", "")
+        mt = tool_result.get("manor_time_human", "")
+        ck = tool_result.get("cocktail", "a cocktail")
+        return (
+            f"Locked in for Scarlet Night: {ln}, blow-out at {st}, Manor table at {mt}, "
+            f"and a {ck} waiting before you head in. You're sorted, honey."
+        )
+    if tool_name == "hangover_recovery_menu":
+        return (
+            "Late one, honey? Recovery menu sorted — hydration drip at Redemption at 10:30, "
+            "green smoothie when you wake, late breakfast at The Wake at 11:30, and a cabana siesta "
+            "to seal it. You'll be vertical by sunset."
+        )
+    if tool_name == "identify_now_playing":
+        t = tool_result.get("track", "that track")
+        a = tool_result.get("artist", "")
+        return f"That's '{t}' by {a} — added to your Cruise Soundtrack on Spotify. Branson story behind it on the card."
+    if tool_name == "recommend_drink_now":
+        d = tool_result.get("drink", "a cocktail")
+        v = tool_result.get("venue", "the bar")
+        return f"{d} at {v} — that's the answer, honey."
+    if tool_name == "arrange_surprise":
+        occ = tool_result.get("occasion", "surprise")
+        who = tool_result.get("recipient", "your partner")
+        return f"Sorted, honey — {occ} for {who} is on. Flowers waiting in the cabin, table booked, bubbles on the way."
+    if tool_name == "prebook_bimini_day":
+        return (
+            "Tomorrow at Bimini: cabana check-in at 10, lunch at 1, sunset cocktail at 6:30, "
+            "last tender at 8. Sun's out, UV is high — pack the SPF."
+        )
+    if tool_name == "generate_packing_list":
+        sec_count = len(tool_result.get("sections", []))
+        return f"Packing list pulled — {sec_count} sections, RED flagged for Scarlet Night. No formal wear needed, kids-free, obviously."
+    if tool_name == "get_voyage_diary":
+        dl = tool_result.get("day_label", "today")
+        return f"Here's {dl} — your moments, your photos, your tracks at The Manor. Shareable when you're ready."
+    if tool_name == "create_squad_event":
+        ps = tool_result.get("party_size", 4)
+        return f"Squad of {ps} sorted for Scarlet Night — coordinated salon slots, Manor table at 11, pre-toast at On The Rocks. Share link in the card."
     return "Done — anything else?"
+
+
+def _assemble_card_payload(tool_result: Dict[str, Any]):
+    """Build the `card_payload` returned to the frontend from a tool's result.
+
+    Three shapes are supported (precedence order, top wins):
+      1. Macro tools — `{"cards": [card_dict, card_dict, ...]}` returns the list
+         as-is (frontend ConciergeCard already renders arrays). Macro tools that
+         want a cancel card must include it themselves in `cards`.
+      2. switch_reservation — single-tool result that also carries
+         `switched_from` metadata: synthesise a 2-element [cancel, new] array.
+      3. Plain single card — `{"card": "...", ...}` — pass through.
+      4. Info-only tools (no `card` key) — return None so no UI card renders.
+    """
+    if not tool_result:
+        return None
+    cards = tool_result.get("cards")
+    if isinstance(cards, list) and cards:
+        return cards
+    if tool_result.get("switched_from") and tool_result.get("card"):
+        sf = tool_result["switched_from"]
+        cancel_card = {
+            "card": "cancel",
+            "name": sf.get("name", "previous booking"),
+            "confirmation_id": sf.get("confirmation_id", ""),
+            "time_human": "",
+        }
+        return [cancel_card, tool_result]
+    if tool_result.get("card"):
+        return tool_result
+    return None
 
 
 def _looks_like_reasoning_leak(text: str) -> bool:
@@ -923,6 +1673,15 @@ _TOOLS: Dict[str, ToolFn] = {
     "suggest_outfit": _tool_suggest_outfit,
     "book_salon": _tool_book_salon,
     "recommend_pre_show_drink": _tool_recommend_pre_show_drink,
+    "land_the_look": _tool_land_the_look,
+    "hangover_recovery_menu": _tool_hangover_recovery_menu,
+    "identify_now_playing": _tool_identify_now_playing,
+    "recommend_drink_now": _tool_recommend_drink_now,
+    "arrange_surprise": _tool_arrange_surprise,
+    "prebook_bimini_day": _tool_prebook_bimini_day,
+    "generate_packing_list": _tool_generate_packing_list,
+    "get_voyage_diary": _tool_get_voyage_diary,
+    "create_squad_event": _tool_create_squad_event,
 }
 
 
@@ -1100,7 +1859,13 @@ def _build_system_prompt(folio_balance: float, reservations: list, drink_package
         "upgrade_drink_package(package,days), get_weather(), "
         "get_wifi_options(), get_spa_options(), get_ship_info(topic), "
         "order_champagne(location), "
-        "suggest_outfit(occasion,vibe?), book_salon(service,time), recommend_pre_show_drink(venue)"
+        "suggest_outfit(occasion,vibe?), book_salon(service,time), recommend_pre_show_drink(venue), "
+        "land_the_look(look_id,salon_time?,manor_time?,party_size?), "
+        "hangover_recovery_menu(), identify_now_playing(), "
+        "recommend_drink_now(mood?), "
+        "arrange_surprise(occasion,recipient?), prebook_bimini_day(cabana_tier?,lunch_time?,party_size?), "
+        "generate_packing_list(occasion?), get_voyage_diary(day?), "
+        "create_squad_event(party_size?)"
     )
     return (
         "You are Ruby, Scarlet Lady's onboard Sailor concierge for Virgin Voyages.\n"
@@ -1154,10 +1919,6 @@ def _build_system_prompt(folio_balance: float, reservations: list, drink_package
         '{"tool":"book_dining","args":{"restaurant":"Pink Agave","time":"20:00","party_size":2},'
         '"say":"Pink Agave at 8 — tableside guac and mezcal flight, you\'re in for it.",'
         '"hints":["Book a show after dinner","Tell me about the mezcal flight","Best cocktail at The Manor?"]}\n\n'
-        'User: "what about steak"\n'
-        '{"tool":"book_dining","args":{"restaurant":"The Wake","time":"19:30","party_size":2},'
-        '"say":"The Wake at 7:30 — dry-aged ribeye, sweeping wake views. No cover, it\'s all in.",'
-        '"hints":["Wine pairing?","Book a show after","What\'s the dress code?"]}\n\n'
         'User: "move my dinner to 9 PM"\n'
         '{"tool":"modify_dining","args":{"restaurant":"dinner","new_time":"21:00"},'
         '"say":"On it — moving your dinner to 9 PM.","hints":["Book a late-night show","Anything pre-dinner?","Show my reservations"]}\n\n'
@@ -1195,9 +1956,22 @@ def _build_system_prompt(folio_balance: float, reservations: list, drink_package
         'User: "what should I drink at The Manor"\n'
         '{"tool":"recommend_pre_show_drink","args":{"venue":"The Manor"},"say":"Negroni Bianco — bartender keeps it cold and a little smoky. $16 to your tab.",'
         '"hints":["Book me a Manor table","Suggest an outfit","Send champagne instead"]}\n\n'
-        'User: "¿qué hay para cenar?"\n'
-        '{"tool":null,"args":{},"say":"Esta noche, todo incluido: Extra Virgin (italiano), Pink Agave (mexicano + mezcal), The Wake (carne y mariscos), Gunbae (BBQ coreano). ¿Te reservo en alguno?",'
-        '"hints":["Reservar Pink Agave a las 8","¿Qué show hay esta noche?","Tráeme champán a la piscina"]}\n\n'
+        'User: "I want the Scarlet Statement look for Scarlet Night — sort the whole night"\n'
+        '{"tool":"land_the_look","args":{"look_id":"scarlet-statement","salon_time":"19:00","manor_time":"23:00"},'
+        '"say":"Locked in, honey — Scarlet Statement, blow-out at 7, Manor table at 11, Disco Nap waiting beforehand.",'
+        '"hints":["Add a manicure","Send champagne to my cabin at 10","Switch to Ruby Tuxedo"]}\n\n'
+        'User: "land the Ruby Tuxedo look"\n'
+        '{"tool":"land_the_look","args":{"look_id":"ruby-tux"},'
+        '"say":"Ruby Tuxedo — sharp choice. Blow-out at 7, Manor table at 11, Negroni waiting.",'
+        '"hints":["Move the Manor table to midnight","Add a glam makeup at 7:30","Show my reservations"]}\n\n'
+        'User: "arrange a surprise for our anniversary tonight" / "surprise mode"\n'
+        '{"tool":"arrange_surprise","args":{"occasion":"anniversary","recipient":"my partner"},'
+        '"say":"On it — anniversary night sorted. Flowers in the cabin, table at The Wake, Möet on the way.",'
+        '"hints":["Make it a proposal instead","Send a Dom Pérignon upgrade","What is the dessert?"]}\n\n'
+        'User: "pre-board my Bimini day" / "plan tomorrow at the Beach Club"\n'
+        '{"tool":"prebook_bimini_day","args":{"cabana_tier":"private","lunch_time":"13:00","party_size":2},'
+        '"say":"Bimini sorted — cabana at 10, lunch at 1, sunset cocktail at 6:30. Last tender 8.",'
+        '"hints":["Add yoga at 11","Order champagne to the cabana","What is the weather?"]}\n\n'
         + _STATIC_KNOWLEDGE
         + dynamic
     )
@@ -1370,25 +2144,9 @@ class AgentService:
 
         bot_text = cleaned or _natural_reply_for(tool_name, tool_result)
 
-        # Build card payload — None for read-only info tools.
-        # switch_reservation returns TWO cards: cancel + new booking.
-        if tool_result.get("switched_from") and tool_result.get("card"):
-            sf = tool_result["switched_from"]
-            cancel_card = {
-                "card": "cancel",
-                "name": sf.get("name", "previous booking"),
-                "confirmation_id": sf.get("confirmation_id", ""),
-                "time_human": "",
-            }
-            final_card = [cancel_card, tool_result]
-        elif tool_result.get("card"):
-            final_card = tool_result
-        else:
-            final_card = None
-
         return {
             "bot_text": bot_text,
-            "card_payload": final_card,
+            "card_payload": _assemble_card_payload(tool_result),
             "folio_balance": ship_data.get_guest()["folio"]["balance"],
             "suggestions": suggestions,
         }
@@ -1487,24 +2245,11 @@ class AgentService:
                 yield {"type": "text_delta", "text": fallback}
             full_text = full_text or fallback
 
-        # Build the card payload
-        if tool_result.get("switched_from") and tool_result.get("card"):
-            sf = tool_result["switched_from"]
-            cancel_card = {
-                "card": "cancel",
-                "name": sf.get("name", "previous booking"),
-                "confirmation_id": sf.get("confirmation_id", ""),
-                "time_human": "",
-            }
-            final_card = [cancel_card, tool_result]
-        elif tool_result.get("card"):
-            final_card = tool_result
-        else:
-            final_card = None
-
+        # Build the card payload (handles macro-tool `cards` arrays, switch_reservation
+        # `switched_from` synth, plain single cards, and info-only None — all in one helper).
         yield {
             "type": "done",
-            "card_payload": final_card,
+            "card_payload": _assemble_card_payload(tool_result),
             "folio_balance": ship_data.get_guest()["folio"]["balance"],
             "suggestions": suggestions,
         }

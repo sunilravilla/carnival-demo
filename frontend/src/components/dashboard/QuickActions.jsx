@@ -1,6 +1,7 @@
 import { useGuest } from '../../context/GuestContext';
+import { isVirgin } from '../../styles/branding';
 
-const ALL_ACTIONS = [
+const CARNIVAL_ACTIONS = [
   { id: 'dining',     icon: '🍽', label: 'Book Dining',    msg: 'I want to book a restaurant for dinner tonight',  always: true },
   { id: 'show',       icon: '🎭', label: 'Find a Show',    msg: 'What shows are playing tonight?',                  always: true },
   { id: 'spa',        icon: '💆', label: 'Book Spa',        msg: 'I would like to book a spa treatment',            always: true },
@@ -9,6 +10,21 @@ const ALL_ACTIONS = [
   { id: 'activities', icon: '🎯', label: 'Onboard Activities', msg: 'What activities are happening on the ship today?', always: true },
   { id: 'folio',      icon: '💳', label: 'My Account',     msg: 'What have I spent so far?',                       always: true },
 ];
+
+const VIRGIN_ACTIONS = [
+  { id: 'dining',     icon: '🍽',  label: 'Book Dining',     msg: 'Book me a restaurant for tonight',                                always: true },
+  { id: 'show',       icon: '🎭',  label: 'Find a Show',     msg: 'What shows are playing tonight at The Red Room and The Manor?',  always: true },
+  { id: 'recovery',   icon: '🥴',  label: 'Recovery menu',   msg: 'Open the hangover recovery menu',                                 always: true },
+  { id: 'drink',      icon: '🍸',  label: 'What to drink?',  msg: 'What should I drink right now? Pick the mood — I trust you.',     always: true },
+  { id: 'surprise',   icon: '🎁',  label: 'Surprise mode',   msg: 'Arrange a surprise for tonight — anniversary, premium budget',    always: true },
+  { id: 'packing',    icon: '🎒',  label: 'Packing list',    msg: 'Generate my packing list for Scarlet Night and Bimini',            always: true },
+  { id: 'bimini',     icon: '🏝',  label: 'Pre-board Bimini',msg: 'Pre-board my Bimini day — cabana, lunch, sunset cocktail',         always: true },
+  { id: 'squad',      icon: '👥',  label: 'Squad night',     msg: 'Create a Scarlet Night squad event for 4 of us',                  always: true },
+  { id: 'diary',      icon: '📔',  label: "Today's diary",   msg: "Show me today's voyage diary",                                     always: true },
+  { id: 'folio',      icon: '💳',  label: 'My Account',      msg: 'What have I spent so far?',                                        always: true },
+];
+
+const ALL_ACTIONS = isVirgin ? VIRGIN_ACTIONS : CARNIVAL_ACTIONS;
 
 const S = {
   section: { margin: '12px 12px 0' },

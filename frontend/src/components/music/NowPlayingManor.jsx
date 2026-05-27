@@ -115,7 +115,7 @@ const S = {
   },
 };
 
-export default function NowPlayingManor() {
+export default function NowPlayingManor({ onAction } = {}) {
   const [tick, setTick] = useState(0);
   useEffect(() => {
     if (document.getElementById('manor-kf')) return;
@@ -185,6 +185,15 @@ export default function NowPlayingManor() {
         <button style={S.vibeBtn} onClick={openSpotify}>
           🎶 Set the Vibe — Spotify
         </button>
+        {onAction && (
+          <button
+            style={S.altBtn}
+            onClick={() => onAction("What's playing right now at The Manor? Identify the track for me.")}
+            title="Identify the current Manor track and add it to your Cruise Soundtrack"
+          >
+            🎧 Shazam
+          </button>
+        )}
         <button style={S.altBtn} onClick={openApple} title="Open in Apple Music">
           Apple
         </button>

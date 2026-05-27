@@ -180,16 +180,19 @@ export default function TonightsLook({ onAction }) {
   const handleLookTap = (look) => {
     if (!onAction) return;
     setHoveredLook(look.id);
-    // Triggers Ruby with a prompt that should chain outfit + salon + Manor.
+    // Fires the `land_the_look` macro — one tool turn, 4 distinct cards back
+    // (outfit + salon + Manor table + look-specific cocktail).
     onAction(
-      `I want the ${look.name} look for Scarlet Night. Pre-book a blow-out at the salon for 7 PM and reserve me a table at The Manor at 11 PM. And recommend the right pre-show cocktail.`
+      `Land the ${look.name} look for Scarlet Night — blow-out at 7 PM, Manor table at 11 PM for 2.`
     );
   };
 
   const handleSortItAll = () => {
     if (!onAction) return;
+    // Default to Scarlet Statement when the Sailor hasn't picked — Ruby will
+    // confirm and offer to swap.
     onAction(
-      `Sort tonight for me — suggest a look for Scarlet Night, book the salon at 7, dinner at 8, and a Manor table at 11. Make it good, Ruby.`
+      `Land the Scarlet Statement look for Scarlet Night — sort everything.`
     );
   };
 

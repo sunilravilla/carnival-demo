@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 220" width="800" height="220" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="d3bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1A1A1A"/>
+      <stop offset="0.6" stop-color="#2E0444"/>
+      <stop offset="1" stop-color="#CC0000"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="220" fill="url(#d3bg)"/>
+  <!-- Sea day vibe: waves + sunset -->
+  <circle cx="400" cy="80" r="44" fill="#FFE6B0" opacity="0.85"/>
+  <g stroke="#FFFFFF" stroke-opacity="0.25" stroke-width="1.5" fill="none">
+    <path d="M 0 150 Q 100 140 200 150 T 400 150 T 600 150 T 800 150"/>
+    <path d="M 0 170 Q 100 160 200 170 T 400 170 T 600 170 T 800 170"/>
+    <path d="M 0 190 Q 100 180 200 190 T 400 190 T 600 190 T 800 190"/>
+  </g>
+  <!-- Spa towel + lemon water vibe -->
+  <g transform="translate(120 100)" opacity="0.85">
+    <rect x="0" y="0" width="60" height="40" rx="6" fill="#FFFFFF"/>
+    <rect x="0" y="14" width="60" height="3" fill="#CC0000"/>
+  </g>
+</svg>
