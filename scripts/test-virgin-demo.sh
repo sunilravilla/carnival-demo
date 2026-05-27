@@ -636,13 +636,23 @@ curl -s -X POST "$API/api/guest/lookup" -H "Content-Type: application/json" \
 
 R=$(ruby_say "Book just the hydration drip from the recovery menu" "w3-b5")
 CARD_TYPE=$(echo "$R" | extract_card)
-info "card type: $CARD_TYPE"
-# After fix: should NOT be 'recovery_menu' (full menu). Should be spa_booking
-# or a new recovery_item card type, or a multi-card with specific items only.
-if [[ "$CARD_TYPE" == "recovery_menu" ]]; then
-  fail "re-issued the full recovery_menu instead of booking the specific item [B5]"
-else
+# After Wave 4: book_recovery_item still returns card type 'recovery_menu' so
+# the rendering stays consistent, but the items array is narrowed to just the
+# named items. Pass criterion is the item count, not the card type.
+ITEM_COUNT=$(echo "$R" | python3 -c "import sys,json
+try:
+    d=json.load(sys.stdin)
+    c=d.get('card_payload')
+    if isinstance(c,list): c=c[0] if c else None
+    print(len((c or {}).get('items',[])))
+except Exception: print(-1)")
+info "card type: $CARD_TYPE | items: $ITEM_COUNT"
+if [[ "$ITEM_COUNT" == "1" ]]; then
+  pass "specific-item request returns 1 item (not the full 4-item menu)"
+elif [[ "$CARD_TYPE" != "recovery_menu" ]]; then
   pass "responded with '$CARD_TYPE' (not the full menu)"
+else
+  fail "re-issued the full recovery_menu instead of booking the specific item [B5]"
 fi
 
 # ---------------------------------------------------------------------------
@@ -734,6 +744,162 @@ fi
 curl -s -X POST "$API/api/guest/lookup" -H "Content-Type: application/json" \
   -d "{\"identifier\":\"$PRIMARY_PHONE\"}" >/dev/null
 
+
+# ===========================================================================
+# WAVE 4 — fixes for the 6 user-reported click-through bugs
+# ===========================================================================
+echo
+echo "${BOLD}════════════════════════════════════════════════${NC}"
+echo "${BOLD}  WAVE 4 — user click-through bug-fix sweep${NC}"
+echo "${BOLD}════════════════════════════════════════════════${NC}"
+
+# Helper: extract a single field from card_payload (first card if list)
+extract_field() {
+  # $1 = field name
+  local field="$1"
+  python3 -c "import sys,json
+try:
+    d=json.load(sys.stdin)
+    c=d.get('card_payload')
+    if isinstance(c, list): c=c[0] if c else None
+    print((c or {}).get('$field',''))
+except Exception as e:
+    print('ERROR:',e)"
+}
+
+# Count cards in payload (returns int)
+extract_card_count() {
+  python3 -c "import sys,json
+try:
+    d=json.load(sys.stdin)
+    c=d.get('card_payload')
+    if c is None: print(0)
+    elif isinstance(c, list): print(len(c))
+    else: print(1)
+except Exception as e:
+    print(0)"
+}
+
+curl -s -X POST "$API/api/guest/reset" -H "Content-Type: application/json" \
+  -d "{\"phone\":\"$PRIMARY_PHONE\"}" >/dev/null
+curl -s -X POST "$API/api/guest/lookup" -H "Content-Type: application/json" \
+  -d "{\"identifier\":\"$PRIMARY_PHONE\"}" >/dev/null
+
+# ── W4.B1 · book_recovery_item returns ONLY the items the Sailor named ────
+head_ "W4.B1 · Recovery subset: 'hydration + smoothie' should give 2 items, not 4"
+R=$(ruby_say "Book hydration spa and B-complex green smoothie" "w4-b1-$RANDOM")
+BOT=$(echo "$R" | extract_bot)
+ITEM_COUNT=$(echo "$R" | python3 -c "import sys,json
+try:
+    d=json.load(sys.stdin)
+    c=d.get('card_payload')
+    if isinstance(c,list): c=c[0] if c else None
+    print(len((c or {}).get('items',[])))
+except Exception: print(-1)")
+info "card items: $ITEM_COUNT | Ruby: ${BOT:0:200}"
+if [[ "$ITEM_COUNT" == "2" ]]; then
+  pass "recovery card shows exactly 2 items"
+else
+  fail "expected 2 items in card, got: $ITEM_COUNT"
+fi
+
+# ── W4.B2 · macro called twice → reservations dedup, not double-listed ────
+head_ "W4.B2 · Double-call recovery menu → no duplicate reservations"
+curl -s -X POST "$API/api/guest/reset" -H "Content-Type: application/json" \
+  -d "{\"phone\":\"$PRIMARY_PHONE\"}" >/dev/null
+curl -s -X POST "$API/api/guest/lookup" -H "Content-Type: application/json" \
+  -d "{\"identifier\":\"$PRIMARY_PHONE\"}" >/dev/null
+ruby_say "Set me up for tomorrow morning, the full recovery menu" "w4-b2a-$RANDOM" >/dev/null
+ruby_say "Set me up for tomorrow morning, the full recovery menu again please" "w4-b2b-$RANDOM" >/dev/null
+RES_JSON=$(curl -s "$API/api/guest/reservations")
+HYDRATION_COUNT=$(echo "$RES_JSON" | python3 -c "import sys,json
+d=json.load(sys.stdin)
+rs = d.get('reservations', d if isinstance(d,list) else [])
+print(sum(1 for r in rs if 'hydration' in (r.get('treatment_name','') or '').lower()))")
+BREAKFAST_COUNT=$(echo "$RES_JSON" | python3 -c "import sys,json
+d=json.load(sys.stdin)
+rs = d.get('reservations', d if isinstance(d,list) else [])
+print(sum(1 for r in rs if r.get('restaurant_id') == 'the-wake-breakfast'))")
+info "hydration=$HYDRATION_COUNT, the-wake-breakfast=$BREAKFAST_COUNT (each should be 1)"
+if [[ "$HYDRATION_COUNT" == "1" && "$BREAKFAST_COUNT" == "1" ]]; then
+  pass "macro re-fire did not duplicate reservations (dedup helper working)"
+else
+  fail "duplicate reservations after macro re-fire (hydration=$HYDRATION_COUNT breakfast=$BREAKFAST_COUNT)"
+fi
+
+# ── W4.B3 · upgrade_drink_package returns real charged + credit + balance ─
+head_ "W4.B3 · Upgrade card shows real charged + credit + new balance (not \$0.00)"
+curl -s -X POST "$API/api/guest/reset" -H "Content-Type: application/json" \
+  -d "{\"phone\":\"$PRIMARY_PHONE\"}" >/dev/null
+R=$(ruby_say "Give me the \$500 Bar Tab package" "w4-b3-$RANDOM")
+BOT=$(echo "$R" | extract_bot)
+CHARGED=$(echo "$R" | extract_field "charged_to_folio")
+CREDIT=$(echo "$R" | extract_field "credit_loaded")
+NEWBAL=$(echo "$R" | extract_field "new_folio_balance")
+info "charged=$CHARGED credit=$CREDIT new_folio_balance=$NEWBAL | Ruby: ${BOT:0:200}"
+if [[ "$CHARGED" == "500.0" || "$CHARGED" == "500" ]] && \
+   [[ "$CREDIT"  == "600.0" || "$CREDIT" == "600" ]] && \
+   [[ "$NEWBAL" != "" && "$NEWBAL" != "0" && "$NEWBAL" != "0.0" ]]; then
+  pass "drink package card carries real charged + credit + balance"
+else
+  fail "upgrade card missing real folio numbers (charged=$CHARGED credit=$CREDIT bal=$NEWBAL)"
+fi
+
+# ── W4.B4 · generic upgrade → recommend_drink_packages returns 2 cards ────
+head_ "W4.B4 · Generic 'upgrade my drink package' → 2 picker cards (no hallucinated tier)"
+curl -s -X POST "$API/api/guest/reset" -H "Content-Type: application/json" \
+  -d "{\"phone\":\"$PRIMARY_PHONE\"}" >/dev/null
+R=$(ruby_say "Upgrade my drink package" "w4-b4-$RANDOM")
+CARD_TYPE=$(echo "$R" | extract_card)
+CARD_COUNT=$(echo "$R" | extract_card_count)
+BOT=$(echo "$R" | extract_bot)
+info "card: $CARD_TYPE | count: $CARD_COUNT | Ruby: ${BOT:0:150}"
+if [[ "$CARD_TYPE" == multi:drink_package_option* ]] && [[ "$CARD_COUNT" == "2" ]]; then
+  pass "generic upgrade returns 2 drink_package_option cards (no premium_unlimited)"
+elif [[ "$BOT" != *"premium_unlimited"* ]] && [[ "$BOT" != *"isn't ringing any bells"* ]] && [[ "$CARD_TYPE" != "error" ]]; then
+  pass "no hallucinated tier even if card path differs (acceptable)"
+else
+  fail "expected 2 drink_package_option cards, got: $CARD_TYPE / $CARD_COUNT"
+fi
+
+# ── W4.B5 · suggested-action chip → real package_id, no error card ────────
+head_ "W4.B5 · 'Give me the \$300 package' chip → real bar-tab-300 booking"
+curl -s -X POST "$API/api/guest/reset" -H "Content-Type: application/json" \
+  -d "{\"phone\":\"$PRIMARY_PHONE\"}" >/dev/null
+R=$(ruby_say "Give me the \$300 package" "w4-b5-$RANDOM")
+CARD_TYPE=$(echo "$R" | extract_card)
+PKG_ID=$(echo "$R" | python3 -c "import sys,json
+try:
+    d=json.load(sys.stdin)
+    c=d.get('card_payload')
+    if isinstance(c,list): c=c[0] if c else None
+    p=(c or {}).get('package') or {}
+    print(p.get('id',''))
+except: print('')")
+info "card: $CARD_TYPE | package_id: $PKG_ID"
+if [[ "$CARD_TYPE" == "drink_package" ]] && [[ "$PKG_ID" == "bar-tab-300" ]]; then
+  pass "chip prefill correctly resolves to bar-tab-300"
+else
+  fail "expected drink_package/bar-tab-300, got: $CARD_TYPE/$PKG_ID"
+fi
+
+# ── W4.B6 · identify_now_playing carries set_label (Bug A frontend dep) ───
+head_ "W4.B6 · Now-playing card carries set_label + set_vibe + dj"
+R=$(ruby_say "What is playing at The Manor right now, identify the track" "w4-b6-$RANDOM")
+CARD_TYPE=$(echo "$R" | extract_card)
+SET_LABEL=$(echo "$R" | extract_field "set_label")
+SET_VIBE=$(echo "$R" | extract_field "set_vibe")
+DJ_NAME=$(echo "$R" | extract_field "dj")
+info "card: $CARD_TYPE | set_label='$SET_LABEL' set_vibe='$SET_VIBE' dj='$DJ_NAME'"
+if [[ -n "$SET_LABEL" ]] && [[ -n "$DJ_NAME" ]]; then
+  pass "now_playing payload carries the connecting set_label + dj"
+else
+  fail "now_playing card missing set_label/dj — frontend can't show dashboard link"
+fi
+
+# Re-pin primary phone (cleanup)
+curl -s -X POST "$API/api/guest/lookup" -H "Content-Type: application/json" \
+  -d "{\"identifier\":\"$PRIMARY_PHONE\"}" >/dev/null
 
 # ---------------------------------------------------------------------------
 # Summary

@@ -268,6 +268,18 @@ function FolioCard({ payload }) {
 
 function DrinkPackageCard({ payload }) {
   const p = payload.package || {};
+  // Wave-4 fix (Bug E): backend now returns charged_to_folio + credit_loaded +
+  // new_folio_balance for an actual debit picture. Fall back to legacy fields
+  // for any test fixtures that haven't been refreshed yet.
+  const charged = (typeof payload.charged_to_folio === "number")
+    ? payload.charged_to_folio
+    : (payload.total ?? 0);
+  const credit = (typeof payload.credit_loaded === "number")
+    ? payload.credit_loaded
+    : (p.credit_value ?? 0);
+  const newBal = (typeof payload.new_folio_balance === "number")
+    ? payload.new_folio_balance
+    : (payload.new_balance ?? 0);
   return (
     <div style={cardBase}>
       <div style={headerStrip(theme.brand.sun || "#FFC72C")} />
@@ -276,15 +288,73 @@ function DrinkPackageCard({ payload }) {
         <span style={pill(theme.brand.green, "white")}>Active · {payload.days} days</span>
       </div>
       <p style={subtle}>{p.covers}</p>
-      <div style={{ ...row, marginTop: theme.spacing.md }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginTop: theme.spacing.md }}>
         <div>
-          <div style={subtle}>Charged to folio</div>
-          <div style={{ fontWeight: theme.typography.fontWeights.bold, fontSize: theme.typography.fontSizes.lg }}>${payload.total.toFixed(2)}</div>
+          <div style={subtle}>Charged</div>
+          <div style={{ fontWeight: theme.typography.fontWeights.bold, fontSize: theme.typography.fontSizes.lg }}>${charged.toFixed(2)}</div>
         </div>
         <div>
-          <div style={subtle}>New balance</div>
-          <div style={{ fontWeight: theme.typography.fontWeights.bold, fontSize: theme.typography.fontSizes.lg }}>${payload.new_balance.toFixed(2)}</div>
+          <div style={subtle}>Credit loaded</div>
+          <div style={{ fontWeight: theme.typography.fontWeights.bold, fontSize: theme.typography.fontSizes.lg, color: theme.brand?.green || "#2D7D5F" }}>${credit.toFixed(2)}</div>
         </div>
+        <div>
+          <div style={subtle}>New folio</div>
+          <div style={{ fontWeight: theme.typography.fontWeights.bold, fontSize: theme.typography.fontSizes.lg }}>${newBal.toFixed(2)}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Virgin: Drink-package picker option (one of two side-by-side cards) ────
+// Returned by `recommend_drink_packages` when the Sailor says generic
+// "upgrade my drink package" — they tap a card's button to lock in a tier.
+function DrinkPackageOptionCard({ payload, onAction }) {
+  const red = "#CC0000";
+  const tolopea = "#2E0444";
+  const p = payload.package || {};
+  const price = payload.one_time_price ?? 0;
+  const credit = payload.credit_value ?? 0;
+  const bonus = price > 0 ? Math.round(((credit - price) / price) * 100) : 0;
+  const prompt = payload.suggested_action || `Give me the $${price} package`;
+  return (
+    <div style={{ ...cardBase, borderColor: "#F0D8D8", overflow: "hidden", padding: 0 }}>
+      <div style={{
+        padding: "12px 16px",
+        background: `linear-gradient(135deg, ${tolopea} 0%, ${red} 100%)`,
+        color: "#fff",
+      }}>
+        <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase", opacity: 0.9 }}>
+          Bar Tab
+        </div>
+        <div style={{ fontSize: 18, fontWeight: 800, lineHeight: 1.2, marginTop: 4 }}>
+          ${price.toFixed(0)} → ${credit.toFixed(0)} of credit
+        </div>
+        {bonus > 0 && (
+          <div style={{ fontSize: 12, opacity: 0.9, marginTop: 2 }}>+{bonus}% bonus credit</div>
+        )}
+      </div>
+      <div style={{ padding: "12px 16px" }}>
+        <p style={{ ...subtle, margin: 0 }}>{p.covers}</p>
+      </div>
+      <div style={{ padding: "0 16px 14px" }}>
+        <button
+          type="button"
+          onClick={() => onAction && onAction(prompt)}
+          style={{
+            width: "100%",
+            padding: "10px 14px",
+            border: "none",
+            borderRadius: 10,
+            background: red,
+            color: "#fff",
+            fontWeight: 700,
+            fontSize: 14,
+            cursor: "pointer",
+          }}
+        >
+          Lock it in
+        </button>
       </div>
     </div>
   );
@@ -694,7 +764,7 @@ function RecoveryMenuCard({ payload }) {
   const gold = "#D4A862";
   const items = payload.items || [];
   return (
-    <div style={{ ...cardBase, borderColor: "#E7D8B8", padding: 0, overflow: "hidden" }}>
+    <div data-testid="recovery-menu-card" data-subset={payload.subset ? "true" : "false"} style={{ ...cardBase, borderColor: "#E7D8B8", padding: 0, overflow: "hidden" }}>
       <div style={{
         padding: "14px 16px",
         background: `linear-gradient(135deg, ${tolopea} 0%, ${red} 100%)`,
@@ -752,6 +822,28 @@ function NowPlayingTrackCard({ payload }) {
       <div style={{ padding: "0 16px 8px" }}>
         <div style={{ fontSize: 18, fontWeight: 800, lineHeight: 1.2 }}>🎧 {payload.track}</div>
         <div style={{ fontSize: 13, opacity: 0.85, marginTop: 3 }}>{payload.artist}{payload.vibe ? ` · ${payload.vibe}` : ""}</div>
+        {(payload.set_label || payload.dj) && (
+          <div style={{
+            marginTop: 8,
+            fontSize: 11,
+            color: gold,
+            textTransform: "uppercase",
+            letterSpacing: 1.2,
+            fontWeight: 700,
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            flexWrap: "wrap",
+          }}>
+            {payload.dj && <span>{payload.dj}</span>}
+            {payload.set_label && <span style={{ opacity: 0.7 }}>·</span>}
+            {payload.set_label && <span>{payload.set_label}</span>}
+            {payload.set_until && <span style={{ opacity: 0.7, fontWeight: 500, textTransform: "none", letterSpacing: 0.4 }}>until {payload.set_until}</span>}
+          </div>
+        )}
+        {payload.set_vibe && (
+          <div style={{ fontSize: 12, fontStyle: "italic", opacity: 0.75, marginTop: 4 }}>{payload.set_vibe}</div>
+        )}
       </div>
       {payload.trivia && (
         <div style={{ padding: "10px 16px", fontSize: 12, fontStyle: "italic", color: "rgba(255,255,255,0.85)", borderTop: "1px solid rgba(255,255,255,0.10)" }}>
@@ -982,71 +1074,215 @@ function VoyageDiaryCard({ payload }) {
 }
 
 // ── Virgin: Squad Mode — cosmetic group coordination card ──────────────────
-function SquadEventCard({ payload }) {
+// Mock sailor directory for the squad-event swap modal. Hardcoded — no real
+// address book in the demo. Names chosen to feel like the kind of sailors a
+// returning guest might have cruised with before.
+const SQUAD_DIRECTORY = [
+  { name: "Lisa P.",   sub: "3 voyages together" },
+  { name: "Marcus T.", sub: "Met on Bimini 2024" },
+  { name: "Priya R.",  sub: "Scarlet Night '24" },
+  { name: "Andre J.",  sub: "Drag Brunch crew" },
+  { name: "Sofia M.",  sub: "Karaoke night regular" },
+  { name: "Wei C.",    sub: "Couples Massage swap" },
+  { name: "Hana K.",   sub: "Pink Agave dinner '23" },
+  { name: "Jules B.",  sub: "Manor table neighbour" },
+];
+
+function ContactPickerModal({ mode, currentInvitees, swapping, onPick, onClose }) {
+  // mode: "swap" (replacing `swapping`) or "add" (inviting someone new)
+  const red = "#CC0000";
+  const tolopea = "#2E0444";
+  const gold = "#D4A862";
+  const taken = new Set(currentInvitees || []);
+  const available = SQUAD_DIRECTORY.filter(s => mode === "swap" ? s.name !== swapping : !taken.has(s.name));
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: "fixed", inset: 0, zIndex: 1000,
+        background: "rgba(10,10,10,0.55)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: 16,
+        animation: "card-slide-up 160ms ease-out",
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          background: "#fff", borderRadius: 14, maxWidth: 360, width: "100%",
+          maxHeight: "80vh", display: "flex", flexDirection: "column", overflow: "hidden",
+          boxShadow: "0 12px 48px rgba(0,0,0,0.35)",
+        }}
+      >
+        <div style={{
+          padding: "14px 16px",
+          background: `linear-gradient(135deg, ${tolopea} 0%, ${red} 100%)`,
+          color: "#fff",
+        }}>
+          <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 2, color: gold, textTransform: "uppercase" }}>
+            {mode === "swap" ? `Swap ${swapping}` : "Invite a sailor"}
+          </div>
+          <div style={{ fontSize: 16, fontWeight: 800, marginTop: 2 }}>
+            {mode === "swap" ? "Pick a replacement" : "Add to your Scarlet Night squad"}
+          </div>
+        </div>
+        <div style={{ flex: 1, overflowY: "auto" }}>
+          {available.length === 0 ? (
+            <div style={{ padding: 16, fontSize: 13, color: "#888", textAlign: "center" }}>
+              No more sailors to suggest right now.
+            </div>
+          ) : available.map((s) => (
+            <button
+              key={s.name}
+              type="button"
+              onClick={() => onPick(s.name)}
+              style={{
+                display: "flex", alignItems: "center", gap: 12,
+                padding: "10px 16px", width: "100%", textAlign: "left",
+                background: "none", border: "none", borderBottom: "1px solid #F2EEE7",
+                cursor: "pointer", fontSize: 14, color: "#0A0A0A",
+              }}
+            >
+              <div style={{
+                width: 36, height: 36, borderRadius: "50%", background: "#F2EEE7",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 16, flexShrink: 0,
+              }}>👤</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 700 }}>{s.name}</div>
+                <div style={{ fontSize: 12, color: "#888" }}>{s.sub}</div>
+              </div>
+            </button>
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          style={{
+            padding: "12px 16px", border: "none", background: "#F2EEE7",
+            color: "#0A0A0A", fontWeight: 700, fontSize: 14, cursor: "pointer",
+          }}
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function SquadEventCard({ payload, onAction }) {
   const red = "#CC0000";
   const tolopea = "#2E0444";
   const gold = "#D4A862";
   const invitees = payload.invitees || [];
+  // picker: { mode: "swap"|"add", swapping?: string } | null
+  const [picker, setPicker] = useState(null);
+
+  const interactive = !!payload.is_demo_data;
+
+  const handleSwap = (oldName) => {
+    if (!interactive) return;
+    setPicker({ mode: "swap", swapping: oldName });
+  };
+  const handleAdd = () => {
+    if (!interactive) return;
+    setPicker({ mode: "add" });
+  };
+  const handlePick = (newName) => {
+    const occ = payload.occasion || "Scarlet Night";
+    const msg = picker?.mode === "swap"
+      ? `Swap ${picker.swapping} for ${newName} in my ${occ} squad`
+      : `Add ${newName} to my ${occ} squad`;
+    setPicker(null);
+    if (onAction) onAction(msg);
+  };
   return (
-    <div style={{ ...cardBase, borderColor: "#F0D8D8", padding: 0, overflow: "hidden" }}>
-      <div style={{ padding: "14px 16px", background: `linear-gradient(135deg, ${tolopea} 0%, ${red} 100%)`, color: "#fff" }}>
-        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 2, color: gold, textTransform: "uppercase", marginBottom: 4 }}>
-          👥 Squad · {payload.occasion}
+    <>
+      <div style={{ ...cardBase, borderColor: "#F0D8D8", padding: 0, overflow: "hidden" }}>
+        <div style={{ padding: "14px 16px", background: `linear-gradient(135deg, ${tolopea} 0%, ${red} 100%)`, color: "#fff" }}>
+          <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 2, color: gold, textTransform: "uppercase", marginBottom: 4 }}>
+            👥 Squad · {payload.occasion}
+          </div>
+          <div style={{ fontSize: 18, fontWeight: 800, lineHeight: 1.2 }}>Group of {payload.party_size}</div>
         </div>
-        <div style={{ fontSize: 18, fontWeight: 800, lineHeight: 1.2 }}>Group of {payload.party_size}</div>
-      </div>
-      <div style={{ padding: "10px 16px", borderBottom: "1px solid #F2EEE7" }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>
-          {payload.invitee_label || "Squad invited"}
-        </div>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-          <span style={pill(`${red}1A`, red)}>👤 You</span>
-          {invitees.map((n, i) => (
-            <span
-              key={i}
-              title={payload.is_demo_data ? "Suggested sailor — tap to swap or invite your own" : undefined}
-              style={{
-                ...pill("#F2EEE7", payload.is_demo_data ? "#888" : "#0A0A0A"),
-                border: payload.is_demo_data ? "1px dashed #C8C2B5" : "1px solid transparent",
-                fontStyle: payload.is_demo_data ? "italic" : "normal",
-                opacity: payload.is_demo_data ? 0.85 : 1,
-                cursor: payload.is_demo_data ? "pointer" : "default",
-              }}
-            >
-              👤 {n}
-            </span>
-          ))}
-          {payload.is_demo_data && (
-            <span style={{ ...pill(`${gold}1A`, "#7A5A1B"), fontSize: 10 }}>+ invite your own</span>
+        <div style={{ padding: "10px 16px", borderBottom: "1px solid #F2EEE7" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>
+            {payload.invitee_label || "Squad invited"}
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+            <span style={pill(`${red}1A`, red)}>👤 You</span>
+            {invitees.map((n, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => handleSwap(n)}
+                title={interactive ? "Tap to swap this sailor" : undefined}
+                style={{
+                  ...pill("#F2EEE7", interactive ? "#888" : "#0A0A0A"),
+                  border: interactive ? "1px dashed #C8C2B5" : "1px solid transparent",
+                  fontStyle: interactive ? "italic" : "normal",
+                  opacity: interactive ? 0.85 : 1,
+                  cursor: interactive ? "pointer" : "default",
+                  fontFamily: "inherit",
+                }}
+              >
+                👤 {n}
+              </button>
+            ))}
+            {interactive && (
+              <button
+                type="button"
+                onClick={handleAdd}
+                title="Invite another sailor"
+                style={{
+                  ...pill(`${gold}1A`, "#7A5A1B"),
+                  fontSize: 10,
+                  border: `1px solid ${gold}55`,
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                }}
+              >
+                + invite your own
+              </button>
+            )}
+          </div>
+          {payload.invitee_hint && (
+            <div style={{ fontSize: 11, color: "#888", fontStyle: "italic", marginTop: 6, lineHeight: 1.3 }}>
+              {payload.invitee_hint}
+            </div>
           )}
         </div>
-        {payload.invitee_hint && (
-          <div style={{ fontSize: 11, color: "#888", fontStyle: "italic", marginTop: 6, lineHeight: 1.3 }}>
-            {payload.invitee_hint}
+        <div style={{ padding: "10px 16px", display: "flex", flexDirection: "column", gap: 6 }}>
+          <div style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 13 }}>
+            <span style={{ width: 22, textAlign: "center" }}>💅</span>
+            <span style={{ flex: 1, color: "#0A0A0A" }}>{payload.salon_window}</span>
+          </div>
+          <div style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 13 }}>
+            <span style={{ width: 22, textAlign: "center" }}>🍸</span>
+            <span style={{ flex: 1, color: "#0A0A0A" }}>{payload.rendezvous}</span>
+          </div>
+          <div style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 13 }}>
+            <span style={{ width: 22, textAlign: "center" }}>🎶</span>
+            <span style={{ flex: 1, color: "#0A0A0A" }}>{payload.manor_table_label} · {payload.manor_table_time}</span>
+          </div>
+        </div>
+        {payload.share_link && (
+          <div style={{ padding: "8px 16px 12px", borderTop: "1px solid #F2EEE7", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ fontSize: 11, color: "#888", fontFamily: "ui-monospace, monospace" }}>#{payload.confirmation_id}</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: red }}>Send the squad link ↗</span>
           </div>
         )}
       </div>
-      <div style={{ padding: "10px 16px", display: "flex", flexDirection: "column", gap: 6 }}>
-        <div style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 13 }}>
-          <span style={{ width: 22, textAlign: "center" }}>💅</span>
-          <span style={{ flex: 1, color: "#0A0A0A" }}>{payload.salon_window}</span>
-        </div>
-        <div style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 13 }}>
-          <span style={{ width: 22, textAlign: "center" }}>🍸</span>
-          <span style={{ flex: 1, color: "#0A0A0A" }}>{payload.rendezvous}</span>
-        </div>
-        <div style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 13 }}>
-          <span style={{ width: 22, textAlign: "center" }}>🎶</span>
-          <span style={{ flex: 1, color: "#0A0A0A" }}>{payload.manor_table_label} · {payload.manor_table_time}</span>
-        </div>
-      </div>
-      {payload.share_link && (
-        <div style={{ padding: "8px 16px 12px", borderTop: "1px solid #F2EEE7", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ fontSize: 11, color: "#888", fontFamily: "ui-monospace, monospace" }}>#{payload.confirmation_id}</span>
-          <span style={{ fontSize: 12, fontWeight: 700, color: red }}>Send the squad link ↗</span>
-        </div>
+      {picker && (
+        <ContactPickerModal
+          mode={picker.mode}
+          swapping={picker.swapping}
+          currentInvitees={invitees}
+          onPick={handlePick}
+          onClose={() => setPicker(null)}
+        />
       )}
-    </div>
+    </>
   );
 }
 
@@ -1075,6 +1311,7 @@ const REGISTRY = {
   excursion: ExcursionCard,
   folio: FolioCard,
   drink_package: DrinkPackageCard,
+  drink_package_option: DrinkPackageOptionCard,
   weather: WeatherCard,
   error: ErrorCard,
   champagne: ChampagneCard,

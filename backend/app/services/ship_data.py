@@ -275,6 +275,40 @@ def add_reservation(kind: str, payload: Dict[str, Any]) -> Dict[str, Any]:
     return copy.deepcopy(entry)
 
 
+def add_reservation_dedup(kind: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Like add_reservation, but skips append if an entry with the same logical
+    identity already exists. Identity tuple = (kind, name_key, time).
+
+    name_key prefers restaurant_id, then treatment_name, then show_name,
+    then restaurant_name, then name. Used by all macro tools (recovery menu,
+    arrange_surprise, prebook_bimini_day, etc.) so a repeated macro call
+    doesn't create duplicate rows in My Reservations.
+    """
+    def _key(p: Dict[str, Any]) -> tuple:
+        name = (
+            p.get("restaurant_id")
+            or p.get("treatment_name")
+            or p.get("show_name")
+            or p.get("restaurant_name")
+            or p.get("name")
+            or ""
+        )
+        return (kind, str(name).strip().lower(), str(p.get("time", "")).strip())
+
+    new_key = _key(payload)
+    reservations = _g().setdefault("reservations", [])
+    for existing in reservations:
+        if existing.get("kind") != kind:
+            continue
+        if _key(existing) == new_key:
+            logger.info("Reservation dedup skipped: %s", new_key)
+            return copy.deepcopy(existing)
+    entry = {"kind": kind, **payload}
+    reservations.append(entry)
+    logger.info("Reservation added (dedup-checked): %s", entry)
+    return copy.deepcopy(entry)
+
+
 # ---------------------------------------------------------------------------
 # Folio / billing helpers
 # ---------------------------------------------------------------------------

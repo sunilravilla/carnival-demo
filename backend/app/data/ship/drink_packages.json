@@ -3,6 +3,8 @@
     "id": "bar-tab-300",
     "name": "Bar Tab — $300 (gets $350 of credit)",
     "price_per_day": 0.00,
+    "one_time_price": 300.00,
+    "credit_value": 350.00,
     "covers": "Prepaid premium drinks (cocktails, wine by the glass, craft beer, top spirits). Receive 17% bonus credit when bought pre-voyage.",
     "max_drinks_alcohol_per_day": 0,
     "min_purchase_days": "One-time prepaid"
@@ -11,6 +13,8 @@
     "id": "bar-tab-500",
     "name": "Bar Tab — $500 (gets $600 of credit)",
     "price_per_day": 0.00,
+    "one_time_price": 500.00,
+    "credit_value": 600.00,
     "covers": "Prepaid premium drinks across all 20+ bars. 20% bonus credit. Roll-over unused balance.",
     "max_drinks_alcohol_per_day": 0,
     "min_purchase_days": "One-time prepaid"
@@ -19,6 +23,8 @@
     "id": "always-included",
     "name": "Always Included (no purchase)",
     "price_per_day": 0.00,
+    "one_time_price": 0.00,
+    "credit_value": 0.00,
     "covers": "Still & sparkling water, drip coffee, tea, soda, juices, gym smoothies — included for every Sailor at every bar.",
     "max_drinks_alcohol_per_day": 0,
     "min_purchase_days": "—"

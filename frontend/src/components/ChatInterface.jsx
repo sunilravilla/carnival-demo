@@ -440,7 +440,15 @@ export default function ChatInterface({
   };
 
   const handleCardAction = (action) => {
-    if (action.type === "cancel" && !isProcessing) {
+    if (isProcessing) return;
+    // Cards may emit either a structured object (e.g. cancel intent) or a
+    // plain string prompt to send back to Ruby (drink-package picker, squad
+    // swap modal, outfit suggestion, etc.).
+    if (typeof action === "string") {
+      handleTextSubmit(action);
+      return;
+    }
+    if (action && action.type === "cancel") {
       handleTextSubmit(`Cancel my ${action.name} reservation`);
     }
   };

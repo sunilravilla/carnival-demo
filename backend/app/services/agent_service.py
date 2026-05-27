@@ -219,21 +219,60 @@ def _tool_upgrade_drink_package(args: Dict[str, Any]) -> Dict[str, Any]:
     if not pkg:
         return {"card": "error", "error": f"I could not find a drink package called '{package_query}'."}
 
+    # Bar Tabs are a one-time prepaid purchase: a fixed dollar amount that buys
+    # a larger credit value (e.g. $500 → $600). The per-day field is 0.00 since
+    # the credit doesn't expire daily. Always-Included is $0.
     days = int(days_arg) if days_arg else ship_data.remaining_cruise_days()
-    total = round(pkg["price_per_day"] * days, 2)
+    one_time = float(pkg.get("one_time_price", 0))
+    credit = float(pkg.get("credit_value", 0))
+    charged = round(one_time, 2)
 
-    ship_data.set_drink_package(pkg["id"], days, total)
-    line_item = ship_data.add_folio_charge(
-        f"{pkg['name']} · {days} days @ ${pkg['price_per_day']:.2f}",
-        total,
-    )
+    ship_data.set_drink_package(pkg["id"], days, charged)
+    line_item = None
+    if charged > 0:
+        line_item = ship_data.add_folio_charge(
+            f"{pkg['name']} — prepaid Bar Tab",
+            charged,
+        )
+    new_balance = ship_data.get_guest()["folio"]["balance"]
     return {
         "card": "drink_package",
         "package": pkg,
         "days": days,
-        "total": total,
+        "charged_to_folio": charged,
+        "credit_loaded": credit,
+        "new_folio_balance": new_balance,
+        # Backward-compat keys still read by the old natural-reply path
+        "total": charged,
+        "new_balance": new_balance,
         "line_item": line_item,
-        "new_balance": ship_data.get_guest()["folio"]["balance"],
+    }
+
+
+def _tool_recommend_drink_packages(_args: Dict[str, Any]) -> Dict[str, Any]:
+    """Show the two real Bar Tab tiers as side-by-side picker cards.
+
+    Used when the Sailor says generic "upgrade my drink package" with no
+    specific tier. Prevents Ruby from inventing tiers (e.g. "premium_unlimited")
+    that don't exist in drink_packages.json.
+    """
+    pkgs = [
+        ship_data.find_drink_package("bar-tab-300"),
+        ship_data.find_drink_package("bar-tab-500"),
+    ]
+    pkgs = [p for p in pkgs if p]  # safety
+    cards = []
+    for p in pkgs:
+        cards.append({
+            "card": "drink_package_option",
+            "package": p,
+            "one_time_price": p.get("one_time_price", 0),
+            "credit_value": p.get("credit_value", 0),
+            "suggested_action": f"Give me the ${int(p.get('one_time_price', 0))} package",
+        })
+    return {
+        "cards": cards,
+        "options_shown": [p["id"] for p in pkgs],
     }
 
 
@@ -715,37 +754,87 @@ _LOOK_DETAILS = {
 # real reservations under the hood (hydration drip + late breakfast) so the
 # menu items echo into My Reservations + folio.
 _RECOVERY_ITEMS = [
-    {"icon": "💧", "title": "Hydration drip — Redemption Spa", "detail": "30 min IV vitamin boost · Deck 5", "price": 95, "time": "10:30", "book_as": "spa"},
-    {"icon": "🥬", "title": "B-Complex green smoothie — B-Complex gym", "detail": "Ginger, spinach, mango · grab-and-go · Deck 5", "price": 12, "time": "11:00", "book_as": None},
-    {"icon": "🍳", "title": "Late breakfast at The Wake", "detail": "Eggs Benedict + bottomless mimosas", "price": 0, "time": "11:30", "book_as": "dining"},
-    {"icon": "😎", "title": "Cabana siesta at The Perch", "detail": "Reserved lounger · Deck 16 aft", "price": 25, "time": "13:30", "book_as": None},
+    {"id": "hydration-drip", "icon": "💧", "title": "Hydration drip — Redemption Spa", "detail": "30 min IV vitamin boost · Deck 5", "price": 95, "time": "10:30", "book_as": "spa", "keywords": ["hydration", "drip", "iv", "vitamin"]},
+    {"id": "smoothie", "icon": "🥬", "title": "B-Complex green smoothie — B-Complex gym", "detail": "Ginger, spinach, mango · grab-and-go · Deck 5", "price": 12, "time": "11:00", "book_as": None, "keywords": ["smoothie", "b-complex", "b complex", "green", "juice"]},
+    {"id": "late-breakfast", "icon": "🍳", "title": "Late breakfast at The Wake", "detail": "Eggs Benedict + bottomless mimosas", "price": 0, "time": "11:30", "book_as": "dining", "keywords": ["breakfast", "wake", "eggs", "benedict", "mimosa"]},
+    {"id": "cabana-siesta", "icon": "😎", "title": "Cabana siesta at The Perch", "detail": "Reserved lounger · Deck 16 aft", "price": 25, "time": "13:30", "book_as": "lounger", "keywords": ["cabana", "siesta", "lounger", "perch", "nap"]},
 ]
 
 
+def _book_recovery_items(items: list, conf: str) -> None:
+    """Persist reservations + folio charges for a subset of recovery items.
+
+    Uses add_reservation_dedup so calling hangover_recovery_menu twice (or
+    pairing it with a specific-item booking) doesn't create duplicate rows.
+    """
+    for it in items:
+        book_as = it.get("book_as")
+        price = it.get("price", 0)
+        if book_as == "spa":
+            ship_data.add_reservation_dedup("spa", {
+                "treatment_name": it["title"],
+                "time": it["time"], "time_human": _human_time(it["time"]),
+                "duration_min": 30, "price": price,
+                "confirmation_id": f"SPA{abs(hash((it['id'], conf))) % 100000:05d}",
+            })
+        elif book_as == "dining":
+            ship_data.add_reservation_dedup("dining", {
+                # distinct restaurant_id from the real "the-wake" dinner slot
+                "restaurant_id": "the-wake-breakfast",
+                "restaurant_name": "The Wake (late breakfast)",
+                "time": it["time"], "time_human": _human_time(it["time"]),
+                "party_size": 1,
+                "confirmation_id": f"BR{abs(hash((it['id'], conf))) % 100000:05d}",
+            })
+        elif book_as == "lounger":
+            ship_data.add_reservation_dedup("lounger", {
+                "treatment_name": it["title"],
+                "time": it["time"], "time_human": _human_time(it["time"]),
+                "price": price,
+                "confirmation_id": f"LNG{abs(hash((it['id'], conf))) % 100000:05d}",
+            })
+        # Folio charges only for items with a price > 0
+        if price > 0:
+            ship_data.add_folio_charge(it["title"], price)
+
+
+def _resolve_recovery_items(requested: list) -> list:
+    """Map a list of user-supplied item names/ids/keywords to recovery item dicts.
+
+    Order-preserving, deduplicated. Returns empty list if nothing matches —
+    the calling tool decides whether to fall back to the full menu.
+    """
+    if not requested:
+        return []
+    seen_ids = set()
+    matched = []
+    for raw in requested:
+        q = str(raw).strip().lower()
+        if not q:
+            continue
+        for item in _RECOVERY_ITEMS:
+            if item["id"] in seen_ids:
+                continue
+            if (
+                q == item["id"]
+                or q in item["title"].lower()
+                or any(kw in q or q in kw for kw in item["keywords"])
+            ):
+                matched.append(item)
+                seen_ids.add(item["id"])
+                break
+    return matched
+
+
 def _tool_hangover_recovery_menu(_args: Dict[str, Any]) -> Dict[str, Any]:
-    """Cheeky adult-only recovery menu — sass + actual bookings."""
+    """Cheeky adult-only recovery menu — sass + actual bookings.
+
+    Returns the FULL 4-item preset and books each one (dedup-guarded).
+    Use book_recovery_item when the Sailor names a subset.
+    """
     total = sum(item["price"] for item in _RECOVERY_ITEMS)
     conf = f"REC{abs(hash(('recovery', _time.time()))) % 100000:05d}"
-
-    # Real reservations for the bookable items
-    ship_data.add_reservation("spa", {
-        "treatment_name": "Hydration drip — Redemption Spa",
-        "time": "10:30", "time_human": _human_time("10:30"),
-        "duration_min": 30, "price": 95,
-        "confirmation_id": f"SPA{abs(hash(('hydration', conf))) % 100000:05d}",
-    })
-    # NOTE: distinct restaurant_id from the real "the-wake" dinner slot so the
-    # duplicate-guard in _tool_book_dining doesn't block a later dinner booking.
-    ship_data.add_reservation("dining", {
-        "restaurant_id": "the-wake-breakfast",
-        "restaurant_name": "The Wake (late breakfast)",
-        "time": "11:30", "time_human": _human_time("11:30"),
-        "party_size": 1,
-        "confirmation_id": f"BR{abs(hash(('wake-bf', conf))) % 100000:05d}",
-    })
-    ship_data.add_folio_charge("Redemption Spa — Hydration drip", 95)
-    ship_data.add_folio_charge("The Perch — Reserved lounger", 25)
-
+    _book_recovery_items(_RECOVERY_ITEMS, conf)
     return {
         "card": "recovery_menu",
         "title": "Late one, honey?",
@@ -753,6 +842,37 @@ def _tool_hangover_recovery_menu(_args: Dict[str, Any]) -> Dict[str, Any]:
         "items": _RECOVERY_ITEMS,
         "confirmation_id": conf,
         "total": total,
+        "new_folio_balance": ship_data.get_guest()["folio"]["balance"],
+    }
+
+
+def _tool_book_recovery_item(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Book a subset of the recovery menu (1+ named items).
+
+    args:
+        items: list of names/ids/keywords (e.g. ["hydration drip", "b-complex smoothie"])
+               or comma-separated string for LLM convenience.
+    """
+    raw = args.get("items") or args.get("item") or []
+    if isinstance(raw, str):
+        # Tolerate "hydration drip, smoothie" as one string from the LLM.
+        raw = [s.strip() for s in raw.split(",") if s.strip()]
+    matched = _resolve_recovery_items(raw)
+    if not matched:
+        # Fall back to the full menu rather than fail — same shape, full preset.
+        return _tool_hangover_recovery_menu({})
+
+    total = sum(item["price"] for item in matched)
+    conf = f"REC{abs(hash(('recovery-item', _time.time()))) % 100000:05d}"
+    _book_recovery_items(matched, conf)
+    return {
+        "card": "recovery_menu",
+        "title": "Sorted, honey",
+        "subtitle": "Just the items you asked for.",
+        "items": matched,
+        "confirmation_id": conf,
+        "total": total,
+        "subset": True,
         "new_folio_balance": ship_data.get_guest()["folio"]["balance"],
     }
 
@@ -816,12 +936,12 @@ _MANOR_HOUR_LOOKUP = {
 }
 
 _MANOR_SET_META = {
-    "sundowner-disco":    {"dj": "DJ House Mother",         "until": "8 PM"},
-    "dinner-funk":        {"dj": "DJ House Mother",         "until": "10 PM"},
-    "marvy-house":        {"dj": "DJ Marvy",                "until": "11:30 PM"},
-    "klub-rubiks-80s":    {"dj": "Resident · Klub Rubik's", "until": "1:30 AM"},
-    "afterhours-grooves": {"dj": "DJ Marvy",                "until": "late"},
-    "winddown-soul":      {"dj": "Resident",                "until": "5 AM"},
+    "sundowner-disco":    {"dj": "DJ House Mother",         "label": "Sundowner Disco",      "vibe": "70s disco · golden-hour cocktail",   "until": "8 PM"},
+    "dinner-funk":        {"dj": "DJ House Mother",         "label": "Dinner Funk Hour",     "vibe": "Soulful funk for the dinner crowd",  "until": "10 PM"},
+    "marvy-house":        {"dj": "DJ Marvy",                "label": "DJ Marvy",             "vibe": "House & disco festival set",         "until": "11:30 PM"},
+    "klub-rubiks-80s":    {"dj": "Resident · Klub Rubik's", "label": "Klub Rubik's",         "vibe": "'80s dance party (costume encouraged)", "until": "1:30 AM"},
+    "afterhours-grooves": {"dj": "DJ Marvy",                "label": "After-Hours Grooves",  "vibe": "Late-night house + punk pulse",      "until": "late"},
+    "winddown-soul":      {"dj": "Resident",                "label": "Wind-Down Soul",       "vibe": "Slow soul to ease into the morning", "until": "5 AM"},
 }
 
 
@@ -833,7 +953,15 @@ def _current_manor_set() -> Dict[str, Any]:
     set_name = _MANOR_HOUR_LOOKUP.get(h, "marvy-house")
     preview = (5 <= h < 16)
     meta = _MANOR_SET_META[set_name]
-    return {"h": h, "set_name": set_name, "dj": meta["dj"], "until": meta["until"], "preview": preview}
+    return {
+        "h": h,
+        "set_name": set_name,
+        "set_label": meta["label"],
+        "set_vibe": meta["vibe"],
+        "dj": meta["dj"],
+        "until": meta["until"],
+        "preview": preview,
+    }
 
 
 def _tool_identify_now_playing(_args: Dict[str, Any]) -> Dict[str, Any]:
@@ -860,6 +988,9 @@ def _tool_identify_now_playing(_args: Dict[str, Any]) -> Dict[str, Any]:
         "deck": 6,
         "dj": current_set["dj"],
         "set_name": current_set["set_name"],
+        "set_label": current_set["set_label"],
+        "set_vibe": current_set["set_vibe"],
+        "set_until": current_set["until"],
         "trivia": pick["trivia"],
         "added_to_playlist": True,
         "playlist_name": "My Cruise Soundtrack",
@@ -965,13 +1096,15 @@ def _tool_arrange_surprise(args: Dict[str, Any]) -> Dict[str, Any]:
 
     # 1) Flowers — reservation only (no separate card; surfaces in summary)
     flowers_conf = f"FLW{abs(hash(('flowers', occasion, _time.time()))) % 100000:05d}"
-    ship_data.add_reservation("flowers", {
+    flowers_existing = ship_data.add_reservation_dedup("flowers", {
         "treatment_name": preset["flowers"]["item"],
         "time": "17:00", "time_human": _human_time("17:00"),
         "price": preset["flowers"]["price"],
         "confirmation_id": flowers_conf,
     })
-    ship_data.add_folio_charge(f"Surprise — {preset['flowers']['item']}", preset["flowers"]["price"])
+    # Only charge folio if this was a fresh booking (dedup returned existing → skip)
+    if flowers_existing.get("confirmation_id") == flowers_conf:
+        ship_data.add_folio_charge(f"Surprise — {preset['flowers']['item']}", preset["flowers"]["price"])
 
     # 2) Dining — real booking via book_dining
     dining_card = _tool_book_dining({
@@ -1009,7 +1142,7 @@ def _tool_arrange_surprise(args: Dict[str, Any]) -> Dict[str, Any]:
     }
 
     # Surprise booking marker (so it shows in My Reservations as a coordinated event)
-    ship_data.add_reservation("surprise", {
+    ship_data.add_reservation_dedup("surprise", {
         "treatment_name": f"{occasion.capitalize()} surprise for {recipient}",
         "time": preset["dinner_time"], "time_human": _human_time(preset["dinner_time"]),
         "confirmation_id": summary_card["confirmation_id"],
@@ -1038,7 +1171,7 @@ def _tool_prebook_bimini_day(args: Dict[str, Any]) -> Dict[str, Any]:
     excursion_card = None
     if excursion:
         conf = f"EXC{abs(hash(('bimini-cabana', _time.time()))) % 100000:05d}"
-        ship_data.add_reservation("excursion", {
+        existing = ship_data.add_reservation_dedup("excursion", {
             "excursion_id": excursion["id"],
             "excursion_name": excursion["name"],
             "treatment_name": excursion["name"],
@@ -1048,7 +1181,7 @@ def _tool_prebook_bimini_day(args: Dict[str, Any]) -> Dict[str, Any]:
             "price": excursion.get("price_per_guest", 0),
             "confirmation_id": conf,
         })
-        if excursion.get("price_per_guest", 0) > 0:
+        if existing.get("confirmation_id") == conf and excursion.get("price_per_guest", 0) > 0:
             ship_data.add_folio_charge(
                 f"{excursion['name']} (×{party_size})",
                 excursion["price_per_guest"] * party_size,
@@ -1063,7 +1196,7 @@ def _tool_prebook_bimini_day(args: Dict[str, Any]) -> Dict[str, Any]:
 
     # Lunch — Beach Club buffet (mocked as a dining reservation)
     lunch_conf = f"LUN{abs(hash(('bimini-lunch', lunch_time))) % 100000:05d}"
-    ship_data.add_reservation("dining", {
+    ship_data.add_reservation_dedup("dining", {
         "restaurant_id": "bimini-beach-club-lunch",
         "restaurant_name": "Beach Club lunch buffet",
         "time": lunch_time, "time_human": _human_time(lunch_time),
@@ -1114,7 +1247,7 @@ def _tool_prebook_bimini_day(args: Dict[str, Any]) -> Dict[str, Any]:
     }
 
     # Port-day-plan reservation marker
-    ship_data.add_reservation("port_day_plan", {
+    ship_data.add_reservation_dedup("port_day_plan", {
         "treatment_name": "Bimini Beach Club — full day plan",
         "time": "09:30", "time_human": "9:30 AM",
         "confirmation_id": plan_card["confirmation_id"],
@@ -1290,7 +1423,7 @@ def _tool_create_squad_event(args: Dict[str, Any]) -> Dict[str, Any]:
     conf = f"SQD{abs(hash(('squad', _time.time()))) % 100000:05d}"
 
     # Add a single squad_event reservation so it shows in My Reservations
-    ship_data.add_reservation("squad_event", {
+    ship_data.add_reservation_dedup("squad_event", {
         "treatment_name": f"Scarlet Night squad for {party_size}",
         "time": "23:00", "time_human": _human_time("23:00"),
         "confirmation_id": conf,
@@ -1354,7 +1487,7 @@ def _tool_land_the_look(args: Dict[str, Any]) -> Dict[str, Any]:
 
     # 1) outfit_confirmed — record the choice as a reservation so it shows in My Reservations
     outfit_conf = f"OUT{abs(hash((look_id, salon_time))) % 100000:05d}"
-    ship_data.add_reservation("outfit", {
+    ship_data.add_reservation_dedup("outfit", {
         "treatment_name": f"Tonight's Look — {look['name']}",
         "look_id": look_id,
         "time": manor_time,
@@ -1381,7 +1514,7 @@ def _tool_land_the_look(args: Dict[str, Any]) -> Dict[str, Any]:
 
     # 3) manor_table — new reservation kind
     manor_conf = f"MAN{abs(hash((look_id, manor_time, party_size))) % 100000:05d}"
-    ship_data.add_reservation("manor_table", {
+    ship_data.add_reservation_dedup("manor_table", {
         "treatment_name": f"The Manor table for {party_size}",
         "venue": "The Manor",
         "deck": 6,
@@ -1597,10 +1730,25 @@ def _natural_reply_for(tool_name: str, tool_result: Dict[str, Any]) -> str:
         return f"Your current folio is ${tool_result.get('balance', 0):.2f} — happy to walk you through the line items."
     if tool_name == "upgrade_drink_package":
         p = tool_result.get("package", {}) or {}
+        charged = tool_result.get("charged_to_folio", tool_result.get("total", 0))
+        credit = tool_result.get("credit_loaded", 0)
+        if charged > 0:
+            return (
+                f"{p.get('name', 'Bar Tab')} loaded — ${charged:.0f} on your onboard account, "
+                f"${credit:.0f} of credit to spend across the voyage."
+            )
+        return f"{p.get('name', 'Always Included')} — every Sailor gets this, no charge."
+    if tool_name == "recommend_drink_packages":
         return (
-            f"{p.get('name', 'Bar Tab')} is loaded for {tool_result.get('days', '')} days "
-            f"— ${tool_result.get('total', 0):.2f} on your onboard account."
+            "Here are the two Bar Tab tiers, honey — $300 gets you $350 of credit, "
+            "$500 gets you $600. Tap whichever fits your voyage."
         )
+    if tool_name == "book_recovery_item":
+        items = tool_result.get("items", []) or []
+        if not items:
+            return "Sorted, honey — recovery items are queued up."
+        names = ", ".join(it.get("title", "item").split(" — ")[0] for it in items)
+        return f"Sorted — {names}. Charges added to your folio if applicable."
     if tool_name == "cancel_reservation":
         name = tool_result.get("name", "your reservation")
         time_human = tool_result.get("time_human", "")
@@ -1672,7 +1820,13 @@ def _natural_reply_for(tool_name: str, tool_result: Dict[str, Any]) -> str:
     if tool_name == "identify_now_playing":
         t = tool_result.get("track", "that track")
         a = tool_result.get("artist", "")
-        return f"That's '{t}' by {a} — added to your Cruise Soundtrack on Spotify. Branson story behind it on the card."
+        label = tool_result.get("set_label", "")
+        vibe = tool_result.get("set_vibe", "")
+        if label:
+            set_phrase = f" — that's tonight's {label} set ({vibe})" if vibe else f" — from tonight's {label} set"
+        else:
+            set_phrase = ""
+        return f"That's '{t}' by {a}{set_phrase}. Added to your Cruise Soundtrack on Spotify."
     if tool_name == "recommend_drink_now":
         d = tool_result.get("drink", "a cocktail")
         v = tool_result.get("venue", "the bar")
@@ -1806,6 +1960,8 @@ _TOOLS: Dict[str, ToolFn] = {
     "generate_packing_list": _tool_generate_packing_list,
     "get_voyage_diary": _tool_get_voyage_diary,
     "create_squad_event": _tool_create_squad_event,
+    "book_recovery_item": _tool_book_recovery_item,
+    "recommend_drink_packages": _tool_recommend_drink_packages,
 }
 
 
@@ -1883,10 +2039,12 @@ WHAT'S INCLUDED (no extra charge — never quote a price for these)
   Soft-serve, sunset toast on opening night
 
 BAR TAB (prepaid premium drink credit, optional)
-  $300 → $350 credit (17% bonus when bought pre-voyage)
-  $500 → $600 credit (20% bonus, roll-over unused balance)
+  Exactly two paid tiers — there are NO other tiers, no "premium", no "unlimited" upgrade:
+    bar-tab-300: $300 → $350 credit (17% bonus when bought pre-voyage)
+    bar-tab-500: $500 → $600 credit (20% bonus, roll-over unused balance)
   Covers cocktails, wine by the glass, craft beer, top spirits.
-  Mega RockStar Sailors have an UNLIMITED bar tab (no need to top up).
+  Mega RockStar Sailors have an UNLIMITED bar tab as part of the cabin tier
+  (this is a cabin perk, NOT an upgrade Ruby can sell — never propose it as a tier).
 
 SPA — Redemption Spa | Decks 5–6 | 6 AM – 11:30 PM
   Award-winning Mud Room, salt therapy, hydrotherapy pool, mineral massages.
@@ -1980,12 +2138,14 @@ def _build_system_prompt(folio_balance: float, reservations: list, drink_package
         "modify_dining(restaurant,new_time,new_party_size?), cancel_reservation(name), switch_reservation(cancel,to,type,count), "
         "get_my_reservations(), book_spa_treatment(treatment,time), "
         "get_excursion(name), get_today_schedule(), get_folio(), "
-        "upgrade_drink_package(package,days), get_weather(), "
+        "upgrade_drink_package(package,days), recommend_drink_packages(), "
+        "get_weather(), "
         "get_wifi_options(), get_spa_options(), get_ship_info(topic), "
         "order_champagne(location, bottle?, price?, dispatched_from?, scheduled_time?), "
         "suggest_outfit(occasion,vibe?), book_salon(service,time), recommend_pre_show_drink(venue), "
         "land_the_look(look_id,salon_time?,manor_time?,party_size?), "
-        "hangover_recovery_menu(), identify_now_playing(), "
+        "hangover_recovery_menu(), book_recovery_item(items), "
+        "identify_now_playing(), "
         "recommend_drink_now(mood?), "
         "arrange_surprise(occasion,recipient?), prebook_bimini_day(cabana_tier?,lunch_time?,party_size?), "
         "generate_packing_list(occasion?), get_voyage_diary(day?), "
@@ -2040,7 +2200,21 @@ def _build_system_prompt(folio_balance: float, reservations: list, drink_package
         "    Ruby suggests Krug pour ($28) → user 'send it to my cabin' →\n"
         '    order_champagne(location="your cabin", bottle="Krug Grande Cuvée", price=28).\n'
         "  For non-champagne cocktails (Negroni, etc.) that don't ship as bottles, clarify in `say`\n"
-        "  ('bottle service is champagne-only — want a Negroni delivered as a single pour instead?').\n\n"
+        "  ('bottle service is champagne-only — want a Negroni delivered as a single pour instead?').\n"
+        "CRITICAL — DRINK PACKAGES: The ONLY real Bar Tab tiers are exactly these three IDs:\n"
+        "  bar-tab-300 (pay $300, get $350 credit · 17% bonus)\n"
+        "  bar-tab-500 (pay $500, get $600 credit · 20% bonus)\n"
+        "  always-included (free for every Sailor; not an upgrade)\n"
+        "  NEVER invent other names ('premium_unlimited', 'platinum', 'unlimited', etc.) — they will fail.\n"
+        "  When the Sailor says generic 'upgrade my drink package' / 'show me the options' with no\n"
+        "  specific tier, call recommend_drink_packages() — it returns BOTH options as picker cards.\n"
+        "  Only call upgrade_drink_package(package=<id>) once the Sailor names a specific tier\n"
+        "  ('the $500 one', 'bar-tab-300', '500 bar tab').\n"
+        "CRITICAL — RECOVERY MENU ROUTING: If the Sailor names SPECIFIC recovery items\n"
+        "  ('book hydration spa and smoothie', 'just the IV drip'), call\n"
+        "  book_recovery_item(items=[...]) with the named items. ONLY call hangover_recovery_menu()\n"
+        "  for generic 'set me up for tomorrow morning' / 'full recovery menu' requests where\n"
+        "  the Sailor wants the whole 4-item preset.\n\n"
         f"Available tools: {tools_list}\n\n"
         "Examples:\n"
         'User: "hi"\n'
@@ -2115,6 +2289,24 @@ def _build_system_prompt(folio_balance: float, reservations: list, drink_package
         '{"tool":"arrange_surprise","args":{"occasion":"anniversary","recipient":"my partner"},'
         '"say":"On it — anniversary night sorted. Flowers in the cabin, table at The Wake, Möet on the way.",'
         '"hints":["Make it a proposal instead","Send a Dom Pérignon upgrade","What is the dessert?"]}\n\n'
+        '// Drink-package upgrade (D): generic → recommend_drink_packages first; specific tier → upgrade_drink_package\n'
+        'User: "Upgrade my drink package"\n'
+        '{"tool":"recommend_drink_packages","args":{},'
+        '"say":"Two Bar Tabs to choose from, honey — $300 gets $350 of credit, $500 gets $600. Tap whichever fits your voyage.",'
+        '"hints":["Give me the $300 package","Give me the $500 package","What is already included?"]}\n\n'
+        'User: "Give me the $500 package"\n'
+        '{"tool":"upgrade_drink_package","args":{"package":"bar-tab-500"},'
+        '"say":"$500 Bar Tab locked in — that loads $600 of credit to spend across the voyage.",'
+        '"hints":["Show my folio","Send champagne to my cabin","What is on at The Manor?"]}\n\n'
+        '// Recovery (B): named items → book_recovery_item; generic full preset → hangover_recovery_menu\n'
+        'User: "Book hydration spa and a B-Complex smoothie"\n'
+        '{"tool":"book_recovery_item","args":{"items":["hydration drip","b-complex smoothie"]},'
+        '"say":"Sorted — hydration drip at 10:30 and a B-Complex green smoothie for 11. Just those two.",'
+        '"hints":["Add late breakfast at The Wake","Add the cabana siesta","Show my reservations"]}\n\n'
+        'User: "Set me up for tomorrow morning — the full recovery menu"\n'
+        '{"tool":"hangover_recovery_menu","args":{},'
+        '"say":"Late one, honey? Full recovery menu locked in — hydration drip, smoothie, late breakfast, cabana siesta.",'
+        '"hints":["Send champagne to the cabana","Move the drip to 11","Show my folio"]}\n\n'
         'User: "pre-board my Bimini day" / "plan tomorrow at the Beach Club"\n'
         '{"tool":"prebook_bimini_day","args":{"cabana_tier":"private","lunch_time":"13:00","party_size":2},'
         '"say":"Bimini sorted — cabana at 10, lunch at 1, sunset cocktail at 6:30. Last tender 8.",'
