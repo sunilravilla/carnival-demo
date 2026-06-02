@@ -21,20 +21,20 @@ const virginBranding = {
   logoText: "Virgin Voyages",
   headerTitle: "Sailor App",
   headerSubtitle: "It's Not a Cruise · Adult by Design",
-  avatarName: "Ruby",
+  avatarName: "Marina",
   avatarRole: "Your Sailor Concierge",
-  avatarInitials: "RB",
+  avatarInitials: "MA",
   emptyHeadline: "Honey, you're home.",
   emptySubtext:
-    'Try: "Bring me a bottle to the pool" — or shake your phone. Ruby\'s listening.',
-  conversationTitle: "Chat with Ruby",
-  inputPlaceholder: "Ask Ruby…",
+    'Try: "Bring me a bottle to the pool" — or shake your phone. Marina\'s listening.',
+  conversationTitle: "Chat with Marina",
+  inputPlaceholder: "Ask Marina…",
   useAgentEndpoint: true,
   enableShowThis: false,
   useCopilotKit: false,
   defaultLanguage: "en",
-  // Sprite-sheet avatar built for Marina — disable for Virgin until a
-  // Ruby sprite ships; SVG/initials fallback is on-brand enough for the demo.
+  // Sprite-sheet avatar built for Carnival's Marina — disable for Virgin until a
+  // dedicated sprite ships; SVG/initials fallback is on-brand enough for the demo.
   useSpriteAvatar: false,
   // Visual assets — official Virgin Voyages logo + Scarlet Lady photo.
   logo: "/virgin-logo.jpg",

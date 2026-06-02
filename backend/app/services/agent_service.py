@@ -1,6 +1,6 @@
 """Onboard concierge agent — Virgin Voyages, Scarlet Lady demo.
 
-Concierge persona: Ruby. Warm + cheeky, music-literate (Branson / Virgin
+Concierge persona: Marina. Warm + cheeky, music-literate (Branson / Virgin
 Records DNA), knows the ship's venues cold, "Always Included" framing.
 
 Uses Anthropic Claude in JSON-output mode. The model returns:
@@ -253,7 +253,7 @@ def _tool_recommend_drink_packages(_args: Dict[str, Any]) -> Dict[str, Any]:
     """Show the two real Bar Tab tiers as side-by-side picker cards.
 
     Used when the Sailor says generic "upgrade my drink package" with no
-    specific tier. Prevents Ruby from inventing tiers (e.g. "premium_unlimited")
+    specific tier. Prevents Marina from inventing tiers (e.g. "premium_unlimited")
     that don't exist in drink_packages.json.
     """
     pkgs = [
@@ -583,10 +583,10 @@ _OUTFIT_LOOKBOOK = {
             "needs": ["blow-out", "smoky-eye"],
         },
         {
-            "id": "ruby-tux",
-            "name": "Ruby Tuxedo",
+            "id": "crimson-tux",
+            "name": "Crimson Tuxedo",
             "description": "Tailored red tux + black silk tee + crisp loafers. Optional black bow.",
-            "image": "/looks/ruby-tux.svg",
+            "image": "/looks/crimson-tux.svg",
             "vibe": "Branson energy. Late-night Manor approved.",
             "needs": ["trim", "manicure"],
         },
@@ -682,7 +682,7 @@ def _tool_book_salon(args: Dict[str, Any]) -> Dict[str, Any]:
     """Book a salon service at Redemption Spa (Deck 5 salon side).
 
     Optional `look_id` is folded into the confirmation hash so that booking a
-    blow-out for two different looks (Scarlet Statement vs Ruby Tuxedo) yields
+    blow-out for two different looks (Scarlet Statement vs Crimson Tuxedo) yields
     different confirmation numbers — used by the `land_the_look` macro.
     """
     service_query = (args.get("service") or args.get("name") or "").strip()
@@ -728,7 +728,7 @@ _LOOK_COCKTAIL = {
         "venue": "On The Rocks", "deck": 6, "price": 17,
         "vibe": "Sleek silk + gold heels deserves caffeine + crema. You're ready to own the pool deck.",
     },
-    "ruby-tux": {
+    "crimson-tux": {
         "drink": "Negroni",
         "venue": "On The Rocks", "deck": 6, "price": 16,
         "vibe": "Sharp suit, sharp drink. Branson energy — exactly the late-night Manor mood.",
@@ -746,8 +746,8 @@ _LOOK_DETAILS = {
         "name": "Scarlet Statement", "image": "/looks/scarlet-statement.svg",
         "summary": "Crimson silk slip + bare-shoulder jacket. Gold strappy heel. Hair: sleek bun.",
     },
-    "ruby-tux": {
-        "name": "Ruby Tuxedo", "image": "/looks/ruby-tux.svg",
+    "crimson-tux": {
+        "name": "Crimson Tuxedo", "image": "/looks/crimson-tux.svg",
         "summary": "Tailored red tux + black silk tee + crisp loafers. Optional black bow.",
     },
     "after-hours": {
@@ -1446,7 +1446,7 @@ def _tool_create_squad_event(args: Dict[str, Any]) -> Dict[str, Any]:
         "invitees": invitees,
         # B3 fix: these mock names should render as SUGGESTIONS, not as
         # confirmed real invitees. Frontend mutes them + shows a "tap to swap"
-        # subtitle. Ruby's natural-reply for this tool reframes accordingly.
+        # subtitle. Marina's natural-reply for this tool reframes accordingly.
         "is_demo_data": True,
         "invitee_label": "Suggested invitees (tap to swap)",
         "invitee_hint": "These are sailors you've cruised with before — tap any name to invite or swap.",
@@ -1480,13 +1480,13 @@ def _tool_land_the_look(args: Dict[str, Any]) -> Dict[str, Any]:
                 return canonical
         # Keyword-based fallback
         if "scarlet" in s or "statement" in s: return "scarlet-statement"
-        if "ruby" in s or "tux" in s:          return "ruby-tux"
+        if "crimson" in s or "ruby" in s or "tux" in s: return "crimson-tux"
         if "after" in s or "column" in s:      return "after-hours"
         return None
 
     look_id = _resolve(raw)
     if look_id is None:
-        return {"card": "error", "error": f"I don't know the '{raw}' look. Try Scarlet Statement, Ruby Tuxedo, or After-Hours Red."}
+        return {"card": "error", "error": f"I don't know the '{raw}' look. Try Scarlet Statement, Crimson Tuxedo, or After-Hours Red."}
 
     salon_time = (args.get("salon_time") or "19:00").strip()
     manor_time = (args.get("manor_time") or "23:00").strip()
@@ -2023,7 +2023,7 @@ BARS
   The Manor (Decks 6–7) — two-story nightclub explicitly inspired by Richard Branson's
     Virgin Records era. Day lounge → evening cabaret → late-night dance floor.
   On The Rocks — largest bar onboard, live music nightly
-  Loose Cannon — cheeky dive bar, easy to miss; ask Ruby for directions
+  Loose Cannon — cheeky dive bar, easy to miss; ask Marina for directions
   Red Bar — hidden behind The Wake; watches the kitchen
   Draught House — late-night craft brews
   The Roundabout — central atrium bar
@@ -2054,7 +2054,7 @@ BAR TAB (prepaid premium drink credit, optional)
     bar-tab-500: $500 → $600 credit (20% bonus, roll-over unused balance)
   Covers cocktails, wine by the glass, craft beer, top spirits.
   Mega RockStar Sailors have an UNLIMITED bar tab as part of the cabin tier
-  (this is a cabin perk, NOT an upgrade Ruby can sell — never propose it as a tier).
+  (this is a cabin perk, NOT an upgrade Marina can sell — never propose it as a tier).
 
 SPA — Redemption Spa | Decks 5–6 | 6 AM – 11:30 PM
   Award-winning Mud Room, salt therapy, hydrotherapy pool, mineral massages.
@@ -2062,7 +2062,7 @@ SPA — Redemption Spa | Decks 5–6 | 6 AM – 11:30 PM
   Hot Stone Massage: 50 min $149 / 80 min $199
   Salt-Stone Facial: 50 min $129
   Mud Room day pass: $45 (Mega RockStar: unlimited daily access included)
-  Salon (Deck 5): blow-dry, makeup, manicure available — same-day booking via Ruby
+  Salon (Deck 5): blow-dry, makeup, manicure available — same-day booking via Marina
   Book in-app or call ext. 7100.
 
 WELLNESS / FITNESS
@@ -2111,7 +2111,7 @@ TONIGHT (Day 4)
 TOMORROW — SCARLET NIGHT (Day 5)
   Sea Day. Ship-wide all-red event culminating on the pool deck. Pop-up
   performances throughout. Dress code: red is non-negotiable. Salon and
-  Redemption Spa book up fast for pre-event glam — Ruby can pre-book.
+  Redemption Spa book up fast for pre-event glam — Marina can pre-book.
 
 WEATHER
   Puerto Plata today: ~85°F / 29°C, partly cloudy, light breeze, calm seas
@@ -2119,7 +2119,7 @@ WEATHER
 DEBARKATION (Thursday, PortMiami)
   Sailor App walks you off — no group muster. Self-walk-off from 7:00 AM.
 
-BRAND VOICE & TRIVIA RUBY CAN DRAW ON
+BRAND VOICE & TRIVIA MARINA CAN DRAW ON
   Virgin Voyages launched in 2021 with Scarlet Lady. Adult-only by design.
   Sister ships: Valiant Lady, Resilient Lady, Brilliant Lady.
   Founded by Richard Branson, who started Virgin Records in 1972. First release:
@@ -2162,7 +2162,7 @@ def _build_system_prompt(folio_balance: float, reservations: list, drink_package
         "create_squad_event(party_size?)"
     )
     return (
-        "You are Ruby, Scarlet Lady's onboard Sailor concierge for Virgin Voyages.\n"
+        "You are Marina, Scarlet Lady's onboard Sailor concierge for Virgin Voyages.\n"
         f"You are speaking with {guest_first_name}. Always address them by first name: {guest_first_name}.\n"
         "\n"
         "PERSONA — get this right or you sound like a different brand:\n"
@@ -2207,7 +2207,7 @@ def _build_system_prompt(folio_balance: float, reservations: list, drink_package
         "  ('send it to my cabin', 'send a bottle of that to my table'), call order_champagne with the\n"
         "  recommended bottle name AND price as args — NEVER let it default silently to Möet when\n"
         "  the conversation was about a different drink. Example:\n"
-        "    Ruby suggests Krug pour ($28) → user 'send it to my cabin' →\n"
+        "    Marina suggests Krug pour ($28) → user 'send it to my cabin' →\n"
         '    order_champagne(location="your cabin", bottle="Krug Grande Cuvée", price=28).\n'
         "  For non-champagne cocktails (Negroni, etc.) that don't ship as bottles, clarify in `say`\n"
         "  ('bottle service is champagne-only — want a Negroni delivered as a single pour instead?').\n"
@@ -2272,8 +2272,8 @@ def _build_system_prompt(folio_balance: float, reservations: list, drink_package
         'User: "send champagne to my cabin"\n'
         '{"tool":"order_champagne","args":{"location":"your cabin"},"say":"Möet & Chandon en route to your cabin — red bucket, two flutes, about 7 minutes.",'
         '"hints":["Track it","What\'s tonight at The Manor?","Book Pink Agave for dinner"]}\n\n'
-        '// FOLLOW-UP after Ruby recommended a drink (B1 chained pattern):\n'
-        'Prior turn: Ruby recommended a Krug pour ($28).\n'
+        '// FOLLOW-UP after Marina recommended a drink (B1 chained pattern):\n'
+        'Prior turn: Marina recommended a Krug pour ($28).\n'
         'User: "Send it to my cabin instead."\n'
         '{"tool":"order_champagne","args":{"location":"your cabin","bottle":"Krug Grande Cuvée","price":28},'
         '"say":"Krug Grande Cuvée on its way to your cabin — chilled, two flutes, about 7 minutes.",'
@@ -2285,8 +2285,8 @@ def _build_system_prompt(folio_balance: float, reservations: list, drink_package
         '"say":"Pink Agave bumped up to 4 for 8 PM — locked in.",'
         '"hints":["Add a Manor table after","Send champagne to the table","Check my reservations"]}\n\n'
         'User: "help me with tonights look" / "what should I wear for Scarlet Night"\n'
-        '{"tool":"suggest_outfit","args":{"occasion":"scarlet night"},"say":"Three looks for you, honey — Scarlet Statement, Ruby Tuxedo, After-Hours Red. Tell me which speaks and I\'ll sort the salon + a Manor table.",'
-        '"hints":["I like Scarlet Statement","Ruby Tuxedo, please","Just book it all"]}\n\n'
+        '{"tool":"suggest_outfit","args":{"occasion":"scarlet night"},"say":"Three looks for you, honey — Scarlet Statement, Crimson Tuxedo, After-Hours Red. Tell me which speaks and I\'ll sort the salon + a Manor table.",'
+        '"hints":["I like Scarlet Statement","Crimson Tuxedo, please","Just book it all"]}\n\n'
         'User: "book me a blow-out at 7"\n'
         '{"tool":"book_salon","args":{"service":"blow-out","time":"19:00"},"say":"Blow-out at 7 at the Redemption salon, done.",'
         '"hints":["Add a manicure","Book a Manor table at 11","What should I wear?"]}\n\n'
@@ -2296,10 +2296,10 @@ def _build_system_prompt(folio_balance: float, reservations: list, drink_package
         'User: "I want the Scarlet Statement look for Scarlet Night — sort the whole night"\n'
         '{"tool":"land_the_look","args":{"look_id":"scarlet-statement","salon_time":"19:00","manor_time":"23:00"},'
         '"say":"Locked in, honey — Scarlet Statement, blow-out at 7, Manor table at 11, Disco Nap waiting beforehand.",'
-        '"hints":["Add a manicure","Send champagne to my cabin at 10","Switch to Ruby Tuxedo"]}\n\n'
-        'User: "land the Ruby Tuxedo look"\n'
-        '{"tool":"land_the_look","args":{"look_id":"ruby-tux"},'
-        '"say":"Ruby Tuxedo — sharp choice. Blow-out at 7, Manor table at 11, Negroni waiting.",'
+        '"hints":["Add a manicure","Send champagne to my cabin at 10","Switch to Crimson Tuxedo"]}\n\n'
+        'User: "land the Crimson Tuxedo look"\n'
+        '{"tool":"land_the_look","args":{"look_id":"crimson-tux"},'
+        '"say":"Crimson Tuxedo — sharp choice. Blow-out at 7, Manor table at 11, Negroni waiting.",'
         '"hints":["Move the Manor table to midnight","Add a glam makeup at 7:30","Show my reservations"]}\n\n'
         'User: "arrange a surprise for our anniversary tonight" / "surprise mode"\n'
         '{"tool":"arrange_surprise","args":{"occasion":"anniversary","recipient":"my partner"},'
@@ -2360,7 +2360,7 @@ def _build_finalize_prompt(tool_name: str, tool_result: Dict[str, Any], guest_fi
             "Suggest one of these by name after confirming the dinner booking."
         )
     return (
-        f"You are Ruby, the Sailor concierge aboard Virgin Voyages' Scarlet Lady. You are speaking with {guest_first_name}.\n"
+        f"You are Marina, the Sailor concierge aboard Virgin Voyages' Scarlet Lady. You are speaking with {guest_first_name}.\n"
         "Voice: warm, cheeky, never stuffy. Adult-only ship. 'It's Not a Cruise.'\n"
         "A tool just ran and returned data. Speak directly to the Sailor in 1–3 natural, friendly sentences.\n"
         "Be specific: mention the actual venue name, time, price, or detail from the result.\n"
@@ -2441,14 +2441,14 @@ class AgentService:
             }
 
         if tool_result.get("card") == "error":
-            # Turn the error into a natural Ruby reply — no ugly error card shown.
+            # Turn the error into a natural Marina reply — no ugly error card shown.
             error_msg = tool_result.get("error", "Something went wrong.")
             try:
                 err_reply = await asyncio.to_thread(
                     self.llm.chat_completion,
                     [
                         {"role": "system", "content": (
-                            f"You are Ruby, Virgin Voyages' Sailor concierge aboard Scarlet Lady. You are speaking with {guest_first_name}. A booking attempt just failed. "
+                            f"You are Marina, Virgin Voyages' Sailor concierge aboard Scarlet Lady. You are speaking with {guest_first_name}. A booking attempt just failed. "
                             f"Tell {guest_first_name} in 1-2 warm, cheeky-but-helpful sentences what went wrong and what they can do instead. "
                             "Do not mention tools or technical details. Be specific about the alternatives."
                         )},
@@ -2568,7 +2568,7 @@ class AgentService:
                     self.llm.chat_completion,
                     [
                         {"role": "system", "content": (
-                            f"You are Ruby, Virgin Voyages' Sailor concierge aboard Scarlet Lady. You are speaking with {guest_first_name}. A booking attempt just failed. "
+                            f"You are Marina, Virgin Voyages' Sailor concierge aboard Scarlet Lady. You are speaking with {guest_first_name}. A booking attempt just failed. "
                             f"Tell {guest_first_name} in 1-2 warm, cheeky-but-helpful sentences what went wrong and what they can do instead. "
                             "Do not mention tools or technical details."
                         )},

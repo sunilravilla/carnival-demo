@@ -484,7 +484,7 @@ export default function LandingPage({ onEnterUser, onEnterAdmin }) {
             onClick={() => setShowAuth(true)}
             className="aria-enter-btn"
           >
-            <span>{isCarnival ? "Board Marina" : isVirgin ? "Meet Ruby" : "Enter ARIA"}</span>
+            <span>{isCarnival ? "Board Marina" : isVirgin ? "Meet Marina" : "Enter ARIA"}</span>
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ marginLeft: 8 }}>
               <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
             </svg>

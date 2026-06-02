@@ -16,9 +16,9 @@ const SCARLET_LOOKS = [
     vibe: 'Photo-finish red.',
   },
   {
-    id: 'ruby-tux',
-    name: 'Ruby Tuxedo',
-    image: '/looks/ruby-tux.svg',
+    id: 'crimson-tux',
+    name: 'Crimson Tuxedo',
+    image: '/looks/crimson-tux.svg',
     vibe: 'Branson energy.',
   },
   {
@@ -190,7 +190,7 @@ export default function TonightsLook({ onAction }) {
 
   const handleSortItAll = () => {
     if (!onAction) return;
-    // Default to Scarlet Statement when the Sailor hasn't picked — Ruby will
+    // Default to Scarlet Statement when the Sailor hasn't picked — Marina will
     // confirm and offer to swap.
     onAction(
       `Land the Scarlet Statement look for Scarlet Night — sort everything.`
@@ -220,7 +220,7 @@ export default function TonightsLook({ onAction }) {
         <div>Dress code: <strong>RED</strong> — non-negotiable.</div>
       </div>
 
-      <div style={S.looksLabel}>Pick a look · Ruby books the rest</div>
+      <div style={S.looksLabel}>Pick a look · Marina books the rest</div>
       <div style={S.looksRow}>
         {SCARLET_LOOKS.map((l) => (
           <div

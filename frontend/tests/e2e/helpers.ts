@@ -1,8 +1,9 @@
 import { Page, expect, Locator } from '@playwright/test';
 
 // Forbidden Carnival residue. Anywhere in the visible UI = demo killer.
+// NOTE: 'Marina' is intentionally NOT listed — it is now the Virgin concierge's
+// name (renamed from Ruby), so it is a legitimate string across the Virgin UI.
 export const CARNIVAL_LEAK_STRINGS = [
-  'Marina',
   'Carnival',
   'Celebration',
   'Cucina',
@@ -39,7 +40,7 @@ export async function loadDashboard(page: Page, phone = '9999999990') {
   await expect(page.getByText('Welcome back')).toBeVisible({ timeout: 15_000 });
 }
 
-// Open the Ruby chat panel by tapping the floating bubble.
+// Open the Marina chat panel by tapping the floating bubble.
 export async function openChat(page: Page) {
   const bubble = page.locator('[title^="Chat with"]');
   await bubble.click();
@@ -47,12 +48,12 @@ export async function openChat(page: Page) {
   await expect(page.getByText('Sailor App', { exact: false })).toBeVisible({ timeout: 5_000 });
 }
 
-// Send a message in the open chat, wait for Ruby to finish responding.
+// Send a message in the open chat, wait for Marina to finish responding.
 // Strategy: send, then wait for the input field to be re-enabled (the
 // ChatInterface disables it while isProcessing is true and re-enables once
 // the SSE stream completes). Much more reliable than whole-body polling.
 export async function sendChat(page: Page, message: string) {
-  const input = page.getByPlaceholder('Ask Ruby…');
+  const input = page.getByPlaceholder('Ask Marina…');
   await input.click();
   await input.fill(message);
   await input.press('Enter');
@@ -69,10 +70,10 @@ export async function sendChat(page: Page, message: string) {
     })),
     page.waitForTimeout(800),
   ]);
-  // Then wait for the input to become enabled again — Ruby's done.
+  // Then wait for the input to become enabled again — Marina's done.
   await page.waitForFunction(
     () => {
-      const i = document.querySelector('input[placeholder="Ask Ruby…"]') as HTMLInputElement | null;
+      const i = document.querySelector('input[placeholder="Ask Marina…"]') as HTMLInputElement | null;
       return !!i && !i.disabled;
     },
     null,

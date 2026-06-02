@@ -1,4 +1,4 @@
-# Ruby Demo Script — Virgin Voyages, Scarlet Lady
+# Marina Demo Script — Virgin Voyages, Scarlet Lady
 
 > **Setup**: Open the app at 390×844 (iPhone 14 Pro) in browser DevTools.
 > Backend on `:8000`, frontend on `:5173`. Sound on. Access code: `hpe-carnival`.
@@ -24,15 +24,15 @@
 
 ---
 
-## 1. Meet Ruby — Persona & Voice
+## 1. Meet Marina — Persona & Voice
 
 | # | Type / say | What to show |
 |---|---|---|
 | 1.1 | `hi` | Cheeky, on-brand: "Honey, you're back. What's the move, Vivian?" |
-| 1.2 | `who are you?` | "I'm Ruby, your onboard concierge for Scarlet Lady..." |
+| 1.2 | `who are you?` | "I'm Marina, your onboard concierge for Scarlet Lady..." |
 | 1.3 | `what's tonight?` | Booked! at 7, Persephone at 9, UNTITLED DANCESHOWPARTYTHING at 10:30, Klub Rubik's at 11:30 — all real Virgin shows |
 
-**What you should NOT hear**: "Marina", "Carnival", "Celebration", "VIFP Gold", "Cucina del Capitano", "CHEERS!", "Cozumel".
+**What you should NOT hear**: "Carnival", "Celebration", "VIFP Gold", "Cucina del Capitano", "CHEERS!", "Cozumel".
 
 ---
 
@@ -46,7 +46,7 @@
 | 2.2 | Tap **Send it 🥂** | Switches to live tracker: "On its way, honey · On The Rocks bar, Deck 6 → Cabin 10245" + countdown `M:SS` + animated deck cross-section with a moving red dot |
 | 2.3 | Tap **Minimise** to close, then scroll to **Onboard Account** | New $105 line item: "Möet & Chandon Impérial 750ml — delivered to Cabin 10245" |
 
-### 2b. Via Ruby (chat path — same tool)
+### 2b. Via Marina (chat path — same tool)
 
 | # | Type / say | What to show |
 |---|---|---|
@@ -70,16 +70,16 @@
 |---|---|---|
 | 3.1 | Note the live countdown — "Scarlet Night in ~Xh Xm Xs" + "Dress code: RED — non-negotiable" | Card animates the timer every second |
 | 3.2 | Tap the **Scarlet Statement** thumbnail | Chat opens prefilled: "I want the Scarlet Statement look for Scarlet Night. Pre-book a blow-out at 7 PM and reserve me a table at The Manor at 11 PM..." |
-| 3.3 | Watch Ruby respond | Calls `book_salon` → returns a salon_booking card (Blow-Out · 7:00 PM · Redemption Spa Salon · $65 · confirmation `SAL…`) |
-| 3.4 | Tap the next hint chip Ruby suggests | She chains the next step — Manor table or pre-show cocktail |
+| 3.3 | Watch Marina respond | Calls `book_salon` → returns a salon_booking card (Blow-Out · 7:00 PM · Redemption Spa Salon · $65 · confirmation `SAL…`) |
+| 3.4 | Tap the next hint chip Marina suggests | She chains the next step — Manor table or pre-show cocktail |
 | 3.5 | Tap the bigger ✨ **Sort it all for me** CTA | Multi-step plan: outfit suggestion → salon → dinner → Manor |
 
-### 3b. Through Ruby (free-form)
+### 3b. Through Marina (free-form)
 
 | # | Type / say | What to show |
 |---|---|---|
-| 3.6 | `what should I wear for Scarlet Night?` | **outfit_suggestion** card with 3 looks (Scarlet Statement, Ruby Tuxedo, After-Hours Red) — each has an image, vibe line, "Land this look" button |
-| 3.7 | Tap **Land this look** on Ruby Tuxedo | Chat sends "I want Ruby Tuxedo — book the salon and a Manor table to land it" |
+| 3.6 | `what should I wear for Scarlet Night?` | **outfit_suggestion** card with 3 looks (Scarlet Statement, Crimson Tuxedo, After-Hours Red) — each has an image, vibe line, "Land this look" button |
+| 3.7 | Tap **Land this look** on Crimson Tuxedo | Chat sends "I want Crimson Tuxedo — book the salon and a Manor table to land it" |
 | 3.8 | `book me a blow-out at 7 PM` | **salon_booking** card |
 | 3.9 | `what should I drink at The Manor?` | **drink_pairing** card — Negroni Bianco, $16 |
 | 3.10 | `book me a manicure at 6:30` | salon_booking card — Express Manicure, $45 |
@@ -122,9 +122,9 @@
 
 ---
 
-## 7. Multi-step "Sort my night, Ruby"
+## 7. Multi-step "Sort my night, Marina"
 
-Demonstrates the agent's hint-driven chain (Ruby suggests next steps via hint chips).
+Demonstrates the agent's hint-driven chain (Marina suggests next steps via hint chips).
 
 | # | Type / say | What to show |
 |---|---|---|
@@ -162,7 +162,7 @@ Switch to `9999999993` (Carlos Mendez, language: es).
 
 | # | Type / say | What to show |
 |---|---|---|
-| 10.1 | `¿qué hay para cenar esta noche?` | Ruby replies in Spanish, surfaces Extra Virgin / Pink Agave / The Wake / Gunbae |
+| 10.1 | `¿qué hay para cenar esta noche?` | Marina replies in Spanish, surfaces Extra Virgin / Pink Agave / The Wake / Gunbae |
 | 10.2 | `tráeme champán a la piscina` | order_champagne fires, reply in Spanish |
 | 10.3 | `¿qué me pongo para Scarlet Night?` | 3 looks suggested in Spanish |
 
@@ -183,7 +183,7 @@ Switch to `9999999993` (Carlos Mendez, language: es).
 
 | # | Action | What to show |
 |---|---|---|
-| 12.1 | Tap the 🎙️ mic, say *"book Pink Agave for two at eight"* | Speech-to-text → same Pink Agave booking flow → Ruby speaks the confirmation via ElevenLabs |
+| 12.1 | Tap the 🎙️ mic, say *"book Pink Agave for two at eight"* | Speech-to-text → same Pink Agave booking flow → Marina speaks the confirmation via ElevenLabs |
 | 12.2 | Voice in Spanish: *"reserva Extra Virgin a las siete y media"* | Detected as ES, response in Spanish |
 
 ---
@@ -192,7 +192,7 @@ Switch to `9999999993` (Carlos Mendez, language: es).
 
 Scroll the whole app, open every panel. If you spot any of these, it's a residual Carnival leak — flag it:
 
-- 🚫 The word "Marina" (Ruby everywhere)
+- 🚫 The word "Marina" (Marina everywhere)
 - 🚫 The word "Carnival" or "Celebration" (Virgin Voyages / Scarlet Lady)
 - 🚫 "VIFP Gold/Platinum" (Sea Terrace / RockStar / Mega RockStar Sailor)
 - 🚫 "CHEERS!" (Bar Tab)
@@ -236,10 +236,10 @@ The original flow had all 3 outfit thumbnails producing identical results (same 
 | # | Action | What to show |
 |---|---|---|
 | W1.1 | Tap **Scarlet Statement** thumbnail | 4 cards stream in: outfit_confirmed (with image + vibe) · Blow-Out at Redemption · Manor table at 11 · Disco Nap at On The Rocks. Each card has a UNIQUE confirmation # |
-| W1.2 | Tap **Ruby Tuxedo** thumbnail | 4 cards — same structure but the cocktail is now **Negroni** and confirmation #s are different |
+| W1.2 | Tap **Crimson Tuxedo** thumbnail | 4 cards — same structure but the cocktail is now **Negroni** and confirmation #s are different |
 | W1.3 | Tap **After-Hours Red** thumbnail | 4 cards — cocktail is **Mezcal Mule at Loose Cannon** |
 | W1.4 | Type `land the Scarlet Statement look` in chat | Same 4-card response — proves the macro works through chat too |
-| W1.5 | Type `land the Ruby Tuxedo look — Manor table at midnight` | Macro respects the `manor_time` override |
+| W1.5 | Type `land the Crimson Tuxedo look — Manor table at midnight` | Macro respects the `manor_time` override |
 | W1.6 | Open the **Reservations** widget | 3 distinct entries per look attempt: Outfit, Salon, Manor table |
 
 **Leak check**: confirmation IDs across the 3 looks should be 3 different SAL### numbers. If they're all the same, the bug regressed.

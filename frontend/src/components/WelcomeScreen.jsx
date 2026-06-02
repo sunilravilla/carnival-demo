@@ -101,7 +101,7 @@ export default function WelcomeScreen({ onGetStarted }) {
         <img src={isVirgin ? branding.logoWhite : (branding.logo || "/carnival-logo.png")} alt={branding.logoText} style={S.logo} />
       </div>
 
-      {/* Concierge avatar — reusing the Marina sprite for Ruby until a dedicated photo ships. */}
+      {/* Concierge avatar — shared Marina sprite until a dedicated photo ships. */}
       <div style={S.avatarRing}>
         <img src="/avatars/marina-real/marina_01_closed.png" alt={branding.avatarName} style={S.avatar} />
       </div>

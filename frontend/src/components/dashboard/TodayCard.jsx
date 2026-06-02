@@ -91,15 +91,18 @@ function useWeather(port) {
       cozumel:          { lat: 20.42, lon: -86.92 },
       belize:           { lat: 17.50, lon: -88.19 },
       miami:            { lat: 25.77, lon: -80.19 },
+      bimini:           { lat: 25.72, lon: -79.30 },
       'celebration key':{ lat: 26.69, lon: -78.36 },
       'grand turk':     { lat: 21.46, lon: -71.13 },
       'half moon cay':  { lat: 24.57, lon: -75.95 },
       'amber cove':     { lat: 19.84, lon: -70.71 },
+      'puerto plata':   { lat: 19.79, lon: -70.69 },
     };
     const p = port.toLowerCase();
     const key = Object.keys(coords).find(k => p.includes(k));
-    if (!key) return;
-    const { lat, lon } = coords[key];
+    // Fall back to the current cruise's home waters (Puerto Plata) rather than
+    // silently rendering nothing when a port label isn't in the lookup table.
+    const { lat, lon } = key ? coords[key] : { lat: 19.79, lon: -70.69 };
     let cancelled = false;
     fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&temperature_unit=fahrenheit&windspeed_unit=mph`)
       .then(r => r.json())

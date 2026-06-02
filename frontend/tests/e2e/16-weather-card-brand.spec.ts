@@ -2,9 +2,9 @@ import { test, expect } from '@playwright/test';
 import { resetGuest, loadDashboard, openChat, sendChat, expectNoCarnivalLeak } from './helpers';
 
 // Bug W5.2 regression: the WeatherCard had two hardcoded Carnival residues —
-// "Marina ✦" attribution and "Cozumel Tomorrow" port label. Both must now be
+// a hardcoded attribution and a "Cozumel Tomorrow" port label. Both must now be
 // driven by the brand registry + the backend payload's dynamic port name.
-test('weather card shows Ruby attribution and a Virgin port label', async ({ page }) => {
+test('weather card shows Marina attribution and a Virgin port label', async ({ page }) => {
   await resetGuest(page);
   await loadDashboard(page);
   await openChat(page);
@@ -16,9 +16,9 @@ test('weather card shows Ruby attribution and a Virgin port label', async ({ pag
   await expect(card).toBeVisible({ timeout: 8000 });
 
   const cardText = await card.innerText();
-  // Brand attribution: Virgin agent name is Ruby — Marina is the Carnival name.
-  expect(cardText).toContain('Ruby');
-  expect(cardText).not.toContain('Marina');
+  // Brand attribution: the Virgin concierge is now named Marina (renamed from Ruby).
+  expect(cardText).toContain('Marina');
+  expect(cardText).not.toContain('Ruby');
 
   // Port label must not say Cozumel (Carnival itinerary port).
   expect(cardText.toLowerCase()).not.toContain('cozumel');

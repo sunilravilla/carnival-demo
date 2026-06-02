@@ -2,19 +2,19 @@ import { test, expect } from '@playwright/test';
 import { resetGuest, loadDashboard, openChat, sendChat } from './helpers';
 
 // Regression for user-reported Bug B1: recommend Krug → "send it to my cabin
-// instead" → Ruby's CARD shows Möet & Chandon (not Krug) because order_champagne
-// is hardcoded. After the fix, the card should match Ruby's narration.
+// instead" → Marina's CARD shows Möet & Chandon (not Krug) because order_champagne
+// is hardcoded. After the fix, the card should match Marina's narration.
 
 test('mood drink follow-up: sending recommended drink to cabin preserves the bottle', async ({ page }) => {
   await resetGuest(page);
   await loadDashboard(page);
   await openChat(page);
 
-  // 1. Ask for a celebratory drink; we expect Ruby to suggest Krug.
+  // 1. Ask for a celebratory drink; we expect Marina to suggest Krug.
   await sendChat(page, 'What should I drink right now? I am celebrating.');
   let body = await page.locator('body').innerText();
   // Krug is the celebratory default in _MOOD_DRINKS.
-  expect(body, 'Ruby should suggest a Krug pour for celebratory mood').toMatch(/krug/i);
+  expect(body, 'Marina should suggest a Krug pour for celebratory mood').toMatch(/krug/i);
 
   // 2. Follow up: "send it to my cabin instead"
   await sendChat(page, 'Send it to my cabin instead.');

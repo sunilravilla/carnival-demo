@@ -127,9 +127,9 @@ function playConfirmChime(cardPayload) {
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
 function MarinaAvatar({ size = 36, speaking = false }) {
-  // Photo-real concierge avatar. We reuse the existing Marina sprite for Ruby
-  // (Virgin) too — same face, different voice/persona. A dedicated Ruby photo
-  // can be dropped into /avatars/ruby-real/ later and we'll switch the src.
+  // Photo-real concierge avatar. The same Marina sprite is shared across
+  // brands — same face, different voice/persona per brand. A dedicated photo
+  // can be dropped into /avatars/ later and we'll switch the src.
   return (
     <img
       src="/avatars/marina-real/marina_01_closed.png"
@@ -442,7 +442,7 @@ export default function ChatInterface({
   const handleCardAction = (action) => {
     if (isProcessing) return;
     // Cards may emit either a structured object (e.g. cancel intent) or a
-    // plain string prompt to send back to Ruby (drink-package picker, squad
+    // plain string prompt to send back to Marina (drink-package picker, squad
     // swap modal, outfit suggestion, etc.).
     if (typeof action === "string") {
       handleTextSubmit(action);

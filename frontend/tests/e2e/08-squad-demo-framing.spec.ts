@@ -19,7 +19,7 @@ test('squad event makes it clear the invitee names are sample / demo data', asyn
   // Mock invitees are still listed (that's fine)
   expect(body, 'Expected at least one mock invitee').toMatch(/Lisa P\.|Marcus T\.|Priya R\./);
 
-  // KEY ASSERTION: somewhere on the card or in Ruby's narration there should
+  // KEY ASSERTION: somewhere on the card or in Marina's narration there should
   // be language framing these as suggestions/samples/past-companions —
   // NOT as confirmed real invitees.
   const demoFraming =

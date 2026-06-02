@@ -8,7 +8,7 @@ import { resetGuest, loadDashboard, openChat, sendChat } from './helpers';
 
 const LOOKS = [
   { id: 'scarlet-statement', label: 'Scarlet Statement', expectedDrink: /disco nap/i },
-  { id: 'ruby-tux',           label: 'Ruby Tuxedo',       expectedDrink: /negroni/i },
+  { id: 'crimson-tux',        label: 'Crimson Tuxedo',    expectedDrink: /negroni/i },
   { id: 'after-hours',        label: 'After-Hours Red',   expectedDrink: /mezcal mule/i },
 ];
 

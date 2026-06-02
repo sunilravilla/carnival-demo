@@ -30,7 +30,7 @@ test('drink package upgrade flow — picker then real charge', async ({ page }) 
   // Pick the second (the $500 card is rendered second in the array)
   await lockButtons.nth(1).click();
 
-  // After Ruby processes, a `drink_package` card should appear with real charges
+  // After Marina processes, a `drink_package` card should appear with real charges
   await expect(page.getByText(/\$500\.00/).first()).toBeVisible({ timeout: 15000 });
   await expect(page.getByText(/\$600\.00/).first()).toBeVisible({ timeout: 4000 });
   // Card should also show a "Charged" and "Credit loaded" label
