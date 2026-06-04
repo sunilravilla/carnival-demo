@@ -94,3 +94,4 @@ frontend/start.bat
 
 # Redundant (main Dockerfile is now clean)
 backend/Dockerfile.railway
+.vercel
