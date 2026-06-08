@@ -92,6 +92,7 @@ function useWeather(port) {
       belize:           { lat: 17.50, lon: -88.19 },
       miami:            { lat: 25.77, lon: -80.19 },
       bimini:           { lat: 25.72, lon: -79.30 },
+      'aurora cay':     { lat: 25.72, lon: -79.30 },
       'celebration key':{ lat: 26.69, lon: -78.36 },
       'grand turk':     { lat: 21.46, lon: -71.13 },
       'half moon cay':  { lat: 24.57, lon: -75.95 },

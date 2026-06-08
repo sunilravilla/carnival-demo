@@ -1,5 +1,5 @@
 {
-  "guest_id": "VV-77321",
+  "guest_id": "MA-77321",
   "name": "Ms. Vivian Bell",
   "primary_first_name": "Vivian",
   "primary_last_name": "Bell",
@@ -7,15 +7,15 @@
   "deck": 10,
   "party_size": 2,
   "language_preference": "en",
-  "vifp_tier": "Sea Terrace",
+  "vifp_tier": "Balcony",
   "folio": {
     "balance": 287.50,
     "items": [
       {"date": "2026-05-23", "desc": "Embarkation Photo", "amount": 24.95},
-      {"date": "2026-05-24", "desc": "Beach Club at Bimini — Cabana share", "amount": 112.25},
-      {"date": "2026-05-25", "desc": "On The Rocks — 2 cocktails", "amount": 32.00},
-      {"date": "2026-05-25", "desc": "Redemption Spa — Salt Therapy", "amount": 65.00},
-      {"date": "2026-05-26", "desc": "Sip — single-origin pour-over x3", "amount": 18.30}
+      {"date": "2026-05-24", "desc": "Aurora Cay — Cabana share", "amount": 112.25},
+      {"date": "2026-05-25", "desc": "Sunset Bar — 2 mocktails", "amount": 32.00},
+      {"date": "2026-05-25", "desc": "Serenity Spa — Salt Therapy", "amount": 65.00},
+      {"date": "2026-05-26", "desc": "Bean & Berry — single-origin pour-over x3", "amount": 18.30}
     ]
   },
   "drink_package": null,

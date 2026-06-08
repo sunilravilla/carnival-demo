@@ -1,68 +1,68 @@
 [
   {
     "id": "persephone-9pm",
-    "name": "Persephone",
-    "venue": "The Red Room",
+    "name": "Odyssey",
+    "venue": "Aurora Theater",
     "deck": 6,
     "time": "21:00",
     "duration_min": 60,
-    "rating": "18+",
+    "rating": "All ages",
     "available_seats": 64,
     "headliner": "Resident immersive cast"
   },
   {
     "id": "untitled-1030",
-    "name": "UNTITLED DANCESHOWPARTYTHING",
-    "venue": "The Manor",
+    "name": "Aurora Live",
+    "venue": "Starlight Lounge",
     "deck": 6,
     "time": "22:30",
     "duration_min": 75,
-    "rating": "18+",
+    "rating": "All ages",
     "available_seats": 120,
     "headliner": "Resident dance company + live DJ"
   },
   {
     "id": "drag-8pm",
-    "name": "Lights, Camera, Drag!",
-    "venue": "The Red Room",
+    "name": "Showstoppers",
+    "venue": "Aurora Theater",
     "deck": 6,
     "time": "20:00",
     "duration_min": 60,
-    "rating": "18+",
+    "rating": "All ages",
     "available_seats": 80,
-    "headliner": "Drag cabaret ensemble"
+    "headliner": "Broadway hits revue cast"
   },
   {
     "id": "klub-rubiks-1130",
-    "name": "Klub Rubik's",
-    "venue": "The Manor (upper)",
+    "name": "Retro Deck Party",
+    "venue": "Starlight Lounge (upper)",
     "deck": 7,
     "time": "23:30",
     "duration_min": 120,
-    "rating": "18+",
+    "rating": "All ages",
     "available_seats": 200,
-    "headliner": "'80s dance party — costume encouraged"
+    "headliner": "'80s & '90s hits — costume encouraged"
   },
   {
     "id": "booked-7pm",
-    "name": "Booked!",
-    "venue": "The Red Room",
+    "name": "Center Stage",
+    "venue": "Aurora Theater",
     "deck": 6,
     "time": "19:00",
     "duration_min": 55,
-    "rating": "18+",
+    "rating": "All ages",
     "available_seats": 90,
     "headliner": "Musical theatre cast"
   },
   {
     "id": "festival-stage-10pm",
-    "name": "Festival Stage — Tonight's Headliner",
-    "venue": "The Manor",
+    "name": "Main Stage — Tonight's Headliner",
+    "venue": "Starlight Lounge",
     "deck": 6,
     "time": "22:00",
     "duration_min": 60,
-    "rating": "18+",
+    "rating": "All ages",
     "available_seats": 110,
-    "headliner": "Rotating comedians + magicians"
+    "headliner": "Rotating comedians, magicians & family acts"
   }
 ]

@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
-import { branding, isVirgin } from '../styles/branding';
+import { branding, isVirgin, isMarenova } from '../styles/branding';
 
-const ROOT_GRADIENT = isVirgin
+const ROOT_GRADIENT = isMarenova
+  ? 'linear-gradient(170deg, #0B3D5C 0%, #134E63 50%, #18A0A8 100%)'
+  : isVirgin
   ? 'linear-gradient(170deg, #2E0444 0%, #5B0822 50%, #CC0000 100%)'
   : 'linear-gradient(170deg, #003580 0%, #006994 45%, #C8952A 100%)';
 
@@ -98,7 +100,7 @@ export default function WelcomeScreen({ onGetStarted }) {
 
       {/* Brand logo — use the white/transparent variant on the dark gradient. */}
       <div style={S.logoWrap}>
-        <img src={isVirgin ? branding.logoWhite : (branding.logo || "/carnival-logo.png")} alt={branding.logoText} style={S.logo} />
+        <img src={(isVirgin || isMarenova) ? branding.logoWhite : (branding.logo || "/carnival-logo.png")} alt={branding.logoText} style={S.logo} />
       </div>
 
       {/* Concierge avatar — shared Marina sprite until a dedicated photo ships. */}
@@ -106,8 +108,8 @@ export default function WelcomeScreen({ onGetStarted }) {
         <img src="/avatars/marina-real/marina_01_closed.png" alt={branding.avatarName} style={S.avatar} />
       </div>
 
-      <div style={S.headline}>{isVirgin ? "Honey, you're home." : "Welcome Aboard"}</div>
-      <div style={S.sub}>{isVirgin ? "Scarlet Lady · Western Caribbean · 5 Nights" : "Carnival Celebration · Western Caribbean · 7 Nights"}</div>
+      <div style={S.headline}>{isMarenova ? "Welcome aboard!" : isVirgin ? "Honey, you're home." : "Welcome Aboard"}</div>
+      <div style={S.sub}>{isMarenova ? "Marenova Aurora · Western Caribbean · 5 Nights" : isVirgin ? "Scarlet Lady · Western Caribbean · 5 Nights" : "Carnival Celebration · Western Caribbean · 7 Nights"}</div>
 
       <button
         style={{
@@ -134,7 +136,7 @@ export default function WelcomeScreen({ onGetStarted }) {
         </svg>
       </div>
 
-      <div style={S.footer}>Powered by HPE · {branding.logoText} {isVirgin ? "Sailor App" : "AI Concierge"}</div>
+      <div style={S.footer}>Powered by HPE · {branding.logoText} {isMarenova ? "Aurora App" : isVirgin ? "Sailor App" : "AI Concierge"}</div>
     </div>
   );
 }

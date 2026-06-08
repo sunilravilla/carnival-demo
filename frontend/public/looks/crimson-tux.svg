@@ -1,16 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
   <defs>
-    <linearGradient id="bg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0A0A0A"/><stop offset="1" stop-color="#2E0444"/></linearGradient>
+    <linearGradient id="bg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#06283D"/><stop offset="1" stop-color="#0B3D5C"/></linearGradient>
   </defs>
   <rect width="200" height="200" fill="url(#bg2)"/>
-  <!-- tux jacket -->
-  <path d="M70 70 L100 60 L130 70 L138 168 L100 178 L62 168 Z" fill="#CC0000"/>
-  <!-- lapel -->
-  <path d="M82 78 L100 72 L100 130 L88 138 Z" fill="#0A0A0A"/>
-  <path d="M118 78 L100 72 L100 130 L112 138 Z" fill="#0A0A0A"/>
-  <!-- silk tee under -->
-  <path d="M88 90 L112 90 L112 138 L100 142 L88 138 Z" fill="#0A0A0A"/>
+  <!-- tailored blazer -->
+  <path d="M70 70 L100 60 L130 70 L138 168 L100 178 L62 168 Z" fill="#155E72"/>
+  <!-- crisp tee -->
+  <path d="M88 90 L112 90 L112 138 L100 142 L88 138 Z" fill="#F8FBFC"/>
   <!-- bow tie -->
-  <path d="M92 76 L100 72 L108 76 L108 84 L100 80 L92 84 Z" fill="#0A0A0A"/>
-  <text x="100" y="32" font-family="Inter,Helvetica,sans-serif" font-size="13" font-weight="800" fill="#fff" text-anchor="middle" letter-spacing="2">CRIMSON TUXEDO</text>
+  <path d="M92 76 L100 72 L108 76 L108 84 L100 80 L92 84 Z" fill="#E8B04B"/>
+  <!-- sneakers -->
+  <rect x="80" y="178" width="16" height="9" rx="3" fill="#E8B04B"/>
+  <rect x="104" y="178" width="16" height="9" rx="3" fill="#E8B04B"/>
+  <text x="100" y="32" font-family="Inter,Helvetica,sans-serif" font-size="12" font-weight="800" fill="#fff" text-anchor="middle" letter-spacing="2">DECK PARTY SHARP</text>
 </svg>

@@ -19,12 +19,12 @@ test('after a normal demo flow, zero Carnival residue exists anywhere in the UI'
   await sendChat(page, 'hi');
   await expectNoCarnivalLeak(page, 'chat after greeting');
 
-  await sendChat(page, 'What should I wear for Scarlet Night?');
+  await sendChat(page, 'What should I wear for the Starlight Deck Party?');
   await expectNoCarnivalLeak(page, 'chat after outfit suggestion');
 
   await sendChat(page, 'Book Italian dinner for 7:30');
   await expectNoCarnivalLeak(page, 'chat after Italian booking');
 
-  await sendChat(page, "What's playing right now at The Manor?");
+  await sendChat(page, "What's playing right now at the Starlight Lounge?");
   await expectNoCarnivalLeak(page, 'chat after Shazam');
 });

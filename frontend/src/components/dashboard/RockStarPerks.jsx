@@ -1,29 +1,29 @@
 import { useGuest } from '../../context/GuestContext';
 
-const RED = '#CC0000';
-const TOLOPEA = '#2E0444';
-const GOLD = '#D4A862';
+const TEAL = '#18A0A8';
+const DEEPSEA = '#0B3D5C';
+const GOLD = '#E8B04B';
 
 const TIER_PERKS = {
-  'Mega RockStar': {
-    label: 'Mega RockStar',
+  'Aurora Grand Suite': {
+    label: 'Aurora Grand Suite',
     color: GOLD,
     perks: [
-      { icon: '🌅', label: "Richard's Rooftop — exclusive sundeck access" },
-      { icon: '🍸', label: 'Unlimited bar tab — top everything, no charge' },
-      { icon: '💆', label: 'Unlimited Redemption Spa Thermal Suite' },
+      { icon: '🌅', label: 'The Aurora Deck — exclusive sundeck access' },
+      { icon: '🥤', label: 'Unlimited Refreshment Package — included' },
+      { icon: '💆', label: 'Unlimited Serenity Spa Thermal Suite' },
       { icon: '📶', label: 'Premium Wi-Fi included on all devices' },
-      { icon: '🛎️', label: 'RockStar Agent — 24/7 white-glove service' },
+      { icon: '🛎️', label: 'Aurora Concierge — 24/7 white-glove service' },
     ],
   },
-  'RockStar': {
-    label: 'RockStar',
-    color: RED,
+  'Aurora Suite': {
+    label: 'Aurora Suite',
+    color: TEAL,
     perks: [
-      { icon: '🌅', label: "Richard's Rooftop access" },
+      { icon: '🌅', label: 'The Aurora Deck access' },
       { icon: '🚶', label: 'Priority boarding + reserved restaurant slots' },
-      { icon: '🥃', label: 'In-cabin bar stocked your way' },
-      { icon: '🛎️', label: 'RockStar Agent — 24/7 support' },
+      { icon: '🧸', label: 'Kids-club priority + in-cabin treats' },
+      { icon: '🛎️', label: 'Aurora Concierge — 24/7 support' },
     ],
   },
 };
@@ -32,10 +32,10 @@ const S = {
   card: {
     margin: '8px 14px',
     background: '#fff',
-    border: `1.5px solid ${TOLOPEA}33`,
+    border: `1.5px solid ${DEEPSEA}33`,
     borderRadius: 14,
     padding: '14px 16px 12px',
-    boxShadow: '0 4px 14px rgba(46,4,68,0.08)',
+    boxShadow: '0 4px 14px rgba(11,61,92,0.08)',
     position: 'relative',
     overflow: 'hidden',
   },

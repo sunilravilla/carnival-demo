@@ -306,8 +306,8 @@ function DrinkPackageCard({ payload }) {
   );
 }
 
-// ── Virgin: Drink-package picker option (one of two side-by-side cards) ────
-// Returned by `recommend_drink_packages` when the Sailor says generic
+// ── Marenova: Drink-package picker option (one of two side-by-side cards) ────
+// Returned by `recommend_drink_packages` when the guest says generic
 // "upgrade my drink package" — they tap a card's button to lock in a tier.
 function DrinkPackageOptionCard({ payload, onAction }) {
   const red = "#CC0000";
@@ -325,7 +325,7 @@ function DrinkPackageOptionCard({ payload, onAction }) {
         color: "#fff",
       }}>
         <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase", opacity: 0.9 }}>
-          Bar Tab
+          Refreshment Package
         </div>
         <div style={{ fontSize: 18, fontWeight: 800, lineHeight: 1.2, marginTop: 4 }}>
           ${price.toFixed(0)} → ${credit.toFixed(0)} of credit
@@ -573,18 +573,18 @@ function ErrorCard({ payload }) {
   );
 }
 
-// ── Virgin: Shake for Champagne confirmation card ───────────────────────────
+// ── Marenova: Shake for a Treat confirmation card ───────────────────────────
 function ChampagneCard({ payload }) {
-  const red = "#CC0000";
+  const red = "#18A0A8";
   return (
-    <div style={{ ...cardBase, borderColor: "#F0B8B8" }}>
+    <div style={{ ...cardBase, borderColor: "#B8E6E8" }}>
       <div style={headerStrip(red)} />
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
-        <h3 style={{ ...title, color: red }}>🥂 {payload.bottle}</h3>
-        <span style={pill("#FFE9E9", red)}>#{payload.confirmation_id}</span>
+        <h3 style={{ ...title, color: red }}>🍦 {payload.bottle}</h3>
+        <span style={pill("#E6F6F7", red)}>#{payload.confirmation_id}</span>
       </div>
       <div style={{ ...subtle, marginBottom: 10 }}>
-        {payload.volume_ml} ml · From {payload.dispatched_from}
+        From {payload.dispatched_from}
       </div>
       <div style={{ ...row, marginBottom: 10 }}>
         <div>
@@ -605,14 +605,14 @@ function ChampagneCard({ payload }) {
           )}
         </div>
       </div>
-      <div style={{ ...pill("#FFE9E9", red), display: "block", textAlign: "center", padding: "6px 12px", borderRadius: 8 }}>
-        ${(payload.price || 0).toFixed(2)} · Chilled bucket + 2 flutes included
+      <div style={{ ...pill("#E6F6F7", red), display: "block", textAlign: "center", padding: "6px 12px", borderRadius: 8 }}>
+        {(payload.price || 0) > 0 ? `$${payload.price.toFixed(2)} · ` : "Complimentary · "}delivered with a smile
       </div>
     </div>
   );
 }
 
-// ── Virgin: Tonight's Look — outfit suggestions ─────────────────────────────
+// ── Marenova: Tonight's Look — outfit suggestions ─────────────────────────────
 function OutfitSuggestionCard({ payload, onAction }) {
   const red = "#CC0000";
   const looks = payload.looks || [];
@@ -644,7 +644,7 @@ function OutfitSuggestionCard({ payload, onAction }) {
               <div style={{ fontSize: 11, color: red, marginTop: 4, fontStyle: "italic" }}>{look.vibe}</div>
               {onAction && (
                 <button
-                  onClick={() => onAction(`I want ${look.name} — book the salon and a Manor table to land it`)}
+                  onClick={() => onAction(`I want ${look.name} — book the salon and a Starlight Lounge table to land it`)}
                   style={{
                     marginTop: 8,
                     background: red, color: "#fff", border: "none",
@@ -663,7 +663,7 @@ function OutfitSuggestionCard({ payload, onAction }) {
   );
 }
 
-// ── Virgin: Salon booking confirmation ──────────────────────────────────────
+// ── Marenova: Salon booking confirmation ──────────────────────────────────────
 function SalonBookingCard({ payload }) {
   const gold = "#D4A862";
   return (
@@ -690,7 +690,7 @@ function SalonBookingCard({ payload }) {
   );
 }
 
-// ── Virgin: outfit confirmation card (from land_the_look macro) ────────────
+// ── Marenova: outfit confirmation card (from land_the_look macro) ────────────
 function OutfitConfirmedCard({ payload }) {
   const red = "#CC0000";
   const tolopea = "#2E0444";
@@ -729,7 +729,7 @@ function OutfitConfirmedCard({ payload }) {
   );
 }
 
-// ── Virgin: Manor table reservation card (from land_the_look macro) ─────────
+// ── Marenova: Manor table reservation card (from land_the_look macro) ─────────
 function ManorTableCard({ payload }) {
   const ink = "#0A0A0A";
   const red = "#CC0000";
@@ -738,11 +738,11 @@ function ManorTableCard({ payload }) {
     <div style={{ ...cardBase, borderColor: "#1A1A1A33", background: ink, color: "#fff" }}>
       <div style={{ ...headerStrip(red), marginLeft: 0 - 16, marginRight: 0 - 16 }} />
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
-        <h3 style={{ ...title, color: gold, marginBottom: 0 }}>🎶 The Manor — Reserved</h3>
+        <h3 style={{ ...title, color: gold, marginBottom: 0 }}>🎶 Starlight Lounge — Reserved</h3>
         <span style={pill(`${gold}26`, gold)}>#{payload.confirmation_id}</span>
       </div>
       <div style={{ fontSize: 12, opacity: 0.75, marginBottom: 10 }}>
-        Deck {payload.deck || 6} · Branson's love letter to Virgin Records
+        Deck {payload.deck || 6} · under a ceiling of stars
       </div>
       <div style={{ ...row }}>
         <div>
@@ -761,7 +761,7 @@ function ManorTableCard({ payload }) {
   );
 }
 
-// ── Virgin: Recovery Menu (Hangover Saver) ──────────────────────────────────
+// ── Marenova: Recovery Menu (Hangover Saver) ──────────────────────────────────
 function RecoveryMenuCard({ payload }) {
   const red = "#CC0000";
   const tolopea = "#2E0444";
@@ -775,7 +775,7 @@ function RecoveryMenuCard({ payload }) {
         color: "#fff",
       }}>
         <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 2, color: gold, textTransform: "uppercase", marginBottom: 4 }}>
-          Recovery menu
+          Morning reset
         </div>
         <div style={{ fontSize: 18, fontWeight: 800, lineHeight: 1.2 }}>{payload.title || "Late one, honey?"}</div>
         {payload.subtitle && <div style={{ fontSize: 12, opacity: 0.85, marginTop: 3 }}>{payload.subtitle}</div>}
@@ -809,7 +809,7 @@ function RecoveryMenuCard({ payload }) {
   );
 }
 
-// ── Virgin: Manor Shazam — Now Playing track card ───────────────────────────
+// ── Marenova: Manor Shazam — Now Playing track card ───────────────────────────
 function NowPlayingTrackCard({ payload }) {
   const red = "#CC0000";
   const ink = "#0A0A0A";
@@ -819,7 +819,7 @@ function NowPlayingTrackCard({ payload }) {
       <div style={{ padding: "12px 16px 10px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 2, color: gold, textTransform: "uppercase", display: "flex", alignItems: "center", gap: 6 }}>
           <span style={{ width: 6, height: 6, borderRadius: "50%", background: red, boxShadow: `0 0 6px ${red}`, display: "inline-block" }} />
-          Now · {payload.venue || "The Manor"} · Deck {payload.deck || 6}
+          Now · {payload.venue || "Starlight Lounge"} · Deck {payload.deck || 6}
         </div>
         {payload.year && <div style={{ fontSize: 11, color: gold }}>{payload.year}</div>}
       </div>
@@ -878,15 +878,15 @@ function NowPlayingTrackCard({ payload }) {
   );
 }
 
-// ── Virgin: Surprise Mode — headline coordination card ────────────────────
+// ── Marenova: Surprise Mode — headline coordination card ────────────────────
 function SurpriseSummaryCard({ payload }) {
-  const red = "#CC0000";
-  const tolopea = "#2E0444";
-  const gold = "#D4A862";
+  const red = "#18A0A8";
+  const tolopea = "#0B3D5C";
+  const gold = "#E8B04B";
   const rows = [
     { icon: "💐", label: "Flowers", value: `${payload.flowers?.item} · to ${payload.flowers?.location}` },
     { icon: "🍽", label: "Table", value: `${payload.restaurant} · ${payload.dinner_time_human}` },
-    { icon: "🍾", label: "Champagne", value: payload.champagne },
+    { icon: "🥂", label: "Toast", value: payload.champagne },
     { icon: "🍰", label: "Dessert", value: payload.dessert },
   ].filter(r => r.value);
   return (
@@ -928,7 +928,7 @@ function SurpriseSummaryCard({ payload }) {
   );
 }
 
-// ── Virgin: Pre-Board Bimini — port day plan ───────────────────────────────
+// ── Marenova: Pre-Board Bimini — port day plan ───────────────────────────────
 function PortDayPlanCard({ payload }) {
   const viking = "#6DBDD6";
   const tolopea = "#2E0444";
@@ -971,7 +971,7 @@ function PortDayPlanCard({ payload }) {
   );
 }
 
-// ── Virgin: Pack Forecaster — tailored packing list ────────────────────────
+// ── Marenova: Pack Forecaster — tailored packing list ────────────────────────
 function PackingListCard({ payload }) {
   const red = "#CC0000";
   const tolopea = "#2E0444";
@@ -1012,7 +1012,7 @@ function PackingListCard({ payload }) {
   );
 }
 
-// ── Virgin: Voyage Diary — illustrated per-day recap ───────────────────────
+// ── Marenova: Voyage Diary — illustrated per-day recap ───────────────────────
 function VoyageDiaryCard({ payload }) {
   const red = "#CC0000";
   const tolopea = "#2E0444";
@@ -1077,19 +1077,19 @@ function VoyageDiaryCard({ payload }) {
   );
 }
 
-// ── Virgin: Squad Mode — cosmetic group coordination card ──────────────────
-// Mock sailor directory for the squad-event swap modal. Hardcoded — no real
-// address book in the demo. Names chosen to feel like the kind of sailors a
+// ── Marenova: Squad Mode — cosmetic group coordination card ──────────────────
+// Mock guest directory for the squad-event swap modal. Hardcoded — no real
+// address book in the demo. Names chosen to feel like the kind of guests a
 // returning guest might have cruised with before.
 const SQUAD_DIRECTORY = [
   { name: "Lisa P.",   sub: "3 voyages together" },
-  { name: "Marcus T.", sub: "Met on Bimini 2024" },
-  { name: "Priya R.",  sub: "Scarlet Night '24" },
+  { name: "Marcus T.", sub: "Met on Aurora Cay 2024" },
+  { name: "Priya R.",  sub: "Starlight Party '24" },
   { name: "Andre J.",  sub: "Drag Brunch crew" },
   { name: "Sofia M.",  sub: "Karaoke night regular" },
   { name: "Wei C.",    sub: "Couples Massage swap" },
-  { name: "Hana K.",   sub: "Pink Agave dinner '23" },
-  { name: "Jules B.",  sub: "Manor table neighbour" },
+  { name: "Hana K.",   sub: "Agave Coast dinner '23" },
+  { name: "Jules B.",  sub: "Starlight Lounge neighbour" },
 ];
 
 function ContactPickerModal({ mode, currentInvitees, swapping, onPick, onClose }) {
@@ -1124,16 +1124,16 @@ function ContactPickerModal({ mode, currentInvitees, swapping, onPick, onClose }
           color: "#fff",
         }}>
           <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 2, color: gold, textTransform: "uppercase" }}>
-            {mode === "swap" ? `Swap ${swapping}` : "Invite a sailor"}
+            {mode === "swap" ? `Swap ${swapping}` : "Invite a guest"}
           </div>
           <div style={{ fontSize: 16, fontWeight: 800, marginTop: 2 }}>
-            {mode === "swap" ? "Pick a replacement" : "Add to your Scarlet Night squad"}
+            {mode === "swap" ? "Pick a replacement" : "Add to your Starlight Deck Party group"}
           </div>
         </div>
         <div style={{ flex: 1, overflowY: "auto" }}>
           {available.length === 0 ? (
             <div style={{ padding: 16, fontSize: 13, color: "#888", textAlign: "center" }}>
-              No more sailors to suggest right now.
+              No more guests to suggest right now.
             </div>
           ) : available.map((s) => (
             <button
@@ -1193,7 +1193,7 @@ function SquadEventCard({ payload, onAction }) {
     setPicker({ mode: "add" });
   };
   const handlePick = (newName) => {
-    const occ = payload.occasion || "Scarlet Night";
+    const occ = payload.occasion || "Starlight Deck Party";
     const msg = picker?.mode === "swap"
       ? `Swap ${picker.swapping} for ${newName} in my ${occ} squad`
       : `Add ${newName} to my ${occ} squad`;
@@ -1220,7 +1220,7 @@ function SquadEventCard({ payload, onAction }) {
                 key={i}
                 type="button"
                 onClick={() => handleSwap(n)}
-                title={interactive ? "Tap to swap this sailor" : undefined}
+                title={interactive ? "Tap to swap this guest" : undefined}
                 style={{
                   ...pill("#F2EEE7", interactive ? "#888" : "#0A0A0A"),
                   border: interactive ? "1px dashed #C8C2B5" : "1px solid transparent",
@@ -1237,7 +1237,7 @@ function SquadEventCard({ payload, onAction }) {
               <button
                 type="button"
                 onClick={handleAdd}
-                title="Invite another sailor"
+                title="Invite another guest"
                 style={{
                   ...pill(`${gold}1A`, "#7A5A1B"),
                   fontSize: 10,
@@ -1290,7 +1290,7 @@ function SquadEventCard({ payload, onAction }) {
   );
 }
 
-// ── Virgin: Pre-show drink pairing recommendation ───────────────────────────
+// ── Marenova: Pre-show drink pairing recommendation ───────────────────────────
 function DrinkPairingCard({ payload }) {
   const purple = "#2E0444";
   return (

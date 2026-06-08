@@ -1,13 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
-  <rect width="200" height="200" fill="#0A0A0A"/>
-  <!-- disco shimmer -->
-  <g opacity="0.5"><circle cx="40" cy="30" r="2" fill="#D4A862"/><circle cx="160" cy="40" r="1.5" fill="#fff"/><circle cx="170" cy="120" r="2" fill="#CC0000"/><circle cx="30" cy="160" r="1.5" fill="#D4A862"/></g>
-  <!-- metallic mini -->
-  <path d="M80 70 L120 70 L128 140 L100 148 L72 140 Z" fill="#D4A862"/>
-  <!-- blazer -->
-  <path d="M64 86 L100 70 L136 86 L130 150 L100 142 L70 150 Z" fill="#1A1A1A" opacity="0.9"/>
+  <rect width="200" height="200" fill="#06283D"/>
+  <!-- starlight shimmer -->
+  <g opacity="0.6"><circle cx="40" cy="30" r="2" fill="#E8B04B"/><circle cx="160" cy="40" r="1.5" fill="#fff"/><circle cx="170" cy="120" r="2" fill="#3FB6C4"/><circle cx="30" cy="160" r="1.5" fill="#E8B04B"/></g>
+  <!-- metallic top -->
+  <path d="M80 70 L120 70 L128 140 L100 148 L72 140 Z" fill="#E8B04B"/>
+  <!-- light jacket -->
+  <path d="M64 86 L100 70 L136 86 L130 150 L100 142 L70 150 Z" fill="#155E72" opacity="0.9"/>
   <!-- boots -->
-  <rect x="86" y="170" width="10" height="20" fill="#0A0A0A" stroke="#D4A862" stroke-width="1"/>
-  <rect x="104" y="170" width="10" height="20" fill="#0A0A0A" stroke="#D4A862" stroke-width="1"/>
-  <text x="100" y="32" font-family="Inter,Helvetica,sans-serif" font-size="13" font-weight="800" fill="#fff" text-anchor="middle" letter-spacing="2">MANOR DISCO</text>
+  <rect x="86" y="170" width="10" height="20" fill="#06283D" stroke="#E8B04B" stroke-width="1"/>
+  <rect x="104" y="170" width="10" height="20" fill="#06283D" stroke="#E8B04B" stroke-width="1"/>
+  <text x="100" y="32" font-family="Inter,Helvetica,sans-serif" font-size="13" font-weight="800" fill="#fff" text-anchor="middle" letter-spacing="2">LOUNGE READY</text>
 </svg>

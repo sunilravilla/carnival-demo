@@ -2,12 +2,12 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { useGuest } from '../../context/GuestContext';
 import { orderChampagne } from '../../services/champagneApi';
 
-// Virgin brand colors
-const RED = '#CC0000';
-const RED_DEEP = '#9A0000';
-const GOLD = '#D4A862';
-const INK = '#0A0A0A';
-const TOLOPEA = '#2E0444';
+// Marenova brand colors (aurora teal, gold, deep sea)
+const RED = '#18A0A8';
+const RED_DEEP = '#0E7C83';
+const GOLD = '#E8B04B';
+const INK = '#06283D';
+const TOLOPEA = '#0B3D5C';
 
 // Shake detection — magnitude threshold + debounce.
 const SHAKE_THRESHOLD = 18;       // m/s^2 net acceleration (gravity-removed approximation)
@@ -185,35 +185,33 @@ const S = {
 
 // ─── Animated SVG bucket ─────────────────────────────────────────────────────
 function ChampagneBucket({ size = 96, popping = false }) {
+  // A gelato sundae — Marenova's "Shake for a Treat" hero visual.
   return (
     <svg width={size} height={size} viewBox="0 0 120 120" aria-hidden>
-      {/* Bucket body */}
       <defs>
         <linearGradient id="bucketGradient" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#E10A0A" />
-          <stop offset="1" stopColor="#7A0000" />
-        </linearGradient>
-        <linearGradient id="bottleGradient" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#2E0444" />
-          <stop offset="1" stopColor="#0A0A0A" />
+          <stop offset="0" stopColor="#3FB6C4" />
+          <stop offset="1" stopColor="#0B3D5C" />
         </linearGradient>
       </defs>
-      {/* Bottle */}
+      {/* Scoops (pop on arrival) */}
       <g style={popping ? { transformOrigin: '60px 50px', animation: 'bottlePop 0.6s ease-out' } : {}}>
-        <rect x="50" y="14" width="20" height="40" rx="2" fill="url(#bottleGradient)" />
-        <rect x="48" y="52" width="24" height="46" rx="3" fill="url(#bottleGradient)" />
-        <rect x="50" y="60" width="20" height="14" fill="#D4A862" />
-        <circle cx="60" cy="12" r="3" fill="#D4A862" />
+        <circle cx="48" cy="50" r="15" fill="#F7C8D6" />
+        <circle cx="72" cy="50" r="15" fill="#F3CE86" />
+        <circle cx="60" cy="40" r="15" fill="#FFFFFF" />
+        {/* Cherry */}
+        <circle cx="60" cy="26" r="5" fill="#E0556B" />
+        <path d="M60 22 Q66 14 72 16" stroke="#0E7C83" strokeWidth="2" fill="none" />
       </g>
-      {/* Ice / sparkle */}
-      <circle cx="36" cy="78" r="3" fill="#fff" opacity="0.85" />
-      <circle cx="86" cy="80" r="2.5" fill="#fff" opacity="0.7" />
-      <circle cx="44" cy="86" r="2" fill="#fff" opacity="0.55" />
-      {/* Bucket */}
-      <path d="M28 84 L92 84 L86 116 L34 116 Z" fill="url(#bucketGradient)" />
-      <path d="M28 84 L92 84 L92 90 L28 90 Z" fill="#FFFFFF" opacity="0.18" />
-      {/* Bucket handle */}
-      <path d="M36 84 Q60 70 84 84" stroke={GOLD} strokeWidth="2.5" fill="none" />
+      {/* Sparkles */}
+      <circle cx="34" cy="40" r="2.5" fill={GOLD} opacity="0.9" />
+      <circle cx="88" cy="38" r="2" fill={GOLD} opacity="0.7" />
+      <circle cx="40" cy="30" r="1.6" fill="#fff" opacity="0.8" />
+      {/* Sundae cup */}
+      <path d="M40 62 L80 62 L72 110 L48 110 Z" fill="url(#bucketGradient)" />
+      <path d="M40 62 L80 62 L80 68 L40 68 Z" fill="#FFFFFF" opacity="0.20" />
+      {/* Cup rim highlight */}
+      <path d="M40 62 Q60 56 80 62" stroke={GOLD} strokeWidth="2.5" fill="none" />
     </svg>
   );
 }
@@ -289,9 +287,9 @@ export default function ShakeForChampagne({ defaultLocation }) {
 
   // Order state persists across modal open/close so "Minimise" doesn't lose
   // the in-flight delivery. Three card states:
-  //   no order            → "Press for Champagne" CTA
-  //   order + sec > 0     → "Möet en route · M:SS" pill, tap to re-open tracker
-  //   order + sec === 0   → "Your bottle has arrived" glowing pill, tap to greet
+  //   no order            → "Press for a Treat" CTA
+  //   order + sec > 0     → "Treat en route · M:SS" pill, tap to re-open tracker
+  //   order + sec === 0   → "Your treat has arrived" glowing pill, tap to greet
   const [order, setOrder] = useState(null);
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [popping, setPopping] = useState(false);
@@ -353,7 +351,7 @@ export default function ShakeForChampagne({ defaultLocation }) {
     }
   }, []);
 
-  // Tap "Press for Champagne" OR shake → either start a new order flow or
+  // Tap "Press for a Treat" OR shake → either start a new order flow or
   // re-open the live tracker for the existing order.
   const triggerReveal = useCallback(() => {
     if (hasOrder) {
@@ -425,13 +423,13 @@ export default function ShakeForChampagne({ defaultLocation }) {
       setSecondsLeft((result?.eta_minutes ?? 7) * 60);
       setView('tracking');
     } catch (e) {
-      console.error('Champagne order failed', e);
+      console.error('Treat order failed', e);
       // Local fallback so the demo never breaks
       const fallback = {
-        bottle: 'Möet & Chandon Impérial',
-        price: 105,
+        bottle: 'Gelato Sundae',
+        price: 0,
         location: cabinLabel,
-        dispatched_from: 'On The Rocks bar, Deck 6',
+        dispatched_from: 'Scoops, Deck 6',
         eta_minutes: 7,
         deck_path: [6, 5, 4, guestData?.deck || 8],
         confirmation_id: `CH${Math.floor(Math.random() * 99999).toString().padStart(5, '0')}`,
@@ -457,7 +455,7 @@ export default function ShakeForChampagne({ defaultLocation }) {
     }
   };
 
-  // "Cheers!" on the arrived view — clears the order entirely, returns card to idle.
+  // "Enjoy!" on the arrived view — clears the order entirely, returns card to idle.
   const dismissOrder = () => {
     setOrder(null);
     setSecondsLeft(0);
@@ -520,13 +518,13 @@ export default function ShakeForChampagne({ defaultLocation }) {
       <div style={S.card}>
         <div style={S.shimmer} />
         <div style={S.headlineRow}>
-          <span style={S.headlineLabel}>Signature ritual</span>
+          <span style={S.headlineLabel}>Signature experience</span>
         </div>
-        <div style={S.headline}>Shake for Champagne</div>
+        <div style={S.headline}>Shake for a Treat</div>
         <div style={S.sub}>
           {hasOrder
-            ? 'Your bottle is on the move — tap below to see live status.'
-            : 'Möet & Chandon Impérial in a red bucket, delivered wherever you are.'}
+            ? 'Your treat is on the move — tap below to see live status.'
+            : 'Gelato, a smoothie, a mocktail, or popcorn — delivered wherever you are.'}
         </div>
 
         {/* Three visual states for the primary CTA. */}
@@ -541,7 +539,7 @@ export default function ShakeForChampagne({ defaultLocation }) {
               onTouchStart={() => setPressed(true)}
               onTouchEnd={() => setPressed(false)}
             >
-              🥂 Press for Champagne
+              🍦 Press for a Treat
             </button>
             <div style={S.shakeHint}>
               {enabled
@@ -558,13 +556,13 @@ export default function ShakeForChampagne({ defaultLocation }) {
         )}
 
         {hasOrder && !isArrived && (
-          <button style={flightPillStyle} onClick={triggerReveal} aria-label="Track champagne delivery">
+          <button style={flightPillStyle} onClick={triggerReveal} aria-label="Track treat delivery">
             <div style={flightLeft}>
-              <div style={flightBucket}>🥂</div>
+              <div style={flightBucket}>🍦</div>
               <div style={{ minWidth: 0 }}>
-                <div style={flightLabel}>Möet en route</div>
+                <div style={flightLabel}>Treat en route</div>
                 <div style={flightTitle}>
-                  {order?.dispatched_from?.replace(' bar', '') || 'On The Rocks'} → {cabinLabel}
+                  {order?.dispatched_from?.replace(' bar', '') || 'Scoops'} → {cabinLabel}
                 </div>
               </div>
             </div>
@@ -576,13 +574,13 @@ export default function ShakeForChampagne({ defaultLocation }) {
         )}
 
         {hasOrder && isArrived && (
-          <button style={arrivedPillStyle} onClick={triggerReveal} aria-label="Champagne arrived — tap to greet">
+          <button style={arrivedPillStyle} onClick={triggerReveal} aria-label="Treat arrived — tap to greet">
             <div style={flightLeft}>
-              <div style={{ ...flightBucket, background: 'rgba(0,0,0,0.10)' }}>🥂</div>
+              <div style={{ ...flightBucket, background: 'rgba(0,0,0,0.10)' }}>🍦</div>
               <div style={{ minWidth: 0 }}>
                 <div style={{ ...flightLabel, color: INK, opacity: 1 }}>It's here</div>
                 <div style={{ ...flightTitle, color: INK }}>
-                  Your Möet has arrived
+                  Your treat has arrived
                 </div>
               </div>
             </div>
@@ -601,8 +599,8 @@ export default function ShakeForChampagne({ defaultLocation }) {
             {view === 'confirm' && !hasOrder && (
               <>
                 <div style={S.bucketWrap}><ChampagneBucket size={108} /></div>
-                <div style={S.ph2Title}>Möet & Chandon Impérial</div>
-                <div style={S.ph2Sub}>Brut · 750 ml · Virgin red bucket + 2 flutes</div>
+                <div style={S.ph2Title}>Gelato Sundae</div>
+                <div style={S.ph2Sub}>Two scoops + cherry · or ask for a smoothie, mocktail, or popcorn</div>
                 <div style={S.detailGrid}>
                   <div>
                     <div style={S.detailKey}>Delivery to</div>
@@ -610,7 +608,7 @@ export default function ShakeForChampagne({ defaultLocation }) {
                   </div>
                   <div>
                     <div style={S.detailKey}>To your folio</div>
-                    <div style={S.detailVal}>$105.00</div>
+                    <div style={S.detailVal}>Complimentary</div>
                   </div>
                 </div>
                 <div style={S.actionsRow}>
@@ -619,7 +617,7 @@ export default function ShakeForChampagne({ defaultLocation }) {
                     style={S.primaryAction(false)}
                     onClick={handleConfirm}
                   >
-                    Send it 🥂
+                    Send it 🍦
                   </button>
                 </div>
               </>
@@ -629,7 +627,7 @@ export default function ShakeForChampagne({ defaultLocation }) {
               <div style={S.trackerWrap}>
                 <div style={S.bucketWrap}><ChampagneBucket size={84} /></div>
                 <div style={S.ph2Title}>On its way, honey</div>
-                <div style={S.ph2Sub}>{order?.dispatched_from || 'On The Rocks, Deck 6'} → {cabinLabel}</div>
+                <div style={S.ph2Sub}>{order?.dispatched_from || 'Scoops, Deck 6'} → {cabinLabel}</div>
                 <div style={S.etaRow}>
                   <span style={S.etaNum}>{etaStr}</span>
                   <span style={S.etaLabel}>min</span>
@@ -650,15 +648,15 @@ export default function ShakeForChampagne({ defaultLocation }) {
             {view === 'arrived' && hasOrder && (
               <>
                 <div style={S.bucketWrap}><ChampagneBucket size={108} popping={popping} /></div>
-                <div style={S.arrivedTitle}>Knock knock 🥂</div>
-                <div style={S.arrivedSub}>Your Möet just arrived at {cabinLabel}.</div>
+                <div style={S.arrivedTitle}>Knock knock 🍦</div>
+                <div style={S.arrivedSub}>Your {order?.bottle || 'treat'} just arrived at {cabinLabel}.</div>
                 <div style={S.confLine}>Confirmation #{order?.confirmation_id}</div>
                 <div style={S.actionsRow}>
                   <button
                     style={S.primaryAction(false)}
                     onClick={dismissOrder}
                   >
-                    Cheers!
+                    Enjoy! 🍦
                   </button>
                 </div>
               </>

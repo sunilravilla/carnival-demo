@@ -15,8 +15,8 @@ test('surprise mode champagne timing matches scheduled dinner time', async ({ pa
   await sendChat(page, 'Arrange an anniversary surprise for tonight, premium budget.');
   const body = await page.locator('body').innerText();
 
-  // Sanity: surprise summary mentions dinner at The Wake at 8 PM
-  expect(body).toMatch(/the wake/i);
+  // Sanity: surprise summary mentions dinner at Horizon Steakhouse at 8 PM
+  expect(body).toMatch(/horizon steakhouse/i);
   expect(body).toMatch(/8:00 pm|8 pm|20:00/i);
 
   // The champagne sub-card should be timed to the dinner (pre-poured),

@@ -1,21 +1,21 @@
 [
   {
     "id": "bar-tab-300",
-    "name": "Bar Tab — $300 (gets $350 of credit)",
+    "name": "Refreshment Package — Classic (gets $175 of credit)",
     "price_per_day": 0.00,
-    "one_time_price": 300.00,
-    "credit_value": 350.00,
-    "covers": "Prepaid premium drinks (cocktails, wine by the glass, craft beer, top spirits). Receive 17% bonus credit when bought pre-voyage.",
+    "one_time_price": 150.00,
+    "credit_value": 175.00,
+    "covers": "Prepaid specialty coffees, fresh juices, smoothies, sodas, bottled water, and house mocktails. Receive 17% bonus credit when bought pre-voyage.",
     "max_drinks_alcohol_per_day": 0,
     "min_purchase_days": "One-time prepaid"
   },
   {
     "id": "bar-tab-500",
-    "name": "Bar Tab — $500 (gets $600 of credit)",
+    "name": "Refreshment Package — Premium (gets $300 of credit)",
     "price_per_day": 0.00,
-    "one_time_price": 500.00,
-    "credit_value": 600.00,
-    "covers": "Prepaid premium drinks across all 20+ bars. 20% bonus credit. Roll-over unused balance.",
+    "one_time_price": 250.00,
+    "credit_value": 300.00,
+    "covers": "Everything in Classic plus premium smoothies, gelato shakes, and fresh-pressed juices at all 20+ venues. 20% bonus credit. Roll-over unused balance.",
     "max_drinks_alcohol_per_day": 0,
     "min_purchase_days": "One-time prepaid"
   },
@@ -25,7 +25,7 @@
     "price_per_day": 0.00,
     "one_time_price": 0.00,
     "credit_value": 0.00,
-    "covers": "Still & sparkling water, drip coffee, tea, soda, juices, gym smoothies — included for every Sailor at every bar.",
+    "covers": "Still & sparkling water, drip coffee, tea, soda, juices, and gym smoothies — included for every guest at every venue.",
     "max_drinks_alcohol_per_day": 0,
     "min_purchase_days": "—"
   }

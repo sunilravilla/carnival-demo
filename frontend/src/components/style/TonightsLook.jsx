@@ -1,36 +1,36 @@
 import { useEffect, useState } from 'react';
 import { useGuest } from '../../context/GuestContext';
 
-// Brand colors
-const RED = '#CC0000';
-const TOLOPEA = '#2E0444';
-const GOLD = '#D4A862';
-const INK = '#0A0A0A';
+// Brand colors (Marenova: deep-sea → aurora teal, gold accent)
+const RED = '#18A0A8';
+const TOLOPEA = '#0B3D5C';
+const GOLD = '#E8B04B';
+const INK = '#06283D';
 
 // Lookbook — must match keys in backend agent_service _OUTFIT_LOOKBOOK
 const SCARLET_LOOKS = [
   {
     id: 'scarlet-statement',
-    name: 'Scarlet Statement',
+    name: 'Starlight Sparkle',
     image: '/looks/scarlet-statement.svg',
-    vibe: 'Photo-finish red.',
+    vibe: 'Catch the light.',
   },
   {
     id: 'crimson-tux',
-    name: 'Crimson Tuxedo',
+    name: 'Deck Party Sharp',
     image: '/looks/crimson-tux.svg',
-    vibe: 'Branson energy.',
+    vibe: 'Sharp and easy.',
   },
   {
     id: 'after-hours',
-    name: 'After-Hours Red',
+    name: 'Evening Glow',
     image: '/looks/after-hours.svg',
-    vibe: 'Arrive second, leave last.',
+    vibe: 'Quiet drama, late shows.',
   },
 ];
 
-// Scarlet Night happens tomorrow (Day 5) at 21:00 local-ish for the demo.
-// Always anchor to "tomorrow at 9 PM" — simple and dramatic.
+// The Starlight Deck Party happens tomorrow (Day 5) at 21:00 local-ish for the
+// demo. Always anchor to "tomorrow at 9 PM" — simple and dramatic.
 function scarletNightTarget() {
   const t = new Date();
   t.setDate(t.getDate() + 1);
@@ -52,11 +52,11 @@ const S = {
   card: {
     margin: '8px 14px',
     borderRadius: 18,
-    background: `linear-gradient(135deg, ${TOLOPEA} 0%, #5B0822 55%, ${RED} 100%)`,
+    background: `linear-gradient(135deg, ${TOLOPEA} 0%, #134E63 55%, ${RED} 100%)`,
     color: '#fff',
     overflow: 'hidden',
     position: 'relative',
-    boxShadow: '0 10px 32px rgba(46,4,68,0.35)',
+    boxShadow: '0 10px 32px rgba(11,61,92,0.35)',
   },
   spotlight: {
     position: 'absolute', inset: 0, pointerEvents: 'none',
@@ -164,7 +164,7 @@ const S = {
 
 export default function TonightsLook({ onAction }) {
   const { guestData } = useGuest();
-  const firstName = guestData?.primaryFirstName || guestData?.name?.split(' ')[0] || 'Sailor';
+  const firstName = guestData?.primaryFirstName || guestData?.name?.split(' ')[0] || 'guest';
   const [now, setNow] = useState(Date.now());
   const [hoveredLook, setHoveredLook] = useState(null);
   const [pressed, setPressed] = useState(false);
@@ -182,18 +182,18 @@ export default function TonightsLook({ onAction }) {
     if (!onAction) return;
     setHoveredLook(look.id);
     // Fires the `land_the_look` macro — one tool turn, 4 distinct cards back
-    // (outfit + salon + Manor table + look-specific cocktail).
+    // (outfit + salon + Starlight Lounge table + look-specific refreshment).
     onAction(
-      `Land the ${look.name} look for Scarlet Night — blow-out at 7 PM, Manor table at 11 PM for 2.`
+      `Land the ${look.name} look for the Starlight Deck Party — blow-out at 7 PM, Starlight Lounge table at 11 PM for 2.`
     );
   };
 
   const handleSortItAll = () => {
     if (!onAction) return;
-    // Default to Scarlet Statement when the Sailor hasn't picked — Marina will
+    // Default to Starlight Sparkle when the guest hasn't picked — Marina will
     // confirm and offer to swap.
     onAction(
-      `Land the Scarlet Statement look for Scarlet Night — sort everything.`
+      `Land the Starlight Sparkle look for the Starlight Deck Party — sort everything.`
     );
   };
 
@@ -203,8 +203,8 @@ export default function TonightsLook({ onAction }) {
 
       <div style={S.top}>
         <div style={S.topLeft}>
-          <div style={S.eyebrow}>Tonight's Look · Scarlet Night</div>
-          <div style={S.headline}>{firstName}, you in red?</div>
+          <div style={S.eyebrow}>Tonight's Look · Starlight Deck Party</div>
+          <div style={S.headline}>{firstName}, ready to shine?</div>
         </div>
         <div style={S.countdown}>
           {cd.d > 0 && (<><span style={S.cdNum}>{cd.d}</span><span style={S.cdLbl}>D</span></>)}
@@ -213,11 +213,11 @@ export default function TonightsLook({ onAction }) {
           <span style={S.cdNum}>{String(cd.s).padStart(2, '0')}</span><span style={S.cdLbl}>S</span>
         </div>
       </div>
-      <div style={S.subline}>Scarlet Night is tomorrow — pick a look.</div>
+      <div style={S.subline}>The Starlight Deck Party is tomorrow — pick a look.</div>
 
       <div style={S.dressRow}>
         <div style={S.redDot} />
-        <div>Dress code: <strong>RED</strong> — non-negotiable.</div>
+        <div>Dress code: <strong>bright &amp; fun</strong> — glow encouraged.</div>
       </div>
 
       <div style={S.looksLabel}>Pick a look · Marina books the rest</div>

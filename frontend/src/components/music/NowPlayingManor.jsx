@@ -1,14 +1,13 @@
 import { useEffect, useState } from 'react';
 
-// Brand colors
-const RED = '#CC0000';
-const TOLOPEA = '#2E0444';
-const GOLD = '#D4A862';
-const INK = '#0A0A0A';
+// Brand colors (Marenova: aurora teal on deep-sea ink, gold accent)
+const RED = '#18A0A8';
+const TOLOPEA = '#0B3D5C';
+const GOLD = '#E8B04B';
+const INK = '#06283D';
 
-// A real public Virgin Voyages / Manor-style playlist on Spotify. (Branson-era
-// disco / late-night Virgin Records sensibility. Opens external app — no audio
-// is played from inside our PWA.)
+// A real public disco / golden-hour playlist on Spotify. (Opens external app —
+// no audio is played from inside our PWA.)
 const SPOTIFY_PLAYLIST_WEB = 'https://open.spotify.com/playlist/37i9dQZF1DXaXB8fQg7xif';
 const SPOTIFY_PLAYLIST_APP = 'spotify:playlist:37i9dQZF1DXaXB8fQg7xif';
 const APPLE_MUSIC = 'https://music.apple.com/us/search?term=disco%20essentials';
@@ -18,12 +17,12 @@ const APPLE_MUSIC = 'https://music.apple.com/us/search?term=disco%20essentials';
 // the backend's _MANOR_SCHEDULE in [backend/app/services/agent_service.py]
 // so the chat "Shazam" tool surfaces a track from THIS set (B4 fix).
 const MANOR_SETS = [
-  { h: 18, set_name: 'sundowner-disco',    dj: 'DJ House Mother',          set: "Sundowner — '70s disco essentials",     until: '8 PM' },
-  { h: 20, set_name: 'dinner-funk',        dj: 'DJ House Mother',          set: 'Dinner Hour — funk & soul',             until: '10 PM' },
-  { h: 22, set_name: 'marvy-house',        dj: 'DJ Marvy',                 set: 'Festival Stage takeover — house & disco', until: '11:30 PM' },
-  { h: 23, set_name: 'klub-rubiks-80s',    dj: "Resident · Klub Rubik's",  set: "'80s dance party (costume encouraged)", until: '1:30 AM' },
-  { h: 1,  set_name: 'afterhours-grooves', dj: 'DJ Marvy',                 set: 'After-hours grooves',                   until: 'late' },
-  { h: 3,  set_name: 'winddown-soul',      dj: 'Resident',                 set: 'Wind-down soul',                        until: '5 AM' },
+  { h: 18, set_name: 'sundowner-disco',    dj: 'DJ House Mother',              set: "Sundowner — '70s disco essentials",      until: '8 PM' },
+  { h: 20, set_name: 'dinner-funk',        dj: 'DJ House Mother',              set: 'Dinner Hour — funk & soul',              until: '10 PM' },
+  { h: 22, set_name: 'marvy-house',        dj: 'DJ Marvy',                     set: 'Main Stage takeover — house & disco',    until: '11:30 PM' },
+  { h: 23, set_name: 'klub-rubiks-80s',    dj: 'Resident · Retro Deck Party',  set: "'80s & '90s dance party (costume encouraged)", until: '1:30 AM' },
+  { h: 1,  set_name: 'afterhours-grooves', dj: 'DJ Marvy',                     set: 'After-hours grooves',                    until: 'late' },
+  { h: 3,  set_name: 'winddown-soul',      dj: 'Resident',                     set: 'Wind-down soul',                         until: '5 AM' },
 ];
 
 // Explicit hour → set name lookup. The naive "latest start hour ≤ now" loop
@@ -179,7 +178,7 @@ export default function NowPlayingManor({ onAction } = {}) {
       <div style={S.topRow}>
         <div style={S.eyebrow}>
           {live && <span style={S.liveDot} />}
-          {live ? 'NOW · THE MANOR' : 'TONIGHT · THE MANOR'}
+          {live ? 'NOW · STARLIGHT LOUNGE' : 'TONIGHT · STARLIGHT LOUNGE'}
         </div>
       </div>
       <div style={S.body}>
@@ -201,8 +200,8 @@ export default function NowPlayingManor({ onAction } = {}) {
         {onAction && (
           <button
             style={S.altBtn}
-            onClick={() => onAction("What's playing right now at The Manor? Identify the track for me.")}
-            title="Identify the current Manor track and add it to your Cruise Soundtrack"
+            onClick={() => onAction("What's playing right now at the Starlight Lounge? Identify the track for me.")}
+            title="Identify the current Starlight Lounge track and add it to your Cruise Soundtrack"
           >
             🎧 Shazam
           </button>

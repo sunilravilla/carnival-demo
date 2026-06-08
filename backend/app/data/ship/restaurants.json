@@ -1,10 +1,10 @@
 [
   {
     "id": "the-wake",
-    "name": "The Wake",
+    "name": "Horizon Steakhouse",
     "cuisine": "Steak & Seafood",
     "deck": 7,
-    "location": "Deck 7 aft — sweeping wake views",
+    "location": "Deck 7 aft — sweeping ocean views",
     "specialty": true,
     "cover_charge": 0.00,
     "hours": "17:30 - 22:00",
@@ -14,7 +14,7 @@
   },
   {
     "id": "pink-agave",
-    "name": "Pink Agave",
+    "name": "Agave Coast",
     "cuisine": "Modern Mexican",
     "deck": 5,
     "location": "Deck 5 mid-ship",
@@ -23,11 +23,11 @@
     "hours": "17:30 - 22:30",
     "available_times": ["17:30", "18:00", "18:30", "19:00", "19:30", "20:00", "21:00", "21:30"],
     "image_keyword": "mexican",
-    "headline_dish": "Tableside guacamole + mezcal flight"
+    "headline_dish": "Tableside guacamole + warm churros"
   },
   {
     "id": "gunbae",
-    "name": "Gunbae",
+    "name": "Seoul Table",
     "cuisine": "Korean BBQ",
     "deck": 6,
     "location": "Deck 6 mid-ship",
@@ -36,11 +36,11 @@
     "hours": "17:30 - 22:00",
     "available_times": ["17:30", "18:00", "19:00", "19:30", "20:30", "21:00"],
     "image_keyword": "korean",
-    "headline_dish": "Wagyu short rib with soju games"
+    "headline_dish": "Wagyu short rib with interactive grill games"
   },
   {
     "id": "razzle-dazzle",
-    "name": "Razzle Dazzle",
+    "name": "Garden & Vine",
     "cuisine": "Plant-forward American",
     "deck": 5,
     "location": "Deck 5 forward",
@@ -49,11 +49,11 @@
     "hours": "07:00 - 22:00",
     "available_times": ["18:00", "18:30", "19:00", "19:30", "20:00", "20:30", "21:00"],
     "image_keyword": "vegetarian",
-    "headline_dish": "Naughty list cauliflower 'wings'"
+    "headline_dish": "Crispy buffalo cauliflower 'wings'"
   },
   {
     "id": "extra-virgin",
-    "name": "Extra Virgin",
+    "name": "Bella Mare",
     "cuisine": "Italian",
     "deck": 5,
     "location": "Deck 5 mid-ship",
@@ -66,7 +66,7 @@
   },
   {
     "id": "test-kitchen",
-    "name": "The Test Kitchen",
+    "name": "The Chef's Table",
     "cuisine": "Experimental Tasting Menu",
     "deck": 5,
     "location": "Deck 5 — half lab, half table",
@@ -79,7 +79,7 @@
   },
   {
     "id": "the-galley",
-    "name": "The Galley",
+    "name": "The Marketplace",
     "cuisine": "Food Hall — 6 venues, all included",
     "deck": 7,
     "location": "Deck 7 mid-ship",
@@ -92,7 +92,7 @@
   },
   {
     "id": "the-dock-house",
-    "name": "The Dock House",
+    "name": "Mezze Bay",
     "cuisine": "Eastern Mediterranean",
     "deck": 7,
     "location": "Deck 7 aft — open-air pavilion",

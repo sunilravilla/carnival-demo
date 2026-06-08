@@ -1,9 +1,8 @@
 import { useGuest } from '../../context/GuestContext';
 
-// Virgin itinerary ports only — Bimini, Puerto Plata, Miami.
-// Nassau/Cozumel/Belize/CelebKey kept out (Carnival residue from the source
-// template); the matcher below falls back to a short slug for any other port.
-const PORT_EMOJI = { 'Bimini': '🏝', 'Puerto Plata': '🌴', 'Miami': '🏙', 'Nassau': '🏝' };
+// Marenova itinerary ports — Aurora Cay, Puerto Plata, Miami.
+// The matcher below falls back to a short slug for any other port.
+const PORT_EMOJI = { 'Aurora Cay': '🏝', 'Puerto Plata': '🌴', 'Miami': '🏙' };
 
 const S = {
   wrap: {
@@ -75,9 +74,8 @@ function getPortLabel(stop) {
   const s = stop.toLowerCase();
   if (s.includes('sea') || s === 'at sea') return 'Sea';
   if (s.includes('miami')) return 'Miami';
-  if (s.includes('bimini')) return 'Bimini';
+  if (s.includes('aurora cay') || s.includes('aurora')) return 'Aurora Cay';
   if (s.includes('puerto plata') || s.includes('plata')) return 'Plata';
-  if (s.includes('nassau')) return 'Nassau';
   if (s.includes('embark')) return 'Start';
   if (s.includes('disembark')) return 'End';
   return stop.split(',')[0].slice(0, 7);

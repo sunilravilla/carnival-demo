@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { resetGuest, loadDashboard, openChat, sendChat } from './helpers';
 
-// Regression for user-reported Bug B4: the dashboard "Now Playing at The Manor"
+// Regression for user-reported Bug B4: the dashboard "Now Playing at the Starlight Lounge"
 // widget rotates DJ sets by hour-of-day, while the chat tool identify_now_playing
 // rotates tracks by minute through an INDEPENDENT pool. The two never agree.
 // After fix: Shazam result should be a track from the current DJ's set.
@@ -22,12 +22,12 @@ test('chat Shazam returns a track consistent with the dashboard widget', async (
   );
 
   await openChat(page);
-  await sendChat(page, 'What is playing right now at The Manor? Identify the track for me.');
+  await sendChat(page, 'What is playing right now at the Starlight Lounge? Identify the track for me.');
 
   const chat = await page.locator('body').innerText();
 
   // Shazam should produce a track + artist + venue
-  expect(chat, 'Shazam should return a track card').toMatch(/the manor/i);
+  expect(chat, 'Shazam should return a track card').toMatch(/starlight lounge/i);
 
   // Capture vibe from chat (the new_playing_track card has a `vibe` field).
   // Pull a likely vibe keyword from the chat response.

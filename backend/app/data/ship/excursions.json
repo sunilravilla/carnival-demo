@@ -1,24 +1,24 @@
 [
   {
     "id": "bimini-beach-club",
-    "name": "The Beach Club at Bimini — All Day",
-    "port": "Bimini, Bahamas",
+    "name": "Aurora Cay Beach Day — All Day",
+    "port": "Aurora Cay, Bahamas",
     "date": "2026-05-24",
     "meet_time": "10:00",
     "depart_time": "10:15",
     "return_time": "20:30",
     "duration_min": 615,
     "meet_location": "Gangway A, Deck 2 aft — short walk to the beach",
-    "deck_directions": "Take elevator to Deck 2 aft, follow the red carpet off the ship.",
+    "deck_directions": "Take elevator to Deck 2 aft, follow the boardwalk off the ship.",
     "price_per_guest": 0.00,
-    "includes": ["beach loungers", "two pools", "DJ takeover", "lunch buffet included", "yoga + volleyball"],
+    "includes": ["beach loungers", "two pools", "kids splash zone & waterslide", "lunch buffet included", "snorkeling + volleyball"],
     "rating": "Light",
-    "min_age": 18
+    "min_age": 0
   },
   {
     "id": "bimini-cabana",
-    "name": "The Beach Club — Private Cabana",
-    "port": "Bimini, Bahamas",
+    "name": "Aurora Cay — Private Family Cabana",
+    "port": "Aurora Cay, Bahamas",
     "date": "2026-05-24",
     "meet_time": "10:00",
     "depart_time": "10:15",
@@ -27,13 +27,13 @@
     "meet_location": "Beach Club Concierge, Deck 2 aft",
     "deck_directions": "Disembark via Deck 2 aft, ask for the Cabana host on arrival.",
     "price_per_guest": 449.00,
-    "includes": ["private cabana for 4", "dedicated host", "bottle service", "shaded loungers"],
+    "includes": ["private cabana for 6", "dedicated host", "snacks & soft drinks", "shaded loungers"],
     "rating": "Light",
-    "min_age": 18
+    "min_age": 0
   },
   {
     "id": "puerto-plata-cocoa",
-    "name": "Puerto Plata Cocoa & Cigar Trail",
+    "name": "Puerto Plata Chocolate Farm Tour",
     "port": "Puerto Plata, Dominican Republic",
     "date": "2026-05-26",
     "meet_time": "08:45",
@@ -43,9 +43,9 @@
     "meet_location": "Amber Cove Pier, Excursion Hut",
     "deck_directions": "Disembark Deck 2, look for the gold flag.",
     "price_per_guest": 119.00,
-    "includes": ["cocoa-farm tour", "chocolate tasting", "hand-rolled cigar demo", "transfer"],
+    "includes": ["cocoa-farm tour", "chocolate tasting", "truffle-making for all ages", "transfer"],
     "rating": "Moderate",
-    "min_age": 18
+    "min_age": 0
   },
   {
     "id": "puerto-plata-mount",
@@ -61,6 +61,6 @@
     "price_per_guest": 89.00,
     "includes": ["cable car ride", "summit walk", "botanical garden", "panoramic Caribbean views"],
     "rating": "Light",
-    "min_age": 18
+    "min_age": 0
   }
 ]

@@ -8,11 +8,11 @@ test('book_recovery_item shows only the requested items', async ({ page }) => {
   await resetGuest(page);
   await loadDashboard(page);
   await openChat(page);
-  await sendChat(page, 'Book hydration spa and a B-complex green smoothie');
+  await sendChat(page, 'Book the hydration boost and a green smoothie');
 
   // Card should contain the two requested items
-  await expect(page.getByText(/hydration drip/i).first()).toBeVisible({ timeout: 8000 });
-  await expect(page.getByText(/b-complex green smoothie/i).first()).toBeVisible({ timeout: 5000 });
+  await expect(page.getByText(/vitamin boost/i).first()).toBeVisible({ timeout: 8000 });
+  await expect(page.getByText(/green smoothie/i).first()).toBeVisible({ timeout: 5000 });
 
   // The response card itself MUST NOT include "Cabana siesta" — but it is OK
   // for the suggested-follow-up chips below the card to mention it
@@ -23,6 +23,6 @@ test('book_recovery_item shows only the requested items', async ({ page }) => {
   await expect(card).toHaveAttribute('data-subset', 'true');
   const cardText = (await card.innerText()).toLowerCase();
   expect(cardText).not.toContain('cabana siesta');
-  expect(cardText).not.toContain('late breakfast at the wake');
+  expect(cardText).not.toContain('late breakfast at horizon steakhouse');
   await expectNoCarnivalLeak(page, 'recovery subset');
 });

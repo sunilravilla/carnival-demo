@@ -13,9 +13,9 @@ test('Wave 2 reservation kinds render with names + icons in dashboard widget', a
   await openChat(page);
 
   // Seed a varied set of Wave 2 bookings
-  await sendChat(page, 'Land the Scarlet Statement look for Scarlet Night.');
+  await sendChat(page, 'Land the Starlight Sparkle look for the Starlight Deck Party.');
   await sendChat(page, 'Arrange an anniversary surprise tonight, premium budget.');
-  await sendChat(page, 'Create a Scarlet Night squad event for 4 of us.');
+  await sendChat(page, 'Create a Starlight Deck Party group event for 4 of us.');
 
   // Close chat to see the dashboard widget
   await page.keyboard.press('Escape').catch(() => {});

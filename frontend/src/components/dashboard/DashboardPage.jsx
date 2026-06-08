@@ -12,7 +12,7 @@ import ShakeForChampagne from '../champagne/ShakeForChampagne';
 import TonightsLook from '../style/TonightsLook';
 import NowPlayingManor from '../music/NowPlayingManor';
 import RockStarPerks from './RockStarPerks';
-import { isVirgin } from '../../styles/branding';
+import { isMarenova } from '../../styles/branding';
 
 const S = {
   root: {
@@ -54,10 +54,10 @@ export default function DashboardPage({ onAdminClick, onSwitchGuest, isCheckingA
         <HeroBanner />
         <VoyageProgressBar />
         <TodayCard />
-        {isVirgin && <RockStarPerks />}
-        {isVirgin && <TonightsLook onAction={openMarinaPanelWithMessage} />}
-        {isVirgin && <ShakeForChampagne />}
-        {isVirgin && <NowPlayingManor onAction={openMarinaPanelWithMessage} />}
+        {isMarenova && <RockStarPerks />}
+        {isMarenova && <TonightsLook onAction={openMarinaPanelWithMessage} />}
+        {isMarenova && <ShakeForChampagne />}
+        {isMarenova && <NowPlayingManor onAction={openMarinaPanelWithMessage} />}
         <ReservationWidget />
         <FolioWidget />
         <QuickActions onAction={openMarinaPanelWithMessage} />

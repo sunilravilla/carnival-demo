@@ -1361,10 +1361,11 @@ async def guest_reset(request: dict):
 
 @app.post("/api/champagne/order")
 async def champagne_order(request: dict):
-    """Virgin signature ritual: Shake for Champagne.
+    """Marenova signature experience: Shake for a Treat.
 
-    Frontend invokes this directly (no agent chat) when the Sailor presses the
-    button or shakes their phone. Returns the order card payload + new folio balance.
+    Frontend invokes this directly (no agent chat) when the guest presses the
+    button or shakes their phone. Returns the treat card payload + new folio balance.
+    (Endpoint path kept as /api/champagne/order so the frontend client is unchanged.)
     """
     from app.services.agent_service import _tool_order_champagne
     location = (request or {}).get("location", "").strip()

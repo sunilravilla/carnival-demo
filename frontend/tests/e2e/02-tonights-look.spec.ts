@@ -7,9 +7,9 @@ import { resetGuest, loadDashboard, openChat, sendChat } from './helpers';
 // cocktail name, the macro routing has regressed.
 
 const LOOKS = [
-  { id: 'scarlet-statement', label: 'Scarlet Statement', expectedDrink: /disco nap/i },
-  { id: 'crimson-tux',        label: 'Crimson Tuxedo',    expectedDrink: /negroni/i },
-  { id: 'after-hours',        label: 'After-Hours Red',   expectedDrink: /mezcal mule/i },
+  { id: 'scarlet-statement', label: 'Starlight Sparkle', expectedDrink: /aurora sparkler/i },
+  { id: 'crimson-tux',        label: 'Deck Party Sharp',  expectedDrink: /cold brew tonic/i },
+  { id: 'after-hours',        label: 'Evening Glow',      expectedDrink: /berry fizz/i },
 ];
 
 test.beforeEach(async ({ page }) => {
@@ -17,20 +17,20 @@ test.beforeEach(async ({ page }) => {
 });
 
 for (const look of LOOKS) {
-  test(`land_the_look — ${look.label} produces its unique cocktail`, async ({ page }) => {
+  test(`land_the_look — ${look.label} produces its unique refreshment`, async ({ page }) => {
     await loadDashboard(page);
     await openChat(page);
-    await sendChat(page, `Land the ${look.label} look for Scarlet Night.`);
+    await sendChat(page, `Land the ${look.label} look for the Starlight Deck Party.`);
 
     // Macro should produce 4 cards in the chat. Expect at least the
-    // look-specific cocktail name to appear in the visible chat body.
+    // look-specific refreshment name to appear in the visible chat body.
     const body = await page.locator('body').innerText();
     expect(body, `Expected '${look.expectedDrink}' for ${look.label}`).toMatch(look.expectedDrink);
 
     // The macro should produce a salon booking (SAL... confirmation).
     expect(body, 'Expected SAL confirmation in chat').toMatch(/SAL\d{5}/);
-    // And a Manor table booking.
-    expect(body, 'Expected MAN confirmation in chat').toMatch(/MAN\d{5}/);
+    // And a Starlight Lounge table booking.
+    expect(body, 'Expected SLT confirmation in chat').toMatch(/SLT\d{5}/);
     // And an outfit confirmation marker.
     expect(body, 'Expected OUT confirmation in chat').toMatch(/OUT\d{5}/);
   });

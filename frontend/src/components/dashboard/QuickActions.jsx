@@ -1,5 +1,5 @@
 import { useGuest } from '../../context/GuestContext';
-import { isVirgin } from '../../styles/branding';
+import { isVirgin, isMarenova } from '../../styles/branding';
 
 const CARNIVAL_ACTIONS = [
   { id: 'dining',     icon: '🍽', label: 'Book Dining',    msg: 'I want to book a restaurant for dinner tonight',  always: true },
@@ -24,7 +24,20 @@ const VIRGIN_ACTIONS = [
   { id: 'folio',      icon: '💳',  label: 'My Account',      msg: 'What have I spent so far?',                                        always: true },
 ];
 
-const ALL_ACTIONS = isVirgin ? VIRGIN_ACTIONS : CARNIVAL_ACTIONS;
+const MARENOVA_ACTIONS = [
+  { id: 'dining',     icon: '🍽',  label: 'Book Dining',     msg: 'Book me a restaurant for tonight',                                          always: true },
+  { id: 'show',       icon: '🎭',  label: 'Find a Show',     msg: 'What shows are playing tonight at the Aurora Theater and Starlight Lounge?', always: true },
+  { id: 'recovery',   icon: '🌅',  label: 'Morning reset',   msg: 'Open the Morning Reset menu',                                               always: true },
+  { id: 'drink',      icon: '🥤',  label: 'What to sip?',    msg: 'What should I sip right now? Pick the mood — I trust you.',                  always: true },
+  { id: 'surprise',   icon: '🎁',  label: 'Surprise mode',   msg: 'Arrange a celebration for tonight — anniversary',                           always: true },
+  { id: 'packing',    icon: '🎒',  label: 'Packing list',    msg: 'Generate my packing list for the Starlight Deck Party and Aurora Cay',      always: true },
+  { id: 'island',     icon: '🏝',  label: 'Pre-board Aurora Cay', msg: 'Pre-board my Aurora Cay day — cabana, lunch, sunset ice-cream social',  always: true },
+  { id: 'squad',      icon: '👥',  label: 'Group night',     msg: 'Create a Starlight Deck Party group event for 4 of us',                     always: true },
+  { id: 'diary',      icon: '📔',  label: "Today's diary",   msg: "Show me today's voyage diary",                                              always: true },
+  { id: 'folio',      icon: '💳',  label: 'My Account',      msg: 'What have I spent so far?',                                                 always: true },
+];
+
+const ALL_ACTIONS = isMarenova ? MARENOVA_ACTIONS : isVirgin ? VIRGIN_ACTIONS : CARNIVAL_ACTIONS;
 
 const S = {
   section: { margin: '12px 12px 0' },

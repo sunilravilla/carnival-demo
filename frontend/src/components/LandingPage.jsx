@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { hpeTheme } from '../styles/hpeTheme';
-import { branding, isCarnival, isVirgin } from '../styles/branding';
+import { branding, isCarnival, isVirgin, isMarenova } from '../styles/branding';
 import { userLogin, setUserAuthenticated } from '../services/api';
 
 // ─── Animated SVG logo mark — three orbital arcs + pulsing core ───────────────
@@ -474,7 +474,7 @@ export default function LandingPage({ onEnterUser, onEnterAdmin }) {
             {branding.logoText || "AI & Data COE Houston"}
           </span>
           <span style={styles.attributionSep}> · </span>
-          <span style={styles.hpeTag}>{(isCarnival || isVirgin) ? "Powered by HPE" : "HPE"}</span>
+          <span style={styles.hpeTag}>{(isCarnival || isVirgin || isMarenova) ? "Powered by HPE" : "HPE"}</span>
         </p>
 
         {/* ── Actions ── */}
@@ -484,7 +484,7 @@ export default function LandingPage({ onEnterUser, onEnterAdmin }) {
             onClick={() => setShowAuth(true)}
             className="aria-enter-btn"
           >
-            <span>{isCarnival ? "Board Marina" : isVirgin ? "Meet Marina" : "Enter ARIA"}</span>
+            <span>{isCarnival ? "Board Marina" : (isVirgin || isMarenova) ? "Meet Marina" : "Enter ARIA"}</span>
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ marginLeft: 8 }}>
               <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
@@ -507,7 +507,7 @@ export default function LandingPage({ onEnterUser, onEnterAdmin }) {
           System Online
         </span>
         <span style={styles.footerRight}>
-          {(isCarnival || isVirgin) ? "Demo · HPE Greenlake" : "HPE Internal · AI&Data COE"}
+          {(isCarnival || isVirgin || isMarenova) ? "Demo · HPE Greenlake" : "HPE Internal · AI&Data COE"}
         </span>
       </footer>
 

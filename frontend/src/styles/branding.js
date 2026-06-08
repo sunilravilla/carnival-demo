@@ -1,18 +1,22 @@
 // Centralised brand selection for the demo.
-// Set VITE_DEMO_BRAND=carnival | virgin | hpe in the frontend env.
+// Set VITE_DEMO_BRAND=carnival | virgin | marenova | hpe in the frontend env.
 // Default = hpe (the upstream codebase).
 import hpeTheme from "./hpeTheme";
 import carnivalTheme from "./carnivalTheme";
 import virginTheme from "./virginTheme";
+import marenovaTheme from "./marenovaTheme";
 
 const brand = (import.meta.env.VITE_DEMO_BRAND || "hpe").toLowerCase();
 
 export const isCarnival = brand === "carnival";
 export const isVirgin = brand === "virgin";
-export const isHpe = !isCarnival && !isVirgin;
+export const isMarenova = brand === "marenova";
+export const isHpe = !isCarnival && !isVirgin && !isMarenova;
 
 export const activeTheme = isVirgin
   ? virginTheme
+  : isMarenova
+  ? marenovaTheme
   : isCarnival
   ? carnivalTheme
   : hpeTheme;
@@ -61,6 +65,51 @@ const virginBranding = {
     { icon: "🥂", label: "Shake — bring me champagne" },
     { icon: "💃", label: "What should I wear for Scarlet Night?" },
     { icon: "🎧", label: "What's on at The Manor tonight?" },
+  ],
+};
+
+const marenovaBranding = {
+  logoText: "Marenova",
+  headerTitle: "Marenova Aurora",
+  headerSubtitle: "Your Sea. Your Story.",
+  avatarName: "Marina",
+  avatarRole: "Your Onboard Concierge",
+  avatarInitials: "MA",
+  emptyHeadline: "Welcome aboard!",
+  emptySubtext:
+    'Try: "Book Bella Mare for 7:30" — or shake your phone for a treat. Marina\'s listening.',
+  conversationTitle: "Chat with Marina",
+  inputPlaceholder: "Ask Marina…",
+  useAgentEndpoint: true,
+  enableShowThis: false,
+  useCopilotKit: false,
+  defaultLanguage: "en",
+  // SVG/initials avatar fallback — no dedicated sprite for Marenova yet.
+  useSpriteAvatar: false,
+  // Visual assets — Marenova logo + Aurora ship photo (placeholder SVG/JPG in public/).
+  logo: "/marenova-logo.svg",
+  logoWhite: "/marenova-logo-white.svg",
+  heroImage: "/marenova-ship-hero.jpg",
+  // Deep Sea → Aurora teal is the signature brand gradient.
+  headerGradient: "linear-gradient(135deg, #0B3D5C 0%, #18A0A8 100%)",
+  heroOverlay:
+    "linear-gradient(180deg, rgba(11,61,92,0.35) 0%, rgba(6,40,61,0.75) 100%)",
+  tierLabel: "Star", // "Aurora Suite", "Balcony" etc.
+  tierColors: {
+    "Aurora Grand Suite": "#E8B04B", // gold — most prestigious
+    "Aurora Suite":       "#5B4B8A", // aurora violet — prestige
+    "Balcony":            "#0B3D5C", // deep sea — most common tier
+    "Ocean View":         "#3FB6C4", // sea teal
+    "Interior":           "#8A9BA3", // neutral
+  },
+  accentColor: "#18A0A8",
+  goldColor: "#E8B04B",
+  quickChips: [
+    { icon: "🍽️", label: "Book Bella Mare for 7:30" },
+    { icon: "🎭", label: "2 seats for Odyssey tonight" },
+    { icon: "🍦", label: "Shake — bring me a treat" },
+    { icon: "✨", label: "What to wear for the Starlight Deck Party?" },
+    { icon: "🎶", label: "What's playing at the Starlight Lounge?" },
   ],
 };
 
@@ -129,6 +178,8 @@ const hpeBranding = {
 
 export const branding = isVirgin
   ? virginBranding
+  : isMarenova
+  ? marenovaBranding
   : isCarnival
   ? carnivalBranding
   : hpeBranding;

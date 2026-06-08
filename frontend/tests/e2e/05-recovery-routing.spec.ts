@@ -12,20 +12,20 @@ test('asking for specific recovery items does NOT re-show the full menu', async 
   await openChat(page);
 
   // Specific items only — should NOT trigger the full menu macro.
-  await sendChat(page, 'Book just the hydration drip — nothing else from the recovery menu.');
+  await sendChat(page, 'Book just the hydration boost — nothing else from the Morning Reset menu.');
 
   const body = await page.locator('body').innerText();
 
   // Should see a spa-booking confirmation
-  expect(body).toMatch(/hydration|redemption spa/i);
+  expect(body).toMatch(/hydration|serenity spa/i);
 
-  // The full recovery menu has multiple items. A response containing ALL of:
-  //   "Hydration drip"
-  //   "B-Complex green smoothie"
+  // The full Morning Reset menu has multiple items. A response containing ALL of:
+  //   "Hydration & vitamin boost"
+  //   "Green smoothie"
   //   "Late breakfast"
   //   "Cabana siesta"
   // means the full menu was returned again, not a single booking.
-  const fullMenuItems = ['hydration drip', 'green smoothie', 'late breakfast', 'cabana siesta'];
+  const fullMenuItems = ['vitamin boost', 'green smoothie', 'late breakfast', 'cabana siesta'];
   const hits = fullMenuItems.filter((s) => body.toLowerCase().includes(s));
 
   expect(

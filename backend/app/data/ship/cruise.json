@@ -1,20 +1,20 @@
 {
-  "ship": "Scarlet Lady",
-  "itinerary_name": "5-Night Western Caribbean Charm",
+  "ship": "Marenova Aurora",
+  "itinerary_name": "5-Night Western Caribbean Getaway",
   "departure_port": "PortMiami, FL",
   "departure_date": "2026-05-23",
   "return_date": "2026-05-28",
   "total_days": 6,
   "itinerary": [
     "PortMiami, FL (Embark)",
-    "Bimini, Bahamas — The Beach Club",
+    "Aurora Cay, Bahamas — Private Island",
     "Sea Day",
     "Puerto Plata, Dominican Republic",
-    "Sea Day — Scarlet Night",
+    "Sea Day — Starlight Deck Party",
     "PortMiami, FL (Disembark)"
   ],
   "next_port_schedule": [
     {"day": 4, "name": "Puerto Plata, Dominican Republic", "arrival_date": "2026-05-26", "all_aboard_time": "17:00"},
-    {"day": 5, "name": "Sea Day — Scarlet Night", "arrival_date": "2026-05-27", "all_aboard_time": "—"}
+    {"day": 5, "name": "Sea Day — Starlight Deck Party", "arrival_date": "2026-05-27", "all_aboard_time": "—"}
   ]
 }

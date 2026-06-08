@@ -7,7 +7,7 @@ test('squad invitee chip opens contact picker modal', async ({ page }) => {
   await resetGuest(page);
   await loadDashboard(page);
   await openChat(page);
-  await sendChat(page, 'Create a Scarlet Night squad event for 4 of us');
+  await sendChat(page, 'Create a Starlight Deck Party group event for 4 of us');
 
   // Wait for the squad card to render — look for "Group of"
   await expect(page.getByText(/group of \d/i).first()).toBeVisible({ timeout: 8000 });

@@ -8,7 +8,7 @@ test('now playing chat card displays the set label + dj name', async ({ page }) 
   await resetGuest(page);
   await loadDashboard(page);
   await openChat(page);
-  await sendChat(page, "What's playing at The Manor right now? Identify the track.");
+  await sendChat(page, "What's playing at the Starlight Lounge right now? Identify the track.");
 
   // The chat panel should contain the song info plus the bridge text:
   // a DJ line (e.g. "Resident · Klub Rubik's") OR a set label (e.g. "Klub Rubik's").

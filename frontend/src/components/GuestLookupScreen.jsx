@@ -120,7 +120,7 @@ export default function GuestLookupScreen({ onGuestFound }) {
           <img src={branding.logo || "/carnival-logo.png"} alt={branding.logoText} style={S.logo} />
         </div>
         <div style={S.header}>Your Voyage Profile</div>
-        <div style={S.shipLine}>Scarlet Lady · Western Caribbean · 5 Nights</div>
+        <div style={S.shipLine}>Marenova Aurora · Western Caribbean · 5 Nights</div>
 
         <form onSubmit={handleSubmit}>
           <label style={S.label} htmlFor="phone-input">Registered Mobile Number</label>

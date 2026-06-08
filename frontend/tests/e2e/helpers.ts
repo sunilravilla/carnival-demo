@@ -1,9 +1,11 @@
 import { Page, expect, Locator } from '@playwright/test';
 
-// Forbidden Carnival residue. Anywhere in the visible UI = demo killer.
-// NOTE: 'Marina' is intentionally NOT listed — it is now the Virgin concierge's
-// name (renamed from Ruby), so it is a legitimate string across the Virgin UI.
+// Forbidden cross-brand residue for the Marenova demo. Anywhere in the visible
+// UI = demo killer. Blocks BOTH Carnival residue (from the original template)
+// AND Virgin residue (this branch was cut from virgin-voyages).
+// NOTE: 'Marina' is intentionally NOT listed — it is the Marenova concierge's name.
 export const CARNIVAL_LEAK_STRINGS = [
+  // ── Carnival residue ──
   'Carnival',
   'Celebration',
   'Cucina',
@@ -18,6 +20,23 @@ export const CARNIVAL_LEAK_STRINGS = [
   'Cloud 9',
   'VIFP Gold',
   'VIFP Platinum',
+  // ── Virgin residue ──
+  'Virgin',
+  'Scarlet Lady',
+  'Scarlet Night',
+  'The Manor',
+  'Branson',
+  'RockStar',
+  'Bar Tab',
+  'Möet',
+  'Sailor App',
+  'Persephone',
+  'Pink Agave',
+  'Gunbae',
+  'Extra Virgin',
+  'Razzle Dazzle',
+  'Bimini',
+  'Redemption Spa',
 ];
 
 // Reset primary guest so each spec starts clean (no duplicate-guards).
@@ -44,8 +63,8 @@ export async function loadDashboard(page: Page, phone = '9999999990') {
 export async function openChat(page: Page) {
   const bubble = page.locator('[title^="Chat with"]');
   await bubble.click();
-  // Wait for the chat header (Sailor App title) to be visible.
-  await expect(page.getByText('Sailor App', { exact: false })).toBeVisible({ timeout: 5_000 });
+  // Wait for the chat header (Marenova Aurora title) to be visible.
+  await expect(page.getByText('Marenova Aurora', { exact: false })).toBeVisible({ timeout: 5_000 });
 }
 
 // Send a message in the open chat, wait for Marina to finish responding.

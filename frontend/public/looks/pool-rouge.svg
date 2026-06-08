@@ -1,11 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
-  <defs><linearGradient id="bg5" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6DBDD6"/><stop offset="1" stop-color="#A8DAE6"/></linearGradient></defs>
+  <defs><linearGradient id="bg5" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3FB6C4"/><stop offset="1" stop-color="#9BDDE6"/></linearGradient></defs>
   <rect width="200" height="200" fill="url(#bg5)"/>
   <!-- one-piece -->
-  <path d="M90 60 L110 60 L116 130 L100 134 L84 130 Z" fill="#CC0000"/>
+  <path d="M90 60 L110 60 L116 130 L100 134 L84 130 Z" fill="#0B3D5C"/>
   <!-- linen overshirt -->
-  <path d="M70 80 L100 68 L130 80 L130 150 L100 144 L70 150 Z" fill="#FAFAF7" opacity="0.85"/>
+  <path d="M70 80 L100 68 L130 80 L130 150 L100 144 L70 150 Z" fill="#F8FBFC" opacity="0.9"/>
   <!-- straw bag -->
-  <rect x="36" y="120" width="22" height="18" rx="3" fill="#D4A862"/>
-  <text x="100" y="32" font-family="Inter,Helvetica,sans-serif" font-size="13" font-weight="800" fill="#0A0A0A" text-anchor="middle" letter-spacing="2">POOL-DECK ROUGE</text>
+  <rect x="36" y="120" width="22" height="18" rx="3" fill="#E8B04B"/>
+  <text x="100" y="32" font-family="Inter,Helvetica,sans-serif" font-size="12" font-weight="800" fill="#06283D" text-anchor="middle" letter-spacing="2">POOL-DECK BRIGHT</text>
 </svg>

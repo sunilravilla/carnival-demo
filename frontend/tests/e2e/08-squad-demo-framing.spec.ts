@@ -11,7 +11,7 @@ test('squad event makes it clear the invitee names are sample / demo data', asyn
   await loadDashboard(page);
   await openChat(page);
 
-  await sendChat(page, 'Create a Scarlet Night squad event for 4 of us.');
+  await sendChat(page, 'Create a Starlight Deck Party group event for 4 of us.');
   const body = await page.locator('body').innerText();
 
   // The card should exist

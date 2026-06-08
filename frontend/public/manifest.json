@@ -1,12 +1,12 @@
 {
-  "name": "Virgin Voyages Sailor",
-  "short_name": "Sailor",
-  "description": "Your onboard AI concierge for Virgin Voyages — Adult by Design.",
+  "name": "Marenova Aurora",
+  "short_name": "Marenova",
+  "description": "Your onboard AI concierge for Marenova Cruise Line — Your Sea. Your Story.",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#2E0444",
-  "theme_color": "#CC0000",
+  "background_color": "#0B3D5C",
+  "theme_color": "#0B3D5C",
   "icons": [
     {
       "src": "/icon-192.png",
@@ -27,7 +27,7 @@
       "purpose": "maskable"
     },
     {
-      "src": "/virgin-app-icon.svg",
+      "src": "/marenova-app-icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"

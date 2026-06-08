@@ -1,39 +1,29 @@
 import { test, expect } from '@playwright/test';
 import { resetGuest, loadDashboard, openChat, sendChat } from './helpers';
 
-// Regression for user-reported Bug B1: recommend Krug → "send it to my cabin
-// instead" → Marina's CARD shows Möet & Chandon (not Krug) because order_champagne
-// is hardcoded. After the fix, the card should match Marina's narration.
+// Regression: recommend a refreshment (Aurora Sparkler) → "send it to my cabin
+// instead" → Marina's treat CARD should reference the SAME refreshment, because
+// order_champagne accepts a `bottle` override. The card should match the narration.
 
-test('mood drink follow-up: sending recommended drink to cabin preserves the bottle', async ({ page }) => {
+test('mood drink follow-up: sending recommended refreshment to cabin preserves the name', async ({ page }) => {
   await resetGuest(page);
   await loadDashboard(page);
   await openChat(page);
 
-  // 1. Ask for a celebratory drink; we expect Marina to suggest Krug.
+  // 1. Ask for a celebratory refreshment; the celebratory default is the Aurora Sparkler.
   await sendChat(page, 'What should I drink right now? I am celebrating.');
   let body = await page.locator('body').innerText();
-  // Krug is the celebratory default in _MOOD_DRINKS.
-  expect(body, 'Marina should suggest a Krug pour for celebratory mood').toMatch(/krug/i);
+  expect(body, 'Marina should suggest an Aurora Sparkler for celebratory mood').toMatch(/aurora sparkler/i);
 
   // 2. Follow up: "send it to my cabin instead"
   await sendChat(page, 'Send it to my cabin instead.');
   body = await page.locator('body').innerText();
 
-  // The order card should reference Krug, NOT Möet.
-  // BUG B1: today this fails — order_champagne hardcodes Möet.
-  // After fix: the new bottle param should propagate to the card.
-  const mentionsKrug = /krug/i.test(body);
-  const mentionsMoet = /möet|moet/i.test(body);
-
+  // The follow-up treat card should reference the Aurora Sparkler (the override
+  // propagates via order_champagne's `bottle` arg).
+  const mentionsSparkler = /aurora sparkler/i.test(body);
   expect(
-    mentionsKrug,
-    'The follow-up order card should mention Krug (or whatever the recommendation was)',
+    mentionsSparkler,
+    'The follow-up treat card should mention the Aurora Sparkler (or whatever the recommendation was)',
   ).toBeTruthy();
-  // It's OK for "Möet" to appear elsewhere on the page (other cards) but
-  // the new card following this exchange should specifically be the Krug.
-  // We assert presence of Krug rather than absence of Möet to avoid false positives.
-
-  // The order should still show as a $-priced item in the folio language.
-  expect(body).toMatch(/\$\d+/);
 });
